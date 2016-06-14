@@ -2,6 +2,7 @@ from vidispine_api import VSApi,VSException,HTTPError
 from vs_storage_rule import VSStorageRule,VSStorageRuleCollection
 import logging
 
+
 class VSShape(VSApi):
     def __init__(self, *args,**kwargs):
         super(VSShape, self).__init__(*args,**kwargs)

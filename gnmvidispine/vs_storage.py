@@ -150,10 +150,10 @@ class VSFile(object):
 
         q = {'path': self.parent.stripOwnPath(newPath)}
         if storage is not None:
-            if isinstance(storage,VSStorage):
+            if isinstance(storage, VSStorage):
                 q['storage'] = storage.name
             elif isinstance(storage,basestring):
-                if not re.match(storage,r'^\w{2}-\d+'):
+                if not re.match(storage, r'^\w{2}-\d+'):
                     raise StandardError("When specifying a storage as a string, it must be in the form VV-nnnnn where VV is the side identifier and nnnnn is the numeric ID")
                 q['storage'] = storage
             else:
@@ -325,8 +325,17 @@ class VSStorage(VSApi):
                 got_files += 1
                 yield VSFile(self,filenode)
 
-#This function will return a hash in the form of filesystem_path=>VSStorage
+    def rescan(self):
+        self.request("/storage/{0}/rescan".format(self.name),method="POST")
+
 def VSStoragePathMap(uriType=None,stripType=False,*args,**kwargs):
+    """
+    This function will return a hash in the form of uri=>VSStorage
+    :param uriType: only include URIs of this type (e.g., file, omms, s3, http, etc.)
+    :param stripType: remove the URI type specifier in the returned hash.  So, rather than file:///blah/blah=>{ref} you get /blah/blah=>{ref}
+    :param kwargs: specify the usual host,port,user,passwd etc. arguments
+    :return: Hash
+    """
     api = VSApi(*args,**kwargs)
 
     rtn = {}
