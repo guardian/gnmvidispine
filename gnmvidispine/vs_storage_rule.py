@@ -72,6 +72,32 @@ class VSStorageRuleNew(VSApi):
             node = ET.SubElement(self.xmlDOM, '{0}precedence'.format(self.xmlns))
         node.text = value
 
+    def _generic_get_ref(self,type,invert=False):
+        self.assert_populated()
+        xps = '{0}{1}'.format(self.xmlns,type)
+        if invert:
+            xps = "{0}not/".format(self.xmlns) + xps
+        
+        return map(lambda x: x.text,self.xmlDOM.findall(xps))
+    
+    def storages(self,inverted=False):
+        return self._generic_get_ref('storage',inverted)
+
+    def groups(self,inverted=False):
+        return self._generic_get_ref('group',inverted)
+    
+    def as_dict(self):
+        return {
+            'storages': self.storages(),
+            'not_storages': self.storages(inverted=True),
+            'groups': self.groups(),
+            'not_groups': self.groups(inverted=True),
+            'name': self.name,
+            'storage_count': self.storage_count,
+            'applies_to': self.applies_to,
+            'precedence': self.precedence,
+        }
+    
     def __unicode__(self):
         o_class,o_id = self.applies_to
         return u'Storage rule {n} copy to {c} storages. Applies to {t} {i}. Precedence {p}.'.format(n=self.name,
