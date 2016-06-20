@@ -22,6 +22,8 @@ class VSStorageRuleNew(VSApi):
         self.assert_populated()
         try:
             return self.xmlDOM.attrib['id']
+        except AttributeError:
+            return None
         except KeyError:
             return None
 
@@ -30,6 +32,8 @@ class VSStorageRuleNew(VSApi):
         self.assert_populated()
         try:
             return int(self.xmlDOM.find('{0}storageCount'.format(self.xmlns)).text)
+        except AttributeError:
+            return 0
         except TypeError:
             return None
 
@@ -48,9 +52,11 @@ class VSStorageRuleNew(VSApi):
         self.assert_populated()
         o_class = None
         o_id = None
-        #try:
-        o_class = self.xmlDOM.find('{0}appliesTo/{0}type'.format(self.xmlns)).text
-        o_id = self.xmlDOM.find('{0}appliesTo/{0}id'.format(self.xmlns)).text
+        try:
+            o_class = self.xmlDOM.find('{0}appliesTo/{0}type'.format(self.xmlns)).text
+            o_id = self.xmlDOM.find('{0}appliesTo/{0}id'.format(self.xmlns)).text
+        except AttributeError:
+            pass
         return (o_class,o_id)
 
     @property
@@ -58,6 +64,8 @@ class VSStorageRuleNew(VSApi):
         self.assert_populated()
         try:
             return self.xmlDOM.find('{0}precedence'.format(self.xmlns)).text
+        except AttributeError:
+            return ""
         except TypeError:
             return None
 
