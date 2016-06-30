@@ -1,4 +1,4 @@
-from vidispine_api import VSApi,VSException,HTTPError
+from vidispine_api import VSApi,VSException,HTTPError, VSNotFound
 from vs_storage_rule import VSStorageRule,VSStorageRuleCollection
 import logging
 
@@ -85,6 +85,8 @@ class VSShape(VSApi):
                 except TypeError as e:
                     logging.warning(e)
                 except AttributeError as e:
+                    logging.warning(e)
+                except VSNotFound as e:
                     logging.warning(e)
 
     @property
