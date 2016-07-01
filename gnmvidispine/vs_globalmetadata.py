@@ -1,17 +1,27 @@
-from vidispine_api import VSApi
+from vidispine_api import VSApi, VSNotFound
 import xml.etree.ElementTree as ET
 import traceback
 
 
 class VSGlobalMetadataGroup(VSApi):
-    def __init__(self,*args,**kwargs):
+    """
+    This class allows access to the actual values and their IDs, as present in the global metadata groups.
+    You get an initialised instance by using VSGlobalMetadata, then get a dictionary of uuids and values by calling
+    .values() on this object.
+    """
+    def __init__(self,groupname="(none)",*args,**kwargs):
         super(VSGlobalMetadataGroup,self).__init__(*args,**kwargs)
         self.xmlnodes = []
+        self.name = groupname
 
     def _addNode(self,xmlnode):
         self.xmlnodes.append(xmlnode)
 
     def values(self):
+        """
+        Returns a dictionary of keys and values from this metadata group
+        :return: dict
+        """
         ns = "{http://xml.vidispine.com/schema/vidispine}"
         rtn = []
         for node in self.xmlnodes:
@@ -34,14 +44,37 @@ class VSGlobalMetadataGroup(VSApi):
 
 
 class VSGlobalMetadata(VSApi):
+    """
+    This class represents the global metadata groups of a Vidispine system.  You can access them by:
+    md = VSGlobalMetadata(hostname,port,user,passwd)
+    md.populate()
+    #either iterate
+    for group in md.items():
+      pprint(group.values())
+    #or get a group directly
+    group = md.get_group("MyMetaGroup")
+    pprint(group.values())
+
+    """
     def populate(self):
+        """
+        Loads the global metadata definitions from the server into memmory.  Call this first, before calling anything else.
+        :return: self
+        """
         self.xml_doc = self.request("/metadata")
+        return self
 
     def get_group(self,groupname):
+        """
+        Returns a VSGlobalMetadataGroup object for the given group name
+        :param groupname: group name that you're interested in
+        :return: The group, or raises VSNotFound
+        """
         ns = "{http://xml.vidispine.com/schema/vidispine}"
         #ET.dump(self.xml_doc)
 
-        rtn = VSGlobalMetadataGroup(self.host,self.port,self.user,self.passwd)
+        rtn = VSGlobalMetadataGroup(groupname=groupname, host=self.host,port=self.port,user=self.user,passwd=self.passwd)
+        foundit = False
 
         for groupnode in self.xml_doc.findall("{0}timespan/{0}group".format(ns)):
             #ET.dump(groupnode)
@@ -49,7 +82,32 @@ class VSGlobalMetadata(VSApi):
                 name = groupnode.find("{0}name".format(ns)).text
                 if groupname == name:
                     rtn._addNode(groupnode)
+                    foundit = True
             except AttributeError as e:
                 pass
 
+        if not foundit:
+            e=VSNotFound()
+            e.exceptionWhat=groupname
+            e.exceptionContext="Global metadata group"
+            raise e
         return rtn
+
+    def items(self):
+        """
+        Generator that yields VSMetadataGroup objects for each group present
+        :return: Yields VSMetadataGroup
+        """
+        rtn = {}
+        for groupnode in self.xml_doc.findall("{0}timespan/{0}group".format(self.xmlns)):
+            try:
+                name = groupnode.find("{0}name".format(self.xmlns)).text
+                if not name in rtn:
+                    rtn[name] = VSGlobalMetadataGroup(groupname=name,host=self.host, port=self.port, user=self.user,
+                                                      passwd=self.passwd)
+                rtn[name]._addNode(groupnode)
+            except AttributeError as e:
+                pass
+
+        for k,v in rtn.items():
+            yield v

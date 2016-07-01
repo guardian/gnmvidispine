@@ -368,8 +368,9 @@ class VSItem(VSApi):
             if not isinstance(value,list):
                 value = [value]
             for v in value:
-                valueEl = ET.SubElement(fieldEl,'value')
-                valueEl.text = str(v)
+                if v is not None:
+                    valueEl = ET.SubElement(fieldEl,'value')
+                    valueEl.text = str(v)
 
         return ET.tostring(root,encoding="UTF-8")
 
