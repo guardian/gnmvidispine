@@ -26,7 +26,7 @@ class ArgumentError(StandardError):
 
 class VSCollection(VSItem):
     """
-    Object to represent a Collection in Vidispine
+    Object to represent a Collection in Vidispine.  This also supports all of the relevant methods from the VSItem class
     """
     def __init__(self, *args, **kwargs):
         super(VSCollection,self).__init__(*args,**kwargs)
