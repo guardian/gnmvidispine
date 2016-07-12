@@ -111,7 +111,6 @@ class VSItem(VSApi):
             print rqbody
             raise
 
-
         try:
             gotId = response.attrib['id']
             self.name = gotId
