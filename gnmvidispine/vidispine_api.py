@@ -27,7 +27,7 @@ class HTTPError(StandardError):
         return "Request was: %s to %s\n\nServer returned %d (%s)\n%s" % (self.method,self.url,self.status, self.reason, self.body)
 
     def to_VSException(self, method=None, url=None, body=None):
-        print str(self)
+        #print str(self)
         try:
             if self.code == 404:
                 newexcept = VSNotFound()
