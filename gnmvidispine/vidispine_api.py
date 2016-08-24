@@ -315,6 +315,7 @@ class VSApi(object):
         base_headers={ 'Accept': accept, }
         if body is not None:
             base_headers['Content-Type'] = 'application/xml'
+
         matrixpart=""
 
         if matrix:
