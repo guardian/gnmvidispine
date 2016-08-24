@@ -226,16 +226,18 @@ class VSStorage(VSApi):
         #raise StandardError("Value not found for %s" % path)
         return None
 
-    def create_file_entity(self,filepath):
+    def create_file_entity(self,filepath,createOnly=True):
         """
         Tells Vidispine to create a new database entry pointing to an existing file.  This will raise a VSException if the file already exists.
         :param filepath: path to import
         :return: a VSFile object or
         """
-        data = self.request("/storage/{0}/file".format(self.name),method="POST",query={
-            'path': filepath,
-            'createOnly': 'true'
-        })
+        if createOnly:
+          create_flag='true'
+        else:
+          create_flag='false'
+
+        data = self.request("/storage/{0}/file".format(self.name),method="POST",query={'path': filepath, 'createOnly': create_flag})
         
         return VSFile(parent_storage=self,parsed_data=data)
         

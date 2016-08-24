@@ -37,6 +37,11 @@ class HTTPError(StandardError):
                 newexcept = VSBadRequest()
                 newexcept.fromHTTPError(self,request_method=method,request_url=url,request_body=body)
                 return newexcept
+            elif self.code == 409:
+                newexcept = VSConflict()
+                newexcept.fromHTTPError(self,request_method=method,request_url=url,request_body=body)
+                return newexcept
+
             else:
                 return self
         except Exception as e:
@@ -127,6 +132,13 @@ class VSNotFound(VSException):
 class InvalidData(StandardError):
     """
     Exception raised if data is passed to a VS Api function that is not valid, before sending it to Vidispine
+    """
+    pass
+
+
+class VSConflict(VSException):
+    """
+    Exception raised if the operation would conflict with some other object, e.g. when creating something that already exists
     """
     pass
 
@@ -300,9 +312,9 @@ class VSApi(object):
         :param body:
         :return:
         """
-        base_headers={ 'Accept': accept,
-                    'Content-Type': 'application/xml' }
-
+        base_headers={ 'Accept': accept, }
+        if body is not None:
+            base_headers['Content-Type'] = 'application/xml'
         matrixpart=""
 
         if matrix:
