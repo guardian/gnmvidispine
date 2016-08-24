@@ -307,6 +307,19 @@ class VSStorage(VSApi):
                                         'path': path})
         return VSFile(self, response)
 
+    @property
+    def fileCount(self):
+        response = self.request("/storage/{0}/file".format(self.name),method="GET",matrix={'number': 0})
+        
+        try:
+            return int(response.find('{0}hits'.format(self.xmlns)).text)
+        except AttributeError:
+            logging.error("storage::fileCount - unable to get hits from returned storage document")
+            raise
+        except ValueError:
+            logging.error("storage::fileCount - entry in <hits> was not an integer")
+            raise
+        
     def files(self, path='/', include_item=True):
         got_files = -100
         total_hits = -1
