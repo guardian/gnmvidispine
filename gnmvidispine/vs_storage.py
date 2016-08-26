@@ -231,7 +231,7 @@ class VSStorage(VSApi):
         Tells Vidispine to create a new database entry pointing to an existing file.  This will raise a VSException
         if the file is already known to Vidispine. A Vidispine file object will be created even if the file does not exist.
         :param filepath: path to import relative to the path of the Vidispine storage
-        :return: a VSFile object or
+        :return: a VSFile object
         """
         if createOnly:
           create_flag='true'
