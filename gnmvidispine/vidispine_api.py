@@ -175,6 +175,7 @@ class VSApi(object):
         self._delay=0
         self._delayedcounter = 0
         self._undelayedcounter = 0
+        self.name = None
         if port:
             self.port=port
 
@@ -205,7 +206,17 @@ class VSApi(object):
     def debug(self, dodebug):
         self.debug=dodebug
 
+    def __eq__(self, other):
+        if not isinstance(self,VSApi) or not isinstance(other,VSApi):
+            return NotImplemented
+        if self.name is None or other.name is None:
+            raise self.NotPopulatedError #both objects must be populated, or at least have IDs, for this to work
+        
+        return self.name==other.name
 
+    def __ne__(self, other):
+        return not self.__eq__(other)
+    
     def sendAuthorized(self,conn,method,url,body,headers):
         """
         Internal method to sign requests. Callers should use request() instead
