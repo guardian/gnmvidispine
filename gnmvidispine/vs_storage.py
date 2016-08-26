@@ -238,7 +238,10 @@ class VSStorage(VSApi):
         else:
           create_flag='false'
 
-        data = self.request("/storage/{0}/file".format(self.name),method="POST",query={'path': filepath, 'createOnly': create_flag})
+        data = self.request("/storage/{0}/file".format(self.name),
+                            method="POST",
+                            query={'path': self.stripOwnPath(filepath), 'createOnly': create_flag}
+                            )
         
         return VSFile(parent_storage=self,parsed_data=data)
         
