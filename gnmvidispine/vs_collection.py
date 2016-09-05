@@ -60,13 +60,35 @@ class VSCollection(VSItem):
             raise InvalidItemReferenceError("The item passed was not a VSItem or string, class was %s" % item.__class__)
 
         #this will raise an exception back to the caller if it fails
-        #print "DEBUG: URL is /collection/{collectionID}/{itemID}".format(collectionID=self.name,
-        #                                                          itemID=itemId)
         self.request("/collection/{collectionID}/{itemID}".format(collectionID=self.name,
                                                                   itemID=itemId),
                      query={'type': type},
                      method="PUT")
 
+    def removeFromCollection(self, item, type=None):
+        """
+        Removes the given item from the collection
+        :param item: VSItem, VSCollection or similar to remove from the collection
+        :param type: if item is a string rather than an item then you need to specify whether it refers to an item or collection
+        :return: None. Raises VSNotFound if item is not in collection, InvalidItemReferenceError or ValueError of the arguments are not correct.
+        """
+        if isinstance(item,VSItem):
+            type="item"
+            itemid = item.name
+        elif isinstance(item,VSCollection):
+            type="collection"
+            itemid = item.name
+        elif isinstance(item,basestring):
+            itemid = item
+        else:
+            raise InvalidItemReferenceError("The item passed was not a VSItem, VSCollection or string, it was a %s" % item.__class__)
+        if type is None:
+            raise ValueError("when removing an item from a collection by string ID you must specify type")
+        
+        self.request("/collection/{collectionID}/{itemID]".format(collectionID=self.name,itemID=itemid),
+                     query={'type': type},
+                     method="DELETE")
+        
     def setName(self, id):
         """
         Set the Vidispine ID internal to this object
@@ -127,12 +149,9 @@ class VSCollection(VSItem):
         :param passwd: Password for destination vidispine
         :return: Initialised, new VSCollection object containing same metadata as this one but no content.
         """
-        #logging.debug("copyToEmpty")
         md = self.metadata_document()
-        #logging.debug("called metadata_document()")
 
         newItem = VSCollection(host,port,user,passwd)
-        #logging.debug(md)
         newItem.createEmpty(metadata=md,title=self.get('title'))
         return newItem
 

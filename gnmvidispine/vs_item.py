@@ -770,23 +770,32 @@ class VSItem(VSApi):
     def parent_collections(self, shouldPopulate=False):
         """
         Generator that yields VSCollection objects for each collection that the item belongs to.
+        The item does NOT need to be populated with metadata for this to work.
         :param: shouldPopulate - (default False) - if set to True, this will pre-load the metadata of the collection for you
         :return: yields VSCollection objects
         """
         from vs_collection import VSCollection
-        try:
-            collection_id_list = self.contentDict['__collection']
-        except KeyError: #there is no __collection key, therefore no collection ownership
-            return
-
-        if not isinstance(collection_id_list,list): collection_id_list=[collection_id_list]
-
-        for coll_id in collection_id_list:
+        # try:
+        #     collection_id_list = self.contentDict['__collection']
+        # except KeyError: #there is no __collection key, therefore no collection ownership
+        #     return
+        #
+        # if not isinstance(collection_id_list,list): collection_id_list=[collection_id_list]
+        #
+        # for coll_id in collection_id_list:
+        #     cref = VSCollection(host=self.host,port=self.port,user=self.user,passwd=self.passwd)
+        #     if shouldPopulate:
+        #         cref.populate(coll_id)
+        #     else:
+        #         cref.name = coll_id
+        #     yield cref
+        response = self.request("/item/{0}/collections".format(self.name),method="GET")
+        for uri_entry in response.findall('{0}uri'.format(self.xmlns)):
             cref = VSCollection(host=self.host,port=self.port,user=self.user,passwd=self.passwd)
             if shouldPopulate:
-                cref.populate(coll_id)
+                cref.populate(uri_entry.text)
             else:
-                cref.name = coll_id
+                cref.name = uri_entry.text
             yield cref
 
 

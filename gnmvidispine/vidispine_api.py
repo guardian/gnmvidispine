@@ -285,6 +285,7 @@ class VSApi(object):
         :return: A parsed XML element tree if data is returned or the string "Success" if there is no data. Raises VSException
         subclasses if an error occurs.
         """
+        from xml.parsers.expat import ExpatError
         n=0
         raw_body=""
         while True:
@@ -309,7 +310,12 @@ class VSApi(object):
                     raise e
 
         if raw_body.__len__() > 0:
-            return ET.fromstring(raw_body)
+            try:
+                return ET.fromstring(unicode(raw_body,errors='ignore'))
+            except ExpatError:
+                logging.error("XML that caused the error: ")
+                logging.error(raw_body)
+                raise
         else:
             return "Success"
 
