@@ -228,6 +228,8 @@ class VSSearchResult(VSApi):
                         rtn.populate(childnode.attrib['id'])
                     else:
                         rtn.name = childnode.attrib['id']
+            elif childnode.tag.endswith('facet'):
+                pass
             else:
                 raise AssertionError("Unexpected node type in document: {0}".format(childnode.tag))
             # if rtn is None:
