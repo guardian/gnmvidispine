@@ -720,7 +720,7 @@ class VSItem(VSApi):
             'no-transcode': nt,
         }
         
-    def streaming_import_to_shape(self, filename, transferPriority=500, throttle=True, **kwargs):
+    def streaming_import_to_shape(self, filename, transferPriority=500, throttle=True, rename=None, **kwargs):
         """
         Attempts a streaming import from an open local stream to Vidispine
         :param input_io: Open file object
@@ -733,9 +733,10 @@ class VSItem(VSApi):
         args = self.import_base(**kwargs)
         
         url = "/item/{0}/shape/raw"
+        if rename is None: rename=os.path.basename(filename)
         
         self.chunked_upload_request(io.FileIO(filename),os.path.getsize(filename),chunk_size=1024*1024,
-                                    path=url.format(self.name).format(self.name),filename=filename,
+                                    path=url.format(self.name).format(self.name),filename=rename,
                                     transferPriority=transferPriority,throttle=throttle,query=args,method="POST")
         
     def import_to_shape(self, uri=None, file_ref=None, **kwargs):

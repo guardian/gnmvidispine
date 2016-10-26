@@ -239,7 +239,7 @@ class VSApi(object):
         response = None
         while True:
             self.logger.debug("sending {0} request to {1} with headers {2}".format(method,url,headers))
-            conn.request(method,url,body,headers)
+            conn.request(method,url.encode('utf-8'),body,headers)
 
             response = conn.getresponse()
             if response.status == 303:

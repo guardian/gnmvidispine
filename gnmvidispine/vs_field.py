@@ -49,8 +49,9 @@ class VSField(VSApi):
 
     @name.setter
     def name(self,newname):
-        node = self.dataContent.find('{0}name'.format(self.xmlns))
-        node.text = newname
+        if self.dataContent is not None:
+            node = self.dataContent.find('{0}name'.format(self.xmlns))
+            node.text = newname
 
     @property
     def type(self):
