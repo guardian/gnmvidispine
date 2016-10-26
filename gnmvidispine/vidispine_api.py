@@ -8,6 +8,7 @@ import json
 import re
 import logging
 from time import sleep
+import io
 
 logger = logging.getLogger(__name__)
 
@@ -176,6 +177,7 @@ class VSApi(object):
         self._delayedcounter = 0
         self._undelayedcounter = 0
         self.name = None
+        self.logger = logging.getLogger(__name__)
         if port:
             self.port=port
 
@@ -229,10 +231,6 @@ class VSApi(object):
         """
         import time
         auth = base64.encodestring('%s:%s' % (self.user, self.passwd)).replace('\n', '')
-        #conn.putheader("Authorization", "Basic %s" % auth)
-        #conn.endheaders()
-        #if headers.__class__ != "<type 'dict'>":
-        #	raise TypeError("VSApi::sendAuthorized: you need to specify a dictionary of headers. Use {} for blank. Type was %s" % headers.__class__)
 
         headers['Authorization']="Basic %s" % auth
         if self.run_as is not None:
@@ -240,6 +238,7 @@ class VSApi(object):
 
         response = None
         while True:
+            self.logger.debug("sending {0} request to {1} with headers {2}".format(method,url,headers))
             conn.request(method,url,body,headers)
 
             response = conn.getresponse()
@@ -271,6 +270,49 @@ class VSApi(object):
         return response
         #return conn
 
+    def chunked_upload_request(self,upload_io,total_size,chunk_size,
+                               path,transferPriority=500,throttle=True,method="GET",matrix=None,query=None,
+                               filename=None,
+                               accept="application/xml",content_type='application/octet-stream',extra_headers={}):
+        """
+        Performs a chunked upload
+        :param upload_io: io base class to get data from
+        :param total_size: total size of the object being uploaded, in bytes
+        :param chunk_size: size of each chunk, in bytes
+        :param args: other args to request()
+        :param kwargs:  other kwargs to request()
+        :return:
+        """
+        #if not isinstance(upload_io,io.BufferedIOBase): raise TypeError
+        from uuid import uuid4
+        
+        transfer_id = uuid4().get_hex()
+        
+        query_params={
+            'transferId': transfer_id,
+            'transferPriority': transferPriority,
+            'throttle'        : throttle,
+        }
+        if filename is not None:
+            query_params['filename'] = filename
+            
+        if query is not None:
+            query_params.update(query)
+            
+        total_uploaded = 0
+        self.logger.debug("Commencing upload from {0} in chunks of {1}".format(upload_io,chunk_size))
+        self.logger.debug("uploading to {0} with account {1}".format(self.host,self.user))
+        for startbyte in range(0,total_size,chunk_size):
+            headers = {
+                'size': chunk_size,
+                'index': startbyte
+            }
+            upload_io.seek(startbyte,io.SEEK_SET)
+            body_buffer = upload_io.read(chunk_size)
+            self.raw_request(path,method=method,matrix=matrix,query=query_params,body=body_buffer,
+                             content_type=content_type,extra_headers=headers)
+            self.logger.debug("Uploaded a total of {0} bytes".format(startbyte+chunk_size))
+            
     def request(self,path,method="GET",matrix=None,query=None,body=None):
         """
         Send a request to Vidispine, returning a parsed XML element tree if XML content is returned or raising VSExceptions
@@ -319,7 +361,8 @@ class VSApi(object):
         else:
             return "Success"
 
-    def raw_request(self,path,method="GET",matrix=None,query=None,body=None,accept="application/xml"):
+    def raw_request(self,path,method="GET",matrix=None,query=None,body=None,accept="application/xml",
+                    content_type='application/xml',extra_headers={}):
         """
         Internal method to build request parameters.  Callers should use request() instead.
         :param path:
@@ -331,8 +374,9 @@ class VSApi(object):
         """
         base_headers={ 'Accept': accept, }
         if body is not None:
-            base_headers['Content-Type'] = 'application/xml'
+            base_headers['Content-Type'] = content_type
 
+        base_headers.update(extra_headers)
         matrixpart=""
 
         if matrix:

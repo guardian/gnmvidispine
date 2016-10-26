@@ -13,7 +13,8 @@ import re
 
 from vidispine_api import HTTPError, VSApi, VSException, VSNotFound
 from vs_storage_rule import VSStorageRule
-
+import io
+import uuid
 
 class VSTranscodeError(VSException):
     def __init__(self, failedJob):
@@ -690,8 +691,54 @@ class VSItem(VSApi):
             except AssertionError:
                 logging.info(rtn)
 
-    def import_to_shape(self, uri=None, file_ref=None, shape_tag='original', priority='MEDIUM',
+    def import_base(self,shape_tag='original', priority='MEDIUM',
                         essence=False, thumbnails=True):
+        """
+        prepares arguments for an import call. This is an internal method, called by import_to_shape and streaming_import_to_shape
+        :param shape_tag:
+        :param priority:
+        :param essence:
+        :param thumbnails:
+        :return:
+        """
+        if isinstance(shape_tag,basestring):
+            shape_tag_string = shape_tag
+        else:
+            shape_tag_string = ",".join(shape_tag)
+
+        if thumbnails:
+            t = 'true'
+            nt = 'false'
+        else:
+            t = 'false'
+            nt = 'true'
+
+        return {
+            'tag'         : shape_tag_string,
+            'priority'    : priority,
+            'thumbnails'  : t,
+            'no-transcode': nt,
+        }
+        
+    def streaming_import_to_shape(self, filename, transferPriority=500, throttle=True, **kwargs):
+        """
+        Attempts a streaming import from an open local stream to Vidispine
+        :param input_io: Open file object
+        :param shape_tag: shape tag to assign to the file, Specify an array to assign multiple tags.
+        :param priority: job priority
+        :param essence: is this an essence version import? True or false
+        :param thumbnails: should thumbnails be re-extracted? True or false
+        :return: VSJob describing the import job
+        """
+        args = self.import_base(**kwargs)
+        
+        url = "/item/{0}/shape/raw"
+        
+        self.chunked_upload_request(io.FileIO(filename),os.path.getsize(filename),chunk_size=1024*1024,
+                                    path=url.format(self.name).format(self.name),filename=filename,
+                                    transferPriority=transferPriority,throttle=throttle,query=args,method="POST")
+        
+    def import_to_shape(self, uri=None, file_ref=None, **kwargs):
         """
         Imports a file given by URI (as seen by the Vidispine server; does not have to be a Vidispine storage) to the item
         as the specified shape
@@ -708,39 +755,18 @@ class VSItem(VSApi):
         if uri is not None and file_ref is not None:
             raise ValueError("You must specify either uri or file_ref, not both")
 
-        if isinstance(shape_tag,basestring):
-            shape_tag_string = shape_tag
-        else:
-            shape_tag_string = ",".join(shape_tag)
-
-        if thumbnails:
-            t = 'true'
-            nt = 'false'
-        else:
-            t = 'false'
-            nt = 'true'
+        args = self.import_base(**kwargs)
+        
         if uri is not None:
-            args={
-                'uri': uri,
-                'tag': shape_tag_string,
-                'priority': priority,
-                'thumbnails':t,
-                'no-transcode': nt,
-            }
+            args['uri'] = 'uri'
         if file_ref is not None:
             if not isinstance(file_ref,VSFile):
                 raise ValueError("file_ref must be a VSFile object")
-            args={
-                'fileId': file_ref.name,
-                'tag': shape_tag_string,
-                'priority': priority,
-                'thumbnails': t,
-                'no-transcode': nt,
-            }
+            args['fileId']=file_ref.name
 
         #if the request fails, this will raise an exception that should be caught by the caller
         url = "/item/{0}/shape"
-        if essence:
+        if kwargs['essence']:
             url += "/essence"
         response = self.request(url.format(self.name),
                                 method="POST",
