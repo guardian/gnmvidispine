@@ -444,7 +444,7 @@ class VSApi(object):
         """
         return ET.tostring(self.dataContent,encoding='utf8')
 
-    def set_metadata(self,path,md):
+    def set_metadata(self,path,md,mode="default"):
         """
         Set "simple metadata" on the object. This is suitable for regular objects but not for Items and other things that
         have advanced metadata.
@@ -454,7 +454,10 @@ class VSApi(object):
         """
         doc='<SimpleMetadataDocument xmlns="http://xml.vidispine.com/schema/vidispine">'
         for key,value in md.items():
-            doc=doc+"\n<field><key>%s</key><value>%s</value></field>" % (key,value)
+            if mode == "add":
+                doc=doc+'\n<field><key>%s</key><value mode="add">%s</value></field>' % (key,value)
+            else:
+                doc=doc+"\n<field><key>%s</key><value>%s</value></field>" % (key,value)
         doc=doc+'</SimpleMetadataDocument>'
 
         path=path+'/metadata'
