@@ -85,7 +85,7 @@ class VSCollection(VSItem):
         if type is None:
             raise ValueError("when removing an item from a collection by string ID you must specify type")
         
-        self.request("/collection/{collectionID}/{itemID]".format(collectionID=self.name,itemID=itemid),
+        self.request("/collection/{collectionID}/{itemID}".format(collectionID=self.name,itemID=itemid),
                      query={'type': type},
                      method="DELETE")
         
