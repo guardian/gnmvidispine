@@ -1,7 +1,7 @@
 from vidispine_api import VSApi,VSException,HTTPError, VSNotFound
 from vs_storage_rule import VSStorageRule,VSStorageRuleCollection
 import logging
-
+import xml.etree.cElementTree as ET
 
 class VSShape(VSApi):
     def __init__(self, *args,**kwargs):
@@ -131,5 +131,40 @@ class VSShape(VSApi):
         ret.populate_from_xml(self.storageRuleXML())
         return ret
 
+    def _analyzeDocFragment(self,parentElem,fragname,threshold=None,percentage=None,time=None):
+        fragroot = ET.SubElement(parentElem,fragname)
+        if threshold is not None:
+            thresElem = ET.SubElement(fragroot,"threshold")
+            thresElem.text = str(threshold)
+        if percentage is not None:
+            percElem = ET.SubElement(fragroot,"percentage")
+            percElem.text = str(percentage)
+        if time is not None:
+            timeElem = ET.SubElement(fragroot, "time")
+            timeElem.text = str(time)
+        return fragroot
+    
+    def analyze(self,blackThreshold=0.1,blackPercentage=95,
+                freezeThreshold=0.05,freezeTime=4.0,
+                barsThreshold=0.05,barsPercentage=10,priority="MEDIUM"):
+        """
+        Requests that Vidispine perform loudness, black frame etc. analysis of the shape
+        :param priority: optional - job priority for the analyse
+        :return: A VSJob representing the analyze job, or an exception
+        """
+        from vs_job import VSJob
+        path = "/item/{0}/shape/{1}/analyze".format(self.itemid,self.name)
+        
+        analyzeDocRoot = ET.Element("AnalyzeJobDocument",{'xmlns': 'http://xml.vidispine.com/schema/vidispine'})
+        self._analyzeDocFragment(analyzeDocRoot,"black",threshold=blackThreshold,percentage=blackPercentage)
+        self._analyzeDocFragment(analyzeDocRoot,"freeze",threshold=freezeThreshold,time=freezeTime)
+        self._analyzeDocFragment(analyzeDocRoot,"bars",threshold=barsThreshold,percentage=barsPercentage)
+        
+        print ET.tostring(analyzeDocRoot)
+        data = self.request(path,method="POST",query={'priority': priority},body=ET.tostring(analyzeDocRoot,encoding="UTF-8"))
+        j = VSJob(host=self.host,port=self.port,user=self.user,passwd=self.passwd,run_as=self.run_as)
+        j.fromResponse(data)
+        return j
+    
     def __unicode__(self):
         return u'Vidispine shape {0}: tag {1} type {2} version {3}'.format(self.name,self.tag(),self.mime_type,self.essence_version)
