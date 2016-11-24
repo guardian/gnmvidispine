@@ -440,7 +440,7 @@ class VSItem(VSApi):
 
         return ET.tostring(root,"UTF-8")
 
-    def set_metadata(self, md, group=None):
+    def set_metadata(self, md, group=None, entitytype="default"):
         """
         Sets metadata values on the item (see also get_metadata_builder).  Raises VSExceptions if the operation fails.
         :param md: dictionary of key/value pairs to set.  lists are allowed as values but dicts are not.
@@ -448,7 +448,10 @@ class VSItem(VSApi):
         :return: Server output (usually blank string)
         """
         import xml.etree.ElementTree as ET
-        path = "/%s/%s/metadata" % (self.type,self.name)
+        if entitytype == "item":
+            path = "/item/%s/metadata" % (self.name)
+        else:
+            path = "/%s/%s/metadata" % (self.type,self.name)
 
         metadoc = self._make_metadata_document(md,group)
 
