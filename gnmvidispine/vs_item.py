@@ -417,7 +417,7 @@ class VSItem(VSApi):
         """
         return self.raw_request("/item/%s/metadata" % self.name, matrix={'projection': projection_name})
 
-    def _make_metadata_document(self, md, group=None):
+    def _make_metadata_document(self, md, group=None, mode="default"):
         from datetime import datetime
         root = ET.Element('MetadataDocument', {'xmlns': "http://xml.vidispine.com/schema/vidispine"})
         ts = ET.SubElement(root, "timespan", {'end': "+INF", 'start': "-INF"})
@@ -432,7 +432,10 @@ class VSItem(VSApi):
             if not isinstance(value, list):
                 value = [value]
             for v in value:
-                valnode = ET.SubElement(fieldnode, "value")
+                if mode == "add":
+                    valnode = ET.SubElement(fieldnode, "value", mode="add")
+                else:
+                    valnode = ET.SubElement(fieldnode, "value")
                 if isinstance(v,datetime):
                     valnode.text = v.isoformat('T')
                 else:
@@ -440,7 +443,7 @@ class VSItem(VSApi):
 
         return ET.tostring(root,"UTF-8")
 
-    def set_metadata(self, md, group=None, entitytype="default"):
+    def set_metadata(self, md, group=None, entitytype="default", mode="default"):
         """
         Sets metadata values on the item (see also get_metadata_builder).  Raises VSExceptions if the operation fails.
         :param md: dictionary of key/value pairs to set.  lists are allowed as values but dicts are not.
@@ -453,7 +456,10 @@ class VSItem(VSApi):
         else:
             path = "/%s/%s/metadata" % (self.type,self.name)
 
-        metadoc = self._make_metadata_document(md,group)
+        if mode == "add":
+            metadoc = self._make_metadata_document(md,group,mode="add")
+        else:
+            metadoc = self._make_metadata_document(md,group)
 
         return self.request(path, method="PUT", body=metadoc)
 
