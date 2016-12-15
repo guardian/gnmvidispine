@@ -298,8 +298,7 @@ class VSSearch(VSApi):
 
     def _makeXML(self):
         vs = "{http://xml.vidispine.com/schema/vidispine}"
-        root = ET.Element('ItemSearchDocument')
-        root.attrib['xmlns'] = "http://xml.vidispine.com/schema/vidispine"
+        root = ET.Element('ItemSearchDocument', {'xmlns': "http://xml.vidispine.com/schema/vidispine", 'version': "2"})
 
         if self.group is not None:
             groupEl = ET.SubElement(root,'group'.format(vs))
