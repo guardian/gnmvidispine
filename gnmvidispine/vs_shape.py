@@ -166,5 +166,12 @@ class VSShape(VSApi):
         j.fromResponse(data)
         return j
     
+    def delete(self):
+        """
+        Attempt to delete this shape.
+        :return: None.  Raises a VSException subclass if the operation fails
+        """
+        self.request("/item/{0}/shape/{1}".format(self.itemid,self.name),method="DELETE")
+        
     def __unicode__(self):
         return u'Vidispine shape {0}: tag {1} type {2} version {3}'.format(self.name,self.tag(),self.mime_type,self.essence_version)

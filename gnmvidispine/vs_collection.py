@@ -43,7 +43,8 @@ class VSCollection(VSItem):
         :return:
         """
         super(VSCollection,self).populate(id,type="collection",specificFields=specificFields)
-        #self.request("/collection/{id}".format(id=self.name))
+        response = self.request("/collection/{0}".format(self.name))
+        
 
     def addToCollection(self, item, type="item"):
         """
