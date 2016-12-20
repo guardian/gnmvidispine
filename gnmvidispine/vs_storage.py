@@ -129,6 +129,9 @@ class VSFile(object):
         import_job.fromResponse(response)
         return import_job
 
+    def delete(self):
+        self.parent.request("/storage/{0}/file/{1}".format(self.parent.name, self.name), method="DELETE")
+        
     def refreshNewData(self,response):
         self.dataContent = response
         self.contentDict = {}
