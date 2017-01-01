@@ -51,6 +51,8 @@ class HTTPError(StandardError):
 
 
 class VSException(StandardError):
+    xmlns = '{http://xml.vidispine.com/schema/vidispine}'
+    
     def __init__(self,*args,**kwargs):
         super(VSException,self).__init__(*args,**kwargs)
         self.request_url = None
@@ -89,19 +91,14 @@ class VSException(StandardError):
         self.exceptionContext = "Unknown"
         self.exceptionRawXML = xmldata
 
-        try:
-            exceptionData = ET.fromstring(xmldata)
-            #root = exceptionData.getroot()
+        exceptionData = ET.fromstring(xmldata)
 
-            for child in exceptionData:
-                self.exceptionType = child.tag
-                self.exceptionType = re.sub(r'{[^}]+}','',self.exceptionType)
-                self.exceptionWhat = self.getNodeContent(child,'{0}explanation'.format('{http://xml.vidispine.com/schema/vidispine}'),default="no explanation provided")
-                self.exceptionID = self.getNodeContent(child,'{0}id'.format('{http://xml.vidispine.com/schema/vidispine}'),default="no id provided")
-                self.exceptionContext = self.getNodeContent(child,'{0}context'.format('{http://xml.vidispine.com/schema/vidispine}'),default="no context provided")
-        except Exception as e:
-            #raise InvalidData("Not given Vidispine exception XML")
-            raise e
+        for child in exceptionData:
+            self.exceptionType = child.tag
+            self.exceptionType = re.sub(r'{[^}]+}','',self.exceptionType)
+            self.exceptionWhat = self.getNodeContent(child,'{0}explanation'.format(self.xmlns),default="no explanation provided")
+            self.exceptionID = self.getNodeContent(child,'{0}id'.format(self.xmlns),default="no id provided")
+            self.exceptionContext = self.getNodeContent(child,'{0}context'.format(self.xmlns),default="no context provided")
 
     def __str__(self):
         """
@@ -160,13 +157,18 @@ class VSApi(object):
 
     xmlns = "{http://xml.vidispine.com/schema/vidispine}"
 
-    def __init__(self,host="localhost",port=8080,user="",passwd="",url=None,run_as=None):
+    def __init__(self,host="localhost",port=8080,user="",passwd="",url=None,run_as=None, conn=None, logger=None):
         """
         Initialise a new Vidispine connection.
         :param host: Hostname to connect to Vidispine on
         :param port: Port number to connect to Vidispine on
         :param user: Username to connect to Vidispine
         :param passwd: Password for the given user
+        :param url: URL to the Vidispine server as {proto}://{server}; for Portal compatibility
+        :param run_as: Tell Vidispine to assume the credentials of this user for the purposes of this request. This only works if you
+        authenticate with administrator credentials.  Allows a program to have admin credentials but run requests on behalf of users.
+        :param conn: Use this httplib connection object rather than initiating a new one. Only for testing.
+        :param logger: Use this logger object rather than initiating a new one. Only for testing.
         """
         from urlparse import urlparse
         self.user=user
@@ -177,7 +179,7 @@ class VSApi(object):
         self._delayedcounter = 0
         self._undelayedcounter = 0
         self.name = None
-        self.logger = logging.getLogger(__name__)
+        self.logger = logger if logger is not None else logging.getLogger(__name__)
         if port:
             self.port=port
 
@@ -188,6 +190,8 @@ class VSApi(object):
             else:
                 self.host = bits.netloc
 
+        self._conn = conn if conn is not None else httplib.HTTPConnection(self.host, self.port)
+        
     class NotPopulatedError(StandardError):
         """
         Exception explaining that the Vidispine object must have been populated by a call to populate() or similar
@@ -219,10 +223,9 @@ class VSApi(object):
     def __ne__(self, other):
         return not self.__eq__(other)
     
-    def sendAuthorized(self,conn,method,url,body,headers):
+    def sendAuthorized(self,method,url,body,headers):
         """
         Internal method to sign requests. Callers should use request() instead
-        :param conn:
         :param method:
         :param url:
         :param body:
@@ -237,17 +240,17 @@ class VSApi(object):
             headers['RunAs'] = self.run_as
 
         response = None
+        conn = self._conn
+        
         while True:
             self.logger.debug("sending {0} request to {1} with headers {2}".format(method,url,headers))
             conn.request(method,url.encode('utf-8'),body,headers)
 
             response = conn.getresponse()
             if response.status == 303:
-                #pprint(response.msg.dict)
                 url = response.msg.dict['location']
                 logger.debug("Response was a redirect to {0}".format(url))
                 conn = httplib.HTTPConnection(self.host,self.port)
-                #return self.sendAuthorized(newConn,method,newURL,body,headers)
             elif response.status == 504:    #gateway timeout
                 #if we're getting timeouts, apply an exponential backoff
                 if self._delay==0:
@@ -268,7 +271,6 @@ class VSApi(object):
                 break
 
         return response
-        #return conn
 
     def chunked_upload_request(self,upload_io,total_size,chunk_size,
                                path,transferPriority=500,throttle=True,method="GET",matrix=None,query=None,
@@ -380,11 +382,7 @@ class VSApi(object):
         matrixpart=""
 
         if matrix:
-            #if matrix.__class__ != "<type 'dict'>":
-            #	raise TypeError("Matrix argument must be a dictionary, if it is specified")
             for key,value in matrix.items():
-                #if isinstance(value,basestring):
-                #value=value.replace(' ', '%20') #if you leave this in, then the % sign gets encoded by the next step!
                 if isinstance(value,basestring):
                     value=urllib.pathname2url(value)
                     value=value.replace("/", "%2F")
@@ -395,18 +393,13 @@ class VSApi(object):
 
         querypart=""
         if query:
-            #if query.__class__ != "<type 'dict'>":
-            #	raise TypeError("Query argument must be a dictionary, if it is specified")
             for key,value in query.items():
-                #value=value.replace(' ', '%20') #if you leave this in, then the % sign gets encoded by the next step!
                 if isinstance(value,basestring):
                     value=urllib.pathname2url(value)
                     value=value.replace("/", "%2F")
                 if isinstance(key,basestring):
                     key=urllib.pathname2url(key)
                 querypart+="%s=%s&" % (urllib.pathname2url(key), value)
-
-            #querypart.replace("?", "&", 1)
 
         url="/API"+path+matrixpart
         if(len(querypart)> 0):
@@ -417,22 +410,10 @@ class VSApi(object):
 
         if method == "POST" and body is None:
             body = ""
-        #print body
 
-        conn=httplib.HTTPConnection(self.host,self.port)
-
-        response=self.sendAuthorized(conn,method,url,body,base_headers)
-        #response=conn.getresponse()
-        #if response.status==404:
-        #    replyData = response.read()
-        #    if replyData:
-        #        raise VSNotFound(replyData)
-        #    else:
-        #        raise VSNotFound("%s was not present",path)
+        response=self.sendAuthorized(method,url,body,base_headers)
 
         if response.status<200 or response.status>299:
-            #raise HTTPError("Request was: %s to %s\n\nServer returned %d (%s)\n%s" % (method,url,response.status, response.reason, response.read()))
-            #self,code,method,url,status,reason,body
             raise HTTPError(response.status,method,url,response.status,response.reason,response.read()).to_VSException(method=method,url=url,body=body)
 
         return response.read()
@@ -475,7 +456,6 @@ class VSApi(object):
 
         rtn={}
 
-#ET.dump(dataContent)
         for nodeset in dataContent.findall('{0}field'.format("{http://xml.vidispine.com/schema/vidispine}")):
             #print ET.dump(nodeset)
             try:
