@@ -1,0 +1,22 @@
+machine:
+  timezone: Europe/London
+  python:
+    version: 2.6.9
+  pre:
+    - sudo apt-get -y install rpm  libsasl2-dev libldap2-dev libssl-dev
+    - sudo mkdir -p /opt/cantemo/python/lib/python2.6/site-packages
+    - sudo chown ubuntu /opt/cantemo/python/lib/python2.6/site-packages
+
+dependencies:
+  cache_directories:
+    - "/opt/circleci/.pyenv/versions/2.6.9"
+    - "/home/ubuntu/virtualenvs/venv-2.6.9"
+  post:
+    - pip install -r requirements.txt
+
+deployment:
+  maindeploy:
+    branch: /.*/
+    commands:
+      - chmod a+x setup.py
+      - ./setup.py bdist_egg

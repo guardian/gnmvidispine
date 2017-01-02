@@ -339,10 +339,10 @@ class VSApi(object):
                 break
             except HTTPError as e:
                 if e.code==503: #server unavailable
-                    logging.warning("Server not available error when contacting Vidispine. Waiting {0}s before retry.".format(self.retry_delay))
+                    self.logger.warning("Server not available error when contacting Vidispine. Waiting {0}s before retry.".format(self.retry_delay))
                     sleep(self.retry_delay)
                     if n>self.retry_attempts:
-                        logging.error("Did not work after %d retries, giving up" % self.retry_attempts)
+                        self.logger.error("Did not work after %d retries, giving up" % self.retry_attempts)
                         raise e
                 else:
                     raise e
@@ -350,7 +350,7 @@ class VSApi(object):
                 logging.warning("Bad status line: {0}".format(unicode(e)))
                 sleep(self.retry_delay)
                 if n>self.retry_attempts:
-                    logging.error("Did not work after %d tries, giving up" % self.retry_attempts)
+                    self.logger.error("Did not work after %d tries, giving up" % self.retry_attempts)
                     raise e
 
         if raw_body.__len__() > 0:
