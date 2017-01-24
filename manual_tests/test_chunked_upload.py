@@ -2,7 +2,7 @@ import unittest
 from gnmvidispine.vidispine_api import VSApi
 from gnmvidispine.vs_item import VSItem
 import io
-import os.path
+import os
 import logging
 LOGFORMAT = '%(asctime)-15s - %(levelname)s - Thread %(thread)s - %(funcName)s: %(message)s'
 logging.basicConfig(level=logging.DEBUG,format=LOGFORMAT)
@@ -17,16 +17,12 @@ class TestChunkedUpload(unittest.TestCase):
         self.passwd=""
         
         self.vsclient = VSApi(host=self.host,port=self.port,user=self.user,passwd=self.passwd)
-        
-    # def test_chunked_upload(self):
-    #     filename = "testfile.mp4"
-    #     testfile = io.FileIO(filename)
-    #     #attempt upload in 1meg chunks
-    #     self.vsclient.chunked_upload_request(testfile,os.path.getsize(filename),1024*1024,
-    #                                          "/import/raw",method="POST",filename=filename)
-    #
     
     def test_placeholder_upload(self):
+        if "CI" in os.environ:
+            print "CI environment detected, not running upload tests"
+            return True
+        
         filename = "testfile.mp4"
         
         item=VSItem(host=self.host,port=self.port,user=self.user,passwd=self.passwd)
