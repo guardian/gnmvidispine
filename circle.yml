@@ -13,6 +13,7 @@ dependencies:
     - "/home/ubuntu/virtualenvs/venv-2.6.9"
   post:
     - pip install -r requirements.txt
+    - pip install boto  #only required for build/upload to s3
 
 deployment:
   maindeploy:
