@@ -5,6 +5,7 @@ import httplib
 import base64
 import logging
 
+
 class TestVSApi(unittest2.TestCase):
     fake_host='localhost'
     fake_port=8080
@@ -206,4 +207,3 @@ class TestVSApi(unittest2.TestCase):
         :return:
         """
         pass
-    
