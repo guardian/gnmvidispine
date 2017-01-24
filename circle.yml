@@ -20,3 +20,4 @@ deployment:
     commands:
       - chmod a+x setup.py
       - ./setup.py sdist
+      - ./setup.py awsupload --bucket ${UPLOAD_BUCKET} --path gnmvidispine --region eu-west-1  --acl public-read
