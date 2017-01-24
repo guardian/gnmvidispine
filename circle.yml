@@ -19,4 +19,4 @@ deployment:
     branch: /.*/
     commands:
       - chmod a+x setup.py
-      - ./setup.py bdist_egg
+      - ./setup.py sdist
