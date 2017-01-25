@@ -285,7 +285,6 @@ class VSApi(object):
         :param kwargs:  other kwargs to request()
         :return:
         """
-        #if not isinstance(upload_io,io.BufferedIOBase): raise TypeError
         from uuid import uuid4
         
         transfer_id = uuid4().get_hex()

@@ -1,10 +1,11 @@
 from __future__ import absolute_import
 import unittest2
-from mock import MagicMock
+from mock import MagicMock, patch
 import httplib
 import base64
 import logging
-
+import tempfile
+from os import urandom
 
 class TestVSApi(unittest2.TestCase):
     fake_host='localhost'
@@ -132,7 +133,7 @@ class TestVSApi(unittest2.TestCase):
         
     def test_400(self):
         """
-        tests the VSBadRequest exception
+        test the VSBadRequest exception, including error parsing
         :return:
         """
         from gnmvidispine.vidispine_api import VSApi, VSBadRequest
@@ -207,3 +208,63 @@ class TestVSApi(unittest2.TestCase):
         :return:
         """
         pass
+    
+    def test_chunked_upload(self):
+        """
+        test the chunked_upload_request functionality
+        :return:
+        """
+        from gnmvidispine.vidispine_api import VSApi,HTTPError
+        
+        conn = httplib.HTTPConnection(host=self.fake_host, port=self.fake_port)
+        conn.request = MagicMock()
+        
+        logging.basicConfig(level=logging.INFO)
+        logger = logging.getLogger("gnmvidispine.vidispine_api")
+        logger.error = MagicMock()
+        logger.warning = MagicMock()
+        logger.debug = MagicMock()
+        
+        api = VSApi(user=self.fake_user, passwd=self.fake_passwd, conn=conn, logger=logger)
+        api.raw_request = MagicMock()
+
+        computed_auth = base64.b64encode("{0}:{1}".format(self.fake_user, self.fake_passwd))
+        
+        #create a test file
+        testfilesize = 100000
+        testchunksize = 1000
+        
+        class FakeUuid4(object):
+            """
+            mock object to return a known id. used via mock.patch below.
+            """
+            def get_hex(self):
+                return 'fa6032d61c7b4db19425c6404ea7b822'
+            
+        with tempfile.TemporaryFile() as f:
+            filecontent = bytes(urandom(testfilesize))
+            f.write(filecontent)
+            with patch('uuid.uuid4', side_effect=lambda: FakeUuid4()):
+                api.chunked_upload_request(f, testfilesize, testchunksize, '/API/fakeupload', transferPriority=100, throttle=False,
+                                           method="POST", filename="fakefile.dat", extra_headers={'extra_header': 'true'})
+                
+                should_have_headers = {
+                    'Authorization': "Basic " + computed_auth,
+                    'Content-Type': 'application/octet-stream',
+                    'Accept': 'application/xml'
+                }
+                
+                for byteindex in range(0,testfilesize,testchunksize):
+                    should_have_qparams = {
+                        'transferId': 'fa6032d61c7b4db19425c6404ea7b822',
+                        'transferPriority': 100,
+                        'throttle': False,
+                        'filename': 'fakefile.dat'
+                    }
+                    should_have_extra_headers = {
+                        'index': byteindex,
+                        'size': testchunksize,
+                    }
+                    api.raw_request.assert_any_call('/API/fakeupload', matrix=None, body=filecontent[byteindex:byteindex+testchunksize],
+                                                       content_type='application/octet-stream', method="POST",
+                                                       query=should_have_qparams, extra_headers=should_have_extra_headers)
