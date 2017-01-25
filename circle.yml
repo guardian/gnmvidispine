@@ -11,12 +11,13 @@ dependencies:
   cache_directories:
     - "/opt/circleci/.pyenv/versions/2.6.9"
     - "/home/ubuntu/virtualenvs/venv-2.6.9"
-  post:
-    - pip install -r requirements.txt
+  pre:
+    - pip install boto  #only required for build/upload to s3
 
 deployment:
   maindeploy:
     branch: /.*/
     commands:
       - chmod a+x setup.py
-      - ./setup.py bdist_egg
+      - ./setup.py sdist
+      - ./setup.py awsupload --bucket ${UPLOAD_BUCKET} --path gnmvidispine --region eu-west-1  --acl public-read
