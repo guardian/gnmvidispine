@@ -9,6 +9,7 @@ import re
 import logging
 from time import sleep
 import io
+import os
 
 logger = logging.getLogger(__name__)
 
@@ -300,6 +301,12 @@ class VSApi(object):
         if query is not None:
             query_params.update(query)
             
+        #fix for older versions of python not having io.SEET_SET but putting it in os
+        if hasattr(io,'SEEK_SET'):
+            my_seek_set = io.SEEK_SET
+        elif hasattr(os, 'SEEK_SET'):
+            my_seek_set = os.SEEK_SET
+            
         total_uploaded = 0
         self.logger.debug("Commencing upload from {0} in chunks of {1}".format(upload_io,chunk_size))
         self.logger.debug("uploading to {0} with account {1}".format(self.host,self.user))
@@ -308,7 +315,7 @@ class VSApi(object):
                 'size': chunk_size,
                 'index': startbyte
             }
-            upload_io.seek(startbyte,io.SEEK_SET)
+            upload_io.seek(startbyte,my_seek_set)
             body_buffer = upload_io.read(chunk_size)
             self.raw_request(path,method=method,matrix=matrix,query=query_params,body=body_buffer,
                              content_type=content_type,extra_headers=headers)
@@ -462,16 +469,15 @@ class VSApi(object):
                 val=nodeset.find('{0}value'.format("{http://xml.vidispine.com/schema/vidispine}")).text
                 rtn[key]=val
             except AttributeError as e:
-                print "WARNING: %s" % e.message
+                self.logger.warning(str(e))
 
         for nodeset in dataContent.findall('{0}timespan/{0}field'.format("{http://xml.vidispine.com/schema/vidispine}")):
-            #print ET.dump(nodeset)
             try:
                 key=nodeset.find('{0}name'.format("{http://xml.vidispine.com/schema/vidispine}")).text
                 val=nodeset.find('{0}value'.format("{http://xml.vidispine.com/schema/vidispine}")).text
                 rtn[key]=val
             except AttributeError as e:
-                print "WARNING: %s" % e.message
+                self.logger.warning(str(e))
 
         return rtn
 
@@ -491,8 +497,6 @@ class VSApi(object):
             return None
 
         for child in node:
-            #logging.debug("findPortalData: tag %s\n" % child.tag)
-
             if child.tag.endswith("key") and child.text == "extradata":
                 foundKey = True
 
