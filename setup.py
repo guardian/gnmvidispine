@@ -17,7 +17,7 @@ class AwsUploadCommand(Command):
     description = "Upload to AWS bucket. Credentials are taken from the environment defaults of the boto library. Requires boto to work"
     user_options = [
         ("region=","r", "Set the AWS region to communicate with"),
-        ("bucket=","b", "Set the bucket to upload to"),
+        ("bucket=","b", "Set the bucket to upload to. Note that you need both HeadObject AND PutObject permissions, not just Put"),
         ("path=","p", "Upload to this path within the bucket.  Leading / are ignored."),
         ("acl=","a", "Canned ACL to apply (see http://docs.aws.amazon.com/AmazonS3/latest/dev/acl-overview.html#canned-acl). Default is private.")
     ]
