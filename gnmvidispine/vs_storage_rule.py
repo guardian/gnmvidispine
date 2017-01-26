@@ -27,6 +27,10 @@ class VSStorageRuleNew(VSApi):
         except KeyError:
             return None
 
+    @name.setter
+    def name(self, newvalue):
+        pass    #this is a null opt, to allow for compatibility for initialisation in vidispine_api
+    
     @property
     def storage_count(self):
         self.assert_populated()
