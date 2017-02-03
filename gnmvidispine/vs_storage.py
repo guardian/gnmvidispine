@@ -177,10 +177,10 @@ class VSFile(object):
         logging.debug("trying to download {0} from storage {1}".format(self.name,self.storageName))
 
         conn=httplib.HTTPConnection(self.parent.host, self.parent.port)
-        response = self.parent.sendAuthorized(conn,'GET','/API/storage/file/{0}/data'.format(self.name),'',{'Accept': '*'})
+        response = self.parent.sendAuthorized('GET','/API/storage/file/{0}/data'.format(self.name),'',{'Accept': '*'})
         if response.status < 200 or response.status > 299:
             pprint(response.msg.__dict__)
-            raise HTTPError(response.status,'GET','/API/storage/file/{0}/data'.format(self.name),response.status,response.reason,response.read()).to_VSException(method='GET',url='/storage/file/{0}/data'.format(fileId),body="")
+            raise HTTPError(response.status,'GET','/API/storage/file/{0}/data'.format(self.name),response.status,response.reason,response.read()).to_VSException(method='GET',url='/storage/file/{0}/data'.format(self.name),body="")
 
         return response
 

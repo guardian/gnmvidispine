@@ -7,6 +7,7 @@ import logging
 import tempfile
 from os import urandom
 
+
 class TestVSApi(unittest2.TestCase):
     fake_host='localhost'
     fake_port=8080

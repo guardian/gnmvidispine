@@ -75,8 +75,7 @@ class VSShape(VSApi):
 
                     logging.debug("trying to download {0} from storage {1}".format(fileId,storageId))
 
-                    conn=httplib.HTTPConnection(self.host, self.port)
-                    response = self.sendAuthorized(conn,'GET','/API/storage/file/{0}/data'.format(fileId),'',{'Accept': '*'})
+                    response = self.sendAuthorized('GET','/API/storage/file/{0}/data'.format(fileId),'',{'Accept': '*'})
                     if response.status < 200 or response.status > 299:
                         pprint(response.msg.__dict__)
                         raise HTTPError(response.status,'GET','/API/storage/file/{0}/data'.format(fileId),response.status,response.reason,response.read()).to_VSException(method='GET',url='/storage/file/{0}/data'.format(fileId),body="")
