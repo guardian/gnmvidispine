@@ -113,7 +113,6 @@ class VSShape(VSApi):
     def storageRuleXML(self):
         path = "/item/{0}/shape/{1}/storage-rule".format(self.itemid,self.name)
         data = self.request(path,method="GET",query={'all': 'true'})
-
         return data
 
     def storageRule(self):
@@ -130,6 +129,15 @@ class VSShape(VSApi):
         ret.populate_from_xml(self.storageRuleXML())
         return ret
 
+    def add_storage_rule(self, newrule):
+        from vs_storage_rule import VSStorageRuleNew
+        from xml.etree.cElementTree import tostring
+        if not isinstance(newrule,VSStorageRuleNew): raise TypeError("add() accepts only a VSStorageRuleNew object")
+        newrule.assert_populated()
+        
+        self.request('/item/{itemid}/shape/{shapeid}/storage-rule'.format(itemid=self.itemid,shapeid=self.name),
+                     method='PUT',body=tostring(newrule.xmlDOM))
+        
     def _analyzeDocFragment(self,parentElem,fragname,threshold=None,percentage=None,time=None):
         fragroot = ET.SubElement(parentElem,fragname)
         if threshold is not None:

@@ -448,6 +448,8 @@ class TestVSShape(unittest2.TestCase):
 </ShapeDocument>
 """
     
+    test_storage_rule = """<StorageRuleDocument id="lowres" xmlns="http://xml.vidispine.com/schema/vidispine"> <storageCount>3</storageCount> <priority level="1">capacity</priority> <priority level="2">bandwidth</priority> <storage>VX-123</storage> </StorageRuleDocument>"""
+
     class MockedResponse(object):
         def __init__(self, status_code, content, reason=""):
             self.status = status_code
@@ -468,3 +470,22 @@ class TestVSShape(unittest2.TestCase):
         
         s.download()
         s.sendAuthorized.assert_called_with('GET','/API/storage/file/KP-31774258/data','',{'Accept': '*'})
+        
+    def test_add_storage_rule(self):
+        from gnmvidispine.vs_shape import VSShape
+        from gnmvidispine.vs_storage_rule import VSStorageRuleNew
+        from xml.etree.cElementTree import fromstring, tostring
+        
+        parsed_xml_doc = fromstring(self.test_storage_rule)
+        newrule = VSStorageRuleNew()
+        newrule.populate_from_xml(parsed_xml_doc)
+
+        s = VSShape(host=self.fake_host, port=self.fake_port, user=self.fake_user, passwd=self.fake_passwd)
+        s.name = "VX-123"
+        s.itemid = "VX-456"
+        s.sendAuthorized = MagicMock(return_value=self.MockedResponse(200,self.test_storage_rule))
+        
+        s.add_storage_rule(newrule)
+        s.sendAuthorized.assert_called_with('PUT','/API/item/VX-456/shape/VX-123/storage-rule',
+                                            tostring(parsed_xml_doc),
+                                            {'Content-Type': 'application/xml', 'Accept': 'application/xml'})
