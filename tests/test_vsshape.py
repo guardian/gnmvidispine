@@ -482,10 +482,11 @@ class TestVSShape(unittest2.TestCase):
 
         s = VSShape(host=self.fake_host, port=self.fake_port, user=self.fake_user, passwd=self.fake_passwd)
         s.name = "VX-123"
+        s.contentDict = {'tag': 'original'}
         s.itemid = "VX-456"
         s.sendAuthorized = MagicMock(return_value=self.MockedResponse(200,self.test_storage_rule))
         
         s.add_storage_rule(newrule)
-        s.sendAuthorized.assert_called_with('PUT','/API/item/VX-456/shape/VX-123/storage-rule',
+        s.sendAuthorized.assert_called_with('PUT','/API/item/VX-456/storage-rule/original',
                                             tostring(parsed_xml_doc),
                                             {'Content-Type': 'application/xml', 'Accept': 'application/xml'})

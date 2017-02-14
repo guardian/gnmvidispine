@@ -135,7 +135,7 @@ class VSShape(VSApi):
         if not isinstance(newrule,VSStorageRuleNew): raise TypeError("add() accepts only a VSStorageRuleNew object")
         newrule.assert_populated()
         
-        self.request('/item/{itemid}/shape/{shapeid}/storage-rule'.format(itemid=self.itemid,shapeid=self.name),
+        self.request('/item/{itemid}/storage-rule/{tag}'.format(itemid=self.itemid,tag=self.tag()),
                      method='PUT',body=tostring(newrule.xmlDOM))
         
     def _analyzeDocFragment(self,parentElem,fragname,threshold=None,percentage=None,time=None):
