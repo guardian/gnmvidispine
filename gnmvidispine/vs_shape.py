@@ -137,6 +137,11 @@ class VSShape(VSApi):
         
         self.request('/item/{itemid}/storage-rule/{tag}'.format(itemid=self.itemid,tag=self.tag()),
                      method='PUT',body=tostring(newrule.xmlDOM))
+
+    def delete_storage_rule(self):
+
+        self.request('/item/{itemid}/storage-rule/{tag}'.format(itemid=self.itemid,tag=self.tag()),
+                     method='DELETE')
         
     def _analyzeDocFragment(self,parentElem,fragname,threshold=None,percentage=None,time=None):
         fragroot = ET.SubElement(parentElem,fragname)
