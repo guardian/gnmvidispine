@@ -569,7 +569,6 @@ class VSItem(VSApi):
             job = VSJob(host=self.host, port=self.port, user=self.user, passwd=self.passwd)
             job.populate(jobID)
 
-            print "Job %s has status %s" % (job.name, job.status())
             if job.status() == "FINISHED":
                 break
 

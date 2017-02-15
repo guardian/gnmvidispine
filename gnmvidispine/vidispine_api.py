@@ -210,8 +210,17 @@ class VSApi(object):
         except:
             return None
 
-    def debug(self, dodebug):
-        self.debug=dodebug
+    def reset_http(self):
+        """
+        creates a new http connection
+        :return:
+        """
+        try:
+            if self._conn is not None:
+                self._conn.close()
+        except:
+            pass
+        self._conn = httplib.HTTPConnection(self.host,self.port)
 
     def __eq__(self, other):
         if not isinstance(self,VSApi) or not isinstance(other,VSApi):
@@ -234,6 +243,7 @@ class VSApi(object):
         :return:
         """
         import time
+        attempt = 0
         auth = base64.encodestring('%s:%s' % (self.user, self.passwd)).replace('\n', '')
 
         headers['Authorization']="Basic %s" % auth
@@ -245,8 +255,17 @@ class VSApi(object):
         
         while True:
             self.logger.debug("sending {0} request to {1} with headers {2}".format(method,url,headers))
-            conn.request(method,url.encode('utf-8'),body,headers)
-
+            try:
+                conn.request(method,url.encode('utf-8'),body,headers)
+            except httplib.CannotSendRequest:
+                attempt+=1
+                logger.warning("HTTP connection re-use issue detected, resetting connection")
+                self.reset_http()
+                time.sleep(1)
+                if attempt>10:
+                    raise
+                continue
+                
             response = conn.getresponse()
             if response.status == 303:
                 url = response.msg.dict['location']
