@@ -6,7 +6,7 @@ import base64
 import logging
 import tempfile
 from os import urandom
-
+from httplib import CannotSendRequest
 
 class TestVSApi(unittest2.TestCase):
     fake_host='localhost'
@@ -269,3 +269,28 @@ class TestVSApi(unittest2.TestCase):
                     api.raw_request.assert_any_call('/API/fakeupload', matrix=None, body=filecontent[byteindex:byteindex+testchunksize],
                                                        content_type='application/octet-stream', method="POST",
                                                        query=should_have_qparams, extra_headers=should_have_extra_headers)
+
+    def test_reuse(self):
+        from gnmvidispine.vidispine_api import VSApi
+        conn = httplib.HTTPConnection(host='localhost',port=8080)
+        conn.request = MagicMock(side_effect=CannotSendRequest())
+        
+        a = VSApi(host='localhost',user='testuser',passwd='testpasswd',conn=conn)
+        a.reset_http = MagicMock()
+        
+        with patch('time.sleep') as sleepmock:  #mocking sleep() makes the test run faster
+            with self.assertRaises(CannotSendRequest):
+                a.sendAuthorized('GET','/fake_path',"",{})
+        self.assertEqual(a.reset_http.call_count,11)
+        self.assertEqual(sleepmock.call_count,11)
+    
+    def test_reset_http(self):
+        from gnmvidispine.vidispine_api import VSApi
+        conn = httplib.HTTPConnection(host='localhost', port=8080)
+        conn.close = MagicMock()
+
+        a = VSApi(host='localhost', user='testuser', passwd='testpasswd', conn=conn)
+        a.reset_http()
+        conn.close.assert_called_once()
+        self.assertNotEqual(conn,a._conn) #we should get a different object
+        

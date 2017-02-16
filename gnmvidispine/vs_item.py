@@ -569,7 +569,6 @@ class VSItem(VSApi):
             job = VSJob(host=self.host, port=self.port, user=self.user, passwd=self.passwd)
             job.populate(jobID)
 
-            print "Job %s has status %s" % (job.name, job.status())
             if job.status() == "FINISHED":
                 break
 
@@ -768,7 +767,7 @@ class VSItem(VSApi):
         args = self.import_base(**kwargs)
         
         if uri is not None:
-            args['uri'] = 'uri'
+            args['uri'] = uri
         if file_ref is not None:
             if not isinstance(file_ref,VSFile):
                 raise ValueError("file_ref must be a VSFile object")
@@ -776,7 +775,7 @@ class VSItem(VSApi):
 
         #if the request fails, this will raise an exception that should be caught by the caller
         url = "/item/{0}/shape"
-        if kwargs['essence']:
+        if 'essence' in kwargs:
             url += "/essence"
         response = self.request(url.format(self.name),
                                 method="POST",
