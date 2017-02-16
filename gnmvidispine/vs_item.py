@@ -896,11 +896,14 @@ class VSMetadataBuilder(VSApi):
         :param subgroupmode:
         :return:
         """
+        params = {}
+        if subgroupmode is not None:
+            params={'mode': subgroupmode}
         for key,value in meta.items():
             #print key
             #pprint(value)
             if isinstance(value,dict):
-                subgroupnode = ET.SubElement(parentNode,"group",{'mode': subgroupmode})
+                subgroupnode = ET.SubElement(parentNode,"group",params)
                 subgroupname = ET.SubElement(subgroupnode,"name")
                 subgroupname.text = key
                 self._groupContent(subgroupnode,value)
@@ -937,7 +940,7 @@ class VSMetadataBuilder(VSApi):
         params = {}
         if mode is not None:
             params={'mode': mode}
-
+            
         groupnode = ET.SubElement(self.tsNode,"group",params)
         groupnameNode = ET.SubElement(groupnode,"name")
         groupnameNode.text = groupname
