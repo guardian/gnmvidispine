@@ -934,7 +934,11 @@ class VSMetadataBuilder(VSApi):
         if subgroubmode is None:
             subgroupmode = mode
 
-        groupnode = ET.SubElement(self.tsNode,"group",{'mode': mode})
+        params = {}
+        if mode is not None:
+            params={'mode': mode}
+
+        groupnode = ET.SubElement(self.tsNode,"group",params)
         groupnameNode = ET.SubElement(groupnode,"name")
         groupnameNode.text = groupname
 
