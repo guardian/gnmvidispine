@@ -501,4 +501,4 @@ class TestVSShape(unittest2.TestCase):
         s.sendAuthorized = MagicMock(return_value=self.MockedResponse(200, self.test_storage_rule))
 
         s.delete_storage_rule()
-        s.sendAuthorized.assert_called_with('DELETE', '/API/item/VX-456/storage-rule/original')
+        s.sendAuthorized.assert_called_with('DELETE', '/API/item/VX-456/storage-rule/original', None, {'Accept': 'application/xml'})
