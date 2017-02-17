@@ -140,7 +140,6 @@ class VSStorageRuleCollection(VSApi):
         if not isinstance(newrule,VSStorageRuleNew): raise TypeError("add() accepts only a VSStorageRuleNew object")
         newrule.assert_populated()
 
-        #pseudo-code
         from xml.etree.cElementTree import tostring
         self.request('/item/{itemid}/shape/{shapeid}/storage-rule'.format(itemid=self.parentshape.parent.name,shapeid=self.parentshape.name),
                      method='PUT',body=tostring(newrule.xmlDOM))
