@@ -721,11 +721,17 @@ class VSItem(VSApi):
             t = 'false'
             nt = 'true'
 
+        if essence:
+            e = 'true'
+        else:
+            e = 'false'
+
         return {
             'tag'         : shape_tag_string,
             'priority'    : priority,
             'thumbnails'  : t,
             'no-transcode': nt,
+            'essence'     : e
         }
         
     def streaming_import_to_shape(self, filename, transferPriority=500, throttle=True, rename=None, **kwargs):
