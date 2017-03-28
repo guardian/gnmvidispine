@@ -88,7 +88,6 @@ class VSItem(VSApi):
         :param group: (optional) primary metadata group
         :return:
         """
-
         rqbody = None
         if isinstance(metadata,dict):
             rqbody = self._make_metadata_document(metadata, group=group)
@@ -418,30 +417,9 @@ class VSItem(VSApi):
         return self.raw_request("/item/%s/metadata" % self.name, matrix={'projection': projection_name})
 
     def _make_metadata_document(self, md, group=None, mode="default"):
-        from datetime import datetime
-        root = ET.Element('MetadataDocument', {'xmlns': "http://xml.vidispine.com/schema/vidispine"})
-        ts = ET.SubElement(root, "timespan", {'end': "+INF", 'start': "-INF"})
-        if group is not None:
-            groupnode = ET.SubElement(root, 'group')
-            groupnode.text = group
-
-        for key, value in md.items():
-            fieldnode = ET.SubElement(ts, "field")
-            namenode = ET.SubElement(fieldnode, "name")
-            namenode.text = key
-            if not isinstance(value, list):
-                value = [value]
-            for v in value:
-                if mode == "add":
-                    valnode = ET.SubElement(fieldnode, "value", mode="add")
-                else:
-                    valnode = ET.SubElement(fieldnode, "value")
-                if isinstance(v,datetime):
-                    valnode.text = v.isoformat('T')
-                else:
-                    valnode.text = unicode(v)
-
-        return ET.tostring(root,"UTF-8")
+        b = self.get_metadata_builder(master_group=group)
+        b.addMeta(md)
+        return b.as_xml("UTF-8")
 
     def set_metadata(self, md, group=None, entitytype="default", mode="default"):
         """
@@ -668,12 +646,12 @@ class VSItem(VSApi):
         a.populate(self)
         return a
 
-    def get_metadata_builder(self):
+    def get_metadata_builder(self, master_group=None):
         """
         Returns a VSMetadataBuilder object relating to this item
         :return: configured VSMetadataBuilder object
         """
-        return VSMetadataBuilder(self)#, master_group=self.master_group)
+        return VSMetadataBuilder(self, master_group=self.master_group if master_group is None else master_group)
 
     def placeholder_adopt(self, file_ref, shape_tag='original', priority='MEDIUM'):
         """
@@ -816,20 +794,7 @@ class VSItem(VSApi):
         :return: yields VSCollection objects
         """
         from vs_collection import VSCollection
-        # try:
-        #     collection_id_list = self.contentDict['__collection']
-        # except KeyError: #there is no __collection key, therefore no collection ownership
-        #     return
-        #
-        # if not isinstance(collection_id_list,list): collection_id_list=[collection_id_list]
-        #
-        # for coll_id in collection_id_list:
-        #     cref = VSCollection(host=self.host,port=self.port,user=self.user,passwd=self.passwd)
-        #     if shouldPopulate:
-        #         cref.populate(coll_id)
-        #     else:
-        #         cref.name = coll_id
-        #     yield cref
+
         response = self.request("/item/{0}/collections".format(self.name),method="GET")
         for uri_entry in response.findall('{0}uri'.format(self.xmlns)):
             cref = VSCollection(host=self.host,port=self.port,user=self.user,passwd=self.passwd)
