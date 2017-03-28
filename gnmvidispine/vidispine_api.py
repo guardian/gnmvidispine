@@ -10,6 +10,7 @@ import logging
 from time import sleep
 import io
 import os
+from socket import error as socket_error
 
 logger = logging.getLogger(__name__)
 
@@ -265,7 +266,15 @@ class VSApi(object):
                 if attempt>10:
                     raise
                 continue
-                
+            except socket_error as e:
+                attempt +=1
+                logger.warning("Socket error: {0}, resetting conection".format(str(e)))
+                self.reset_http()
+                time.sleep(1)
+                if attempt>10:
+                    raise
+                continue
+
             response = conn.getresponse()
             if response.status == 303:
                 url = response.msg.dict['location']
