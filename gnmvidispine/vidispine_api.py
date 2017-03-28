@@ -325,10 +325,13 @@ class VSApi(object):
             my_seek_set = io.SEEK_SET
         elif hasattr(os, 'SEEK_SET'):
             my_seek_set = os.SEEK_SET
-            
+        else:
+            raise RuntimeError("neither io nor os has SEEK_SET, this should not happen. Check your python interpreter")
+
         total_uploaded = 0
         self.logger.debug("Commencing upload from {0} in chunks of {1}".format(upload_io,chunk_size))
         self.logger.debug("uploading to {0} with account {1}".format(self.host,self.user))
+
         for startbyte in range(0,total_size,chunk_size):
             headers = {
                 'size': chunk_size,
