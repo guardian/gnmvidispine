@@ -41,7 +41,7 @@ class TestVSItem(unittest2.TestCase):
         
         i.import_to_shape(uri=fake_uri,shape_tag="shapetagname",priority="HIGH")
         i.sendAuthorized.assert_called_with('POST',
-                                            '/API/item/VX-123/shape?priority=HIGH&no-transcode=false&tag=shapetagname&thumbnails=true&uri={0}'.format(quoted_uri)
+                                            '/API/item/VX-123/shape?thumbnails=true&essence=false&tag=shapetagname&uri={0}&priority=HIGH&no-transcode=false'.format(quoted_uri)
                                             ,"",{'Accept':'application/xml'})
 
         fake_uri = "file:///path/to/" + quote("media with spaces.mxf",safe="/")
@@ -49,7 +49,7 @@ class TestVSItem(unittest2.TestCase):
         
         i.import_to_shape(uri=fake_uri, shape_tag="shapetagname", priority="HIGH")
         i.sendAuthorized.assert_called_with('POST',
-                                            '/API/item/VX-123/shape?priority=HIGH&no-transcode=false&tag=shapetagname&thumbnails=true&uri={0}'.format(
+                                            '/API/item/VX-123/shape?thumbnails=true&essence=false&tag=shapetagname&uri={0}&priority=HIGH&no-transcode=false'.format(
                                                 quoted_uri)
                                             , "", {'Accept': 'application/xml'})
 
@@ -58,6 +58,21 @@ class TestVSItem(unittest2.TestCase):
         
         i.import_to_shape(uri=fake_uri, shape_tag="shapetagname", priority="HIGH")
         i.sendAuthorized.assert_called_with('POST',
-                                            '/API/item/VX-123/shape?priority=HIGH&no-transcode=false&tag=shapetagname&thumbnails=true&uri={0}'.format(
+                                            '/API/item/VX-123/shape?thumbnails=true&essence=false&tag=shapetagname&uri={0}&priority=HIGH&no-transcode=false'.format(
                                                 quoted_uri)
                                             , "", {'Accept': 'application/xml'})
+
+    def test_make_metadata_document(self):
+        from gnmvidispine.vs_item import VSItem
+        i = VSItem(host=self.fake_host,port=self.fake_port,user=self.fake_user,passwd=self.fake_passwd)
+
+        i.name = "VX-123"
+
+        testdoc = i._make_metadata_document({"field1": "value1","field2": "value2"})
+
+        self.assertEqual(testdoc,"""<?xml version='1.0' encoding='UTF-8'?>
+<MetadataDocument xmlns="http://xml.vidispine.com/schema/vidispine"><timespan end="+INF" start="-INF"><field><name>field2</name><value>value2</value></field><field><name>field1</name><value>value1</value></field></timespan></MetadataDocument>""")
+
+        testdoc = i._make_metadata_document({"field1": ["value1","value2","value3"], "field2": "value2"})
+        self.assertEqual(testdoc,"""<?xml version='1.0' encoding='UTF-8'?>
+<MetadataDocument xmlns="http://xml.vidispine.com/schema/vidispine"><timespan end="+INF" start="-INF"><field><name>field2</name><value>value2</value></field><field><name>field1</name><value>value1</value><value>value2</value><value>value3</value></field></timespan></MetadataDocument>""")
