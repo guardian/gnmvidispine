@@ -64,6 +64,7 @@ class TestVSItem(unittest2.TestCase):
 
     def test_make_metadata_document(self):
         from gnmvidispine.vs_item import VSItem
+        from datetime import datetime
         i = VSItem(host=self.fake_host,port=self.fake_port,user=self.fake_user,passwd=self.fake_passwd)
 
         i.name = "VX-123"
@@ -72,6 +73,15 @@ class TestVSItem(unittest2.TestCase):
 
         self.assertEqual(testdoc,"""<?xml version='1.0' encoding='UTF-8'?>
 <MetadataDocument xmlns="http://xml.vidispine.com/schema/vidispine"><timespan end="+INF" start="-INF"><field><name>field2</name><value>value2</value></field><field><name>field1</name><value>value1</value></field></timespan></MetadataDocument>""")
+
+        testdate = datetime.now()
+        testdoc = i._make_metadata_document({"field1": testdate, "field2": "value2"})
+
+        shouldreturndoc = """<?xml version='1.0' encoding='UTF-8'?>
+<MetadataDocument xmlns="http://xml.vidispine.com/schema/vidispine"><timespan end="+INF" start="-INF"><field><name>field2</name><value>value2</value></field><field><name>field1</name><value>{0}</value></field></timespan></MetadataDocument>""".format(
+            testdate.isoformat("T")
+        )
+        self.assertEqual(testdoc, shouldreturndoc)
 
         testdoc = i._make_metadata_document({"field1": ["value1","value2","value3"], "field2": "value2"})
         self.assertEqual(testdoc,"""<?xml version='1.0' encoding='UTF-8'?>

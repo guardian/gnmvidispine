@@ -854,10 +854,22 @@ class VSMetadataBuilder(VSApi):
             fieldname = ET.SubElement(fieldnode,"name")
             fieldname.text = key
             if not isinstance(value,list):
-                value=[value]
+                value=[self._make_serializable(value)]
             for v in value:
                 fieldvalue = ET.SubElement(fieldnode,"value")
-                fieldvalue.text = v
+                fieldvalue.text = self._make_serializable(v)
+
+    def _make_serializable(self, content):
+        """
+        Private internal method to take an arbitary data format and return something serializable
+        :param content: something to check.  lists and dictionaries are dealt with elsewhere.
+        :return: string
+        """
+        from datetime import datetime
+        if isinstance(content,datetime):
+            return content.isoformat('T')
+        else:
+            return content
 
     def _groupContent(self,parentNode,meta,subgroupmode="add"):
         """
@@ -884,13 +896,13 @@ class VSMetadataBuilder(VSApi):
                 fieldname.text = key
                 for item in value:
                     fieldvalue = ET.SubElement(fieldnode,"value")
-                    fieldvalue.text = item
+                    fieldvalue.text = self._make_serializable(item)
             else:
                 fieldnode = ET.SubElement(parentNode,"field")
                 fieldname = ET.SubElement(fieldnode,"name")
                 fieldname.text = key
                 fieldvalue = ET.SubElement(fieldnode,"value")
-                fieldvalue.text = value
+                fieldvalue.text = self._make_serializable(value)
 
     def addGroup(self,groupname,meta,mode="add",subgroubmode=None):
         """
