@@ -4,6 +4,7 @@ import unittest2
 from mock import MagicMock, patch
 from urllib2 import quote
 
+
 class TestVSItem(unittest2.TestCase):
     fake_host = 'localhost'
     fake_port = 8080
