@@ -94,7 +94,7 @@ class VSFile(object):
     def dump(self):
         pprint(self.__dict__)
 
-    def importToItem(self, metadata, tags=['lowres','WebM'], priority="LOW"):
+    def importToItem(self, metadata, tags=['lowres','WebM'], priority="LOW", projection=None):
         if self.memberOfItem is not None:
             msg = "The file {filename} is already associated with item {itemid}".format(filename=self.path,
                                                                                         itemid=self.memberOfItem.name)
@@ -116,13 +116,14 @@ class VSFile(object):
                 q['tag']+=t + ','
             q['tag']=q['tag'][:-1]
 
-        print "query is"
-        pprint(q)
-        self.parent.debug = True
-        #raise StandardError("Testing")
+        mtxparams = {}
+        if projection is not None:
+            mtxparams['projection'] = projection
+
         response = self.parent.request("/storage/{0}/file/{1}/import".format(self.parent.name, self.name),
                                        method="POST",
                                        query=q,
+                                       matrix=mtxparams,
                                        body=mdtext)
         import_job = VSJob(host=self.parent.host, port=self.parent.port, user=self.parent.user,
                            passwd=self.parent.passwd)
