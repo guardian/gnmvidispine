@@ -416,6 +416,15 @@ class VSItem(VSApi):
         """
         return self.raw_request("/item/%s/metadata" % self.name, matrix={'projection': projection_name})
 
+    def import_external_xml(self, xmlstring, projection_name="default"):
+        """
+        Import metadata from a "foreign" format to this item using an XSLT "projection" registered in Vidispine.
+        :param xmlstring: XML metadata to import
+        :param projection_name: projection name to use
+        :return: updated vidispine metadata document
+        """
+        return self.raw_request("/item/%s/metadata" % self.name, method="PUT", matrix={'projection': projection_name}, body=xmlstring)
+
     def _make_metadata_document(self, md, group=None, mode="default"):
         b = self.get_metadata_builder(master_group=group)
         b.addMeta(md)

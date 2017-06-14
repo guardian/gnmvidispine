@@ -76,3 +76,17 @@ class TestVSItem(unittest2.TestCase):
         testdoc = i._make_metadata_document({"field1": ["value1","value2","value3"], "field2": "value2"})
         self.assertEqual(testdoc,"""<?xml version='1.0' encoding='UTF-8'?>
 <MetadataDocument xmlns="http://xml.vidispine.com/schema/vidispine"><timespan end="+INF" start="-INF"><field><name>field2</name><value>value2</value></field><field><name>field1</name><value>value1</value><value>value2</value><value>value3</value></field></timespan></MetadataDocument>""")
+
+    def test_import_external_xml(self):
+        with patch('gnmvidispine.vs_item.VSItem.raw_request') as mock_request:
+            from gnmvidispine.vs_item import VSItem
+            testdoc = """<?xml version="1.0" encoding="UTF-8"?>
+            <external-metadata>
+                <somefieldname>value</somefieldname>
+            </external-metadata>
+            """
+            i = VSItem(host=self.fake_host,port=self.fake_port,user=self.fake_user,passwd=self.fake_passwd)
+            i.name = "VX-345"
+            i.import_external_xml(testdoc,projection_name="myprojection")
+
+            mock_request.assert_called_once_with("/item/VX-345/metadata", method="PUT", matrix={'projection': 'myprojection'},body=testdoc)
