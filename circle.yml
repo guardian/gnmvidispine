@@ -3,7 +3,7 @@ machine:
   python:
     version: 2.7.5  #default version on Centos 7
   pre:
-    - sudo apt-get -y install rpm  libsasl2-dev libldap2-dev libssl-dev python-virtualenv
+    - sudo apt-get -y install rpm  libsasl2-dev libldap2-dev libssl-dev python-virtualenv doxygen
     - sudo mkdir -p /opt/cantemo/python/
     - sudo chown -R ubuntu /opt/cantemo/python/
 
@@ -17,5 +17,5 @@ deployment:
     commands:
       - chmod a+x setup.py
       - ./setup.py sdist
-      - bash ./buildrpms.sh
+      - ./setup.py buildrpms
       - ./setup.py awsupload --bucket ${UPLOAD_BUCKET} --path gnmvidispine --region eu-west-1  --acl public-read
