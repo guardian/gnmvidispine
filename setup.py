@@ -52,7 +52,7 @@ class AwsUploadCommand(Command):
         
         bucket = s3.bucket.Bucket(connection=conn, name=self.bucket)
         
-        filebase = self.distribution.get_name() + "-" + self.distribution.get_version()
+        filebase = self.distribution.get_name()
         
         for filepath in os.listdir('dist'):
             if os.path.isdir(filepath): continue
