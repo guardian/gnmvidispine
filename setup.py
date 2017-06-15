@@ -110,6 +110,11 @@ class BuildRpms(Command):
         source_dist = "dist/{0}".format(sourcefile)
         rpm_buildpath = "{0}/rpmbuild".format(os.environ['HOME'])
 
+        if not os.path.exists(rpm_buildpath):
+            os.mkdir(rpm_buildpath)
+            for f in ['SOURCES', 'BUILD','RPMS']:
+                os.mkdir(os.path.join(rpm_buildpath,f))
+
         if not os.path.exists(source_dist):
             print "Could not find {0}.  Try running setup.py sdist first.".format(source_dist)
             exit(1)
@@ -162,5 +167,6 @@ setup(
     author="Andy Gallagher",
     author_email="andy.gallagher@theguardian.com",
     url="https://github.com/fredex42/gnmvidispine",
+    package_data={'': ['Doxyfile']},
     packages=['gnmvidispine']
 )

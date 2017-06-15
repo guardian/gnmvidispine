@@ -29,13 +29,17 @@ tar xvzf ../SOURCES/%{sourcebundle}
 %build
 cd gnmvidispine-1.9.DEV
 python setup.py build
+doxygen
 
 %install
 cd gnmvidispine-1.9.DEV
 python setup.py install -O1 --root=$RPM_BUILD_ROOT --prefix=/usr --record=INSTALLED_FILES
+mkdir -p $RPM_BUILD_ROOT/usr/share/doc/gnmvidispine
+cp -a doc/html/* $RPM_BUILD_ROOT/usr/share/doc/gnmvidispine
 
 %clean
 rm -rf $RPM_BUILD_ROOT
 
 %files -f gnmvidispine-1.9.DEV/INSTALLED_FILES
 %defattr(-,root,root)
+/usr/share/doc/gnmvidispine/*
