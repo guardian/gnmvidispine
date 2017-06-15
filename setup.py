@@ -60,12 +60,6 @@ class AwsUploadCommand(Command):
             
             self.do_upload_file(bucket, 'dist/', filepath)
 
-        for filepath in os.listdir(os.path.join(os.environ['HOME'],"rpmbuild","rpms","noarch")):
-            if os.path.isdir(filepath): continue
-            if not filepath.startswith('gnmvidispine'): continue
-
-            self.do_upload_file(bucket,os.path.join(os.environ['HOME'],"rpmbuild","rpms","noarch"), filepath)
-
 
 class BuildRpms(Command):
     description = "Build the RPMs for this package"
