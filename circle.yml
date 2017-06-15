@@ -1,16 +1,13 @@
 machine:
   timezone: Europe/London
   python:
-    version: 2.6.9
+    version: 2.7.5  #default version on Centos 7
   pre:
-    - sudo apt-get -y install rpm  libsasl2-dev libldap2-dev libssl-dev
-    - sudo mkdir -p /opt/cantemo/python/lib/python2.6/site-packages
-    - sudo chown ubuntu /opt/cantemo/python/lib/python2.6/site-packages
+    - sudo apt-get -y install rpm  libsasl2-dev libldap2-dev libssl-dev python-virtualenv
+    - sudo mkdir -p /opt/cantemo/python/
+    - sudo chown -R ubuntu /opt/cantemo/python/
 
 dependencies:
-  cache_directories:
-    - "/opt/circleci/.pyenv/versions/2.6.9"
-    - "/home/ubuntu/virtualenvs/venv-2.6.9"
   pre:
     - pip install boto  #only required for build/upload to s3
 
@@ -21,3 +18,4 @@ deployment:
       - chmod a+x setup.py
       - ./setup.py sdist
       - ./setup.py awsupload --bucket ${UPLOAD_BUCKET} --path gnmvidispine --region eu-west-1  --acl public-read
+      - bash ./buildrpms.sh
