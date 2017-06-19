@@ -94,7 +94,7 @@ class VSFile(object):
     def dump(self):
         pprint(self.__dict__)
 
-    def importToItem(self, metadata, tags=['lowres','WebM'], priority="LOW"):
+    def importToItem(self, metadata, tags=['lowres','WebM'], priority="LOW", thumbnails=True):
         if self.memberOfItem is not None:
             msg = "The file {filename} is already associated with item {itemid}".format(filename=self.path,
                                                                                         itemid=self.memberOfItem.name)
@@ -107,7 +107,7 @@ class VSFile(object):
             mdtext = metadata.toXML()
 
         q = {
-            'thumbnails': 'true',
+            'thumbnails': 'true' if thumbnails else 'false',
             'priority': priority,
         }
         if tags:
