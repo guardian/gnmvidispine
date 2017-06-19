@@ -90,3 +90,18 @@ class TestVSItem(unittest2.TestCase):
             i.import_external_xml(testdoc,projection_name="myprojection")
 
             mock_request.assert_called_once_with("/item/VX-345/metadata", method="PUT", matrix={'projection': 'myprojection'},body=testdoc)
+
+    def test_import_external_xml_with_unicode(self):
+        with patch('gnmvidispine.vs_item.VSItem.raw_request') as mock_request:
+            from gnmvidispine.vs_item import VSItem
+            testdoc = u"""<?xml version="1.0" encoding="UTF-8"?>
+            <external-metadata>
+                <somefieldname>Arséne Wenger est alleé en vacances</somefieldname>
+                <someotherfield>This — is a silly long -, as in — not -</someotherfield>
+            </external-metadata>
+            """
+            i = VSItem(host=self.fake_host,port=self.fake_port,user=self.fake_user,passwd=self.fake_passwd)
+            i.name = "VX-345"
+            i.import_external_xml(testdoc,projection_name="myprojection")
+
+            mock_request.assert_called_once_with("/item/VX-345/metadata", method="PUT", matrix={'projection': 'myprojection'},body=testdoc)
