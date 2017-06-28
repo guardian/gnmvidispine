@@ -43,10 +43,8 @@ class VSCollection(VSItem):
         :return:
         """
         super(VSCollection,self).populate(id,type="collection",specificFields=specificFields)
-        response = self.request("/collection/{0}/".format(self.name))
-
+        response = self.request("/collection/{0}".format(self.name))
         self.itemCount = sum(1 for node in response.findall("{0}content".format(self.xmlns)))
-
         
 
     def addToCollection(self, item, type="item"):
