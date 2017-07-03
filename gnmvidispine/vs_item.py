@@ -901,12 +901,12 @@ class VSMetadataBuilder(VSApi):
                 fieldvalue = ET.SubElement(fieldnode,"value")
                 fieldvalue.text = value
 
-    def addGroup(self,groupname,meta,mode="add",subgroubmode=None):
+    def addGroup(self,groupname,meta,mode=None,subgroubmode=None):
         """
         Add a group to the root level, optionally including subgroups
         :param groupname: name of the group to add
         :param meta: dictionary of key/value pairs of metadata. lists and dictionaries are allowed as values.
-        :param mode: (default: 'add') Mode to use when incorporating metadata. Consult VS documentation for details.
+        :param mode: (default: no mode [over-write]) Mode to use when incorporating metadata. Valid values are 'add', 'remove' or None.
         :param subgroubmode: (default: None) Mode to use when incorporating subdictionaries as subgroups. Default is to
         use the same as 'mode'.
         :return:  None
