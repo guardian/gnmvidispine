@@ -1,4 +1,4 @@
-import xml.etree.ElementTree as ET
+import xml.etree.cElementTree as ET
 from vidispine_api import InvalidData, VSBadRequest
 from vs_job import VSJob, VSJobFailed
 from vs_shape import VSShape
@@ -125,24 +125,32 @@ class VSItem(VSApi):
         """
         return ET.tostring(self.dataContent,encoding)
 
-    def fromXML(self, xmlstring=None, type="item"):
+    def fromXML(self, xmldata=None, objectClass="item"):
         """
         populate this item from the given XML document rather than directly from Vidispine
         :param xmlstring: XML to parse
+        :param objectClass: is this an item or collection
         :return: self
         """
-        self.dataContent = ET.fromstring(xmlstring)
+        ElementType = type(ET.Element("nothing"))
 
-        self.type=type
+        if isinstance(xmldata,basestring):
+            self.dataContent = ET.fromstring(xmldata)
+        elif isinstance(xmldata,ElementType):
+            self.dataContent = xmldata
+        else:
+            raise TypeError("you must pass either a string or an element to fromXML. Got {0} instead of {1}".format(type(xmldata),ElementType))
+
+        self.type=objectClass
         namespace = "{http://xml.vidispine.com/schema/vidispine}"
         if type == "item":
             node = self.dataContent.find('{0}item'.format(namespace))
             self.name = node.attrib['id']
 
-        if type == "item":
+        if self.type == "item":
             for x in self.dataContent.findall('{0}item/{0}metadata/{0}timespan'.format(namespace)):
                 self.makeContentDict(x)
-        elif type == "collection":
+        elif self.type == "collection":
             for x in self.dataContent.findall('{0}timespan'.format(namespace)):
                 self.makeContentDict(x)
             self.name = self.contentDict['collectionId']
@@ -170,7 +178,7 @@ class VSItem(VSApi):
         else:
             content = self.request("/%s/%s/metadata" % (type, id), method="GET")
 
-        return self.fromXML(content,type)
+        return self.fromXML(content,objectClass=type)
 
     def importSidecar(self, filepath):
         """
