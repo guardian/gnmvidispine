@@ -3,8 +3,13 @@ from __future__ import absolute_import
 import unittest2
 from mock import MagicMock, patch
 from urllib2 import quote
+import xml.etree.cElementTree as ET
+import re
+
 
 class TestVSItem(unittest2.TestCase):
+    maxDiff=None
+
     fake_host = 'localhost'
     fake_port = 8080
     fake_user = 'username'
@@ -16,7 +21,26 @@ class TestVSItem(unittest2.TestCase):
     <status>READY</status>
     <type>PLACEHOLDER_IMPORT</type>
 </JobDocument>"""
-    
+
+    testdoc = """<?xml version="1.0" encoding="UTF-8"?>
+    <MetadataListDocument xmlns="http://xml.vidispine.com/schema/vidispine">
+    <item id="VX-1234">
+    <metadata>
+        <timespan start="-INF" end="+INF">
+            <field>
+                <name>sometestfield</name>
+                <value>sometestvalue</value>
+            </field>
+            <field>
+                <name>someotherfield</name>
+                <value>valueone</value>
+                <value>valuetwo</value>
+            </field>
+        </timespan>
+        </metadata>
+        </item>
+    </MetadataListDocument>"""
+
     class MockedResponse(object):
         def __init__(self, status_code, content, reason=""):
             self.status = status_code
@@ -105,3 +129,50 @@ class TestVSItem(unittest2.TestCase):
             i.import_external_xml(testdoc,projection_name="myprojection")
 
             mock_request.assert_called_once_with("/item/VX-345/metadata", method="PUT", matrix={'projection': 'myprojection'},body=testdoc)
+
+    def test_populate(self):
+        with patch("gnmvidispine.vs_item.VSItem.request", return_value=ET.fromstring(self.testdoc)) as mock_request:
+            from gnmvidispine.vs_item import VSItem
+            i = VSItem(host=self.fake_host, port=self.fake_port, user=self.fake_user, passwd=self.fake_passwd)
+            i.populate("VX-1234")
+
+            mock_request.assert_called_once_with("/item/VX-1234/metadata",method="GET")
+            self.assertEqual(i.get("sometestfield"),"sometestvalue")
+            self.assertEqual(i.get("someotherfield",allowArray=True),["valueone","valuetwo"])
+
+    def test_fromxml(self):
+        from gnmvidispine.vs_item import VSItem
+        i = VSItem(host=self.fake_host, port=self.fake_port, user=self.fake_user, passwd=self.fake_passwd)
+        i.fromXML(self.testdoc)
+
+        self.assertEqual(i.get("sometestfield"),"sometestvalue")
+        self.assertEqual(i.get("someotherfield", allowArray=True),["valueone","valuetwo"])
+
+    def test_toxml(self):
+        fix = re.compile(r'((?<=>)(\n[\t]*)(?=[^<\t]))|(?<=[^>\t])(\n[\t]*)(?=<)')
+
+        #christ knows why it gets indented like this, but it does.
+        output_testdoc = fix.sub("","""<?xml version='1.0' encoding='UTF-8'?>
+<ns0:MetadataListDocument xmlns:ns0="http://xml.vidispine.com/schema/vidispine">
+    <ns0:item id="VX-1234">
+    <ns0:metadata>
+        <ns0:timespan end="+INF" start="-INF">
+            <ns0:field>
+                <ns0:name>sometestfield</ns0:name>
+                <ns0:value>sometestvalue</ns0:value>
+            </ns0:field>
+            <ns0:field>
+                <ns0:name>someotherfield</ns0:name>
+                <ns0:value>valueone</ns0:value>
+                <ns0:value>valuetwo</ns0:value>
+            </ns0:field>
+        </ns0:timespan>
+        </ns0:metadata>
+        </ns0:item>
+    </ns0:MetadataListDocument>""")
+
+        from gnmvidispine.vs_item import VSItem
+        i = VSItem(host=self.fake_host, port=self.fake_port, user=self.fake_user, passwd=self.fake_passwd)
+        i.fromXML(self.testdoc)
+
+        self.assertEqual(fix.sub("",i.toXML()),output_testdoc)

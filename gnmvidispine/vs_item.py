@@ -1,4 +1,4 @@
-import xml.etree.ElementTree as ET
+import xml.etree.cElementTree as ET
 from vidispine_api import InvalidData, VSBadRequest
 from vs_job import VSJob, VSJobFailed
 from vs_shape import VSShape
@@ -118,6 +118,46 @@ class VSItem(VSApi):
             raise InvalidData("Did not get created collection ID from Vidispine")
         return self
 
+    def toXML(self,encoding="UTF-8"):
+        """
+        Returns a reconstructed XML document for the metadata of this item.
+        :return: XML string
+        """
+        return ET.tostring(self.dataContent,encoding)
+
+    def fromXML(self, xmldata=None, objectClass="item"):
+        """
+        populate this item from the given XML document rather than directly from Vidispine
+        :param xmlstring: XML to parse
+        :param objectClass: is this an item or collection
+        :return: self
+        """
+        ElementType = type(ET.Element("nothing"))
+
+        if isinstance(xmldata,basestring):
+            self.dataContent = ET.fromstring(xmldata)
+        elif isinstance(xmldata,ElementType):
+            self.dataContent = xmldata
+        else:
+            raise TypeError("you must pass either a string or an element to fromXML. Got {0} instead of {1}".format(type(xmldata),ElementType))
+
+        self.type=objectClass
+        namespace = "{http://xml.vidispine.com/schema/vidispine}"
+        if type == "item":
+            node = self.dataContent.find('{0}item'.format(namespace))
+            self.name = node.attrib['id']
+
+        if self.type == "item":
+            for x in self.dataContent.findall('{0}item/{0}metadata/{0}timespan'.format(namespace)):
+                self.makeContentDict(x)
+        elif self.type == "collection":
+            for x in self.dataContent.findall('{0}timespan'.format(namespace)):
+                self.makeContentDict(x)
+            self.name = self.contentDict['collectionId']
+        else:
+            raise TypeError("item populate() called on something not identifying an item or collection")
+        return self
+
     def populate(self, id=None, type="item", specificFields=None):
         """
         Loads metadata about the item from Vidispine.
@@ -134,28 +174,11 @@ class VSItem(VSApi):
 
         if isinstance(specificFields,list) or isinstance(specificFields,tuple):
             fields=",".join(specificFields)
-            self.dataContent = self.request("/{t}/{i}/metadata?field={f}".format(t=type,i=id,f=fields, method="GET"))
+            content = self.request("/{t}/{i}/metadata?field={f}".format(t=type,i=id,f=fields, method="GET"))
         else:
-            self.dataContent = self.request("/%s/%s/metadata" % (type, id), method="GET")
+            content = self.request("/%s/%s/metadata" % (type, id), method="GET")
 
-        # print ET.tostring(self.dataContent)
-        self.type=type
-        #print "Processing..."
-        namespace = "{http://xml.vidispine.com/schema/vidispine}"
-        if type == "item":
-            node = self.dataContent.find('{0}item'.format(namespace))
-            self.name = node.attrib['id']
-
-        if type == "item":
-            for x in self.dataContent.findall('{0}item/{0}metadata/{0}timespan'.format(namespace)):
-                self.makeContentDict(x)
-        elif type == "collection":
-            for x in self.dataContent.findall('{0}timespan'.format(namespace)):
-                self.makeContentDict(x)
-            self.name = self.contentDict['collectionId']
-        else:
-            raise TypeError("item populate() called on something not identifying an item or collection")
-        return self
+        return self.fromXML(content,objectClass=type)
 
     def importSidecar(self, filepath):
         """
