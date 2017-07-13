@@ -136,10 +136,9 @@ class VSItem(VSApi):
 
         if isinstance(xmldata,basestring):
             self.dataContent = ET.fromstring(xmldata)
-        elif isinstance(xmldata,ElementType):
-            self.dataContent = xmldata
         else:
-            raise TypeError("you must pass either a string or an element to fromXML. Got {0} instead of {1}".format(type(xmldata),ElementType))
+            self.dataContent = xmldata
+
 
         self.type=objectClass
         namespace = "{http://xml.vidispine.com/schema/vidispine}"
