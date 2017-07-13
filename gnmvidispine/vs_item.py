@@ -168,7 +168,7 @@ class VSItem(VSApi):
         Only loading the fields you need can significantly speed up your program
         :return: self
         """
-        if id is None:
+        if id is not None:
             id = self.name
 
         if isinstance(specificFields,list) or isinstance(specificFields,tuple):
