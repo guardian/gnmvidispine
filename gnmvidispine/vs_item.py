@@ -8,13 +8,12 @@ import os.path
 from pprint import pprint
 from time import sleep
 import logging
-import copy
 import re
 
 from vidispine_api import HTTPError, VSApi, VSException, VSNotFound
 from vs_storage_rule import VSStorageRule
 import io
-import uuid
+
 
 class VSTranscodeError(VSException):
     def __init__(self, failedJob):
@@ -168,7 +167,7 @@ class VSItem(VSApi):
         Only loading the fields you need can significantly speed up your program
         :return: self
         """
-        if id is not None:
+        if id is None:
             id = self.name
 
         if isinstance(specificFields,list) or isinstance(specificFields,tuple):
@@ -212,10 +211,7 @@ class VSItem(VSApi):
         :param ns:
         :return:
         """
-        # if not isinstance(node_list,list):
-        #     node=[node_list]
 
-        #logging.debug("node_list is a {0}".format(node_list.__class__))
         if parent_key is not None:
             logging.debug("makeContentDict: parent key {0}".format(parent_key))
         logging.debug("makeContentDict: on {0}".format(node.tag))
