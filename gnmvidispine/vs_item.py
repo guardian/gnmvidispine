@@ -138,10 +138,10 @@ class VSItem(VSApi):
         else:
             self.dataContent = xmldata
 
-
         self.type=objectClass
+
         namespace = "{http://xml.vidispine.com/schema/vidispine}"
-        if type == "item":
+        if self.type == "item":
             node = self.dataContent.find('{0}item'.format(namespace))
             self.name = node.attrib['id']
 
@@ -156,7 +156,7 @@ class VSItem(VSApi):
             raise TypeError("item populate() called on something not identifying an item or collection")
         return self
 
-    def populate(self, id=None, type="item", specificFields=None):
+    def populate(self, entity_id=None, type="item", specificFields=None):
         """
         Loads metadata about the item from Vidispine.
         :param id: VS ID of the item to load. You only need to specify this if you're loading an item from a specific ID;
@@ -167,14 +167,14 @@ class VSItem(VSApi):
         Only loading the fields you need can significantly speed up your program
         :return: self
         """
-        if id is None:
-            id = self.name
+        if entity_id is None:
+            entity_id = self.name
 
         if isinstance(specificFields,list) or isinstance(specificFields,tuple):
             fields=",".join(specificFields)
-            content = self.request("/{t}/{i}/metadata?field={f}".format(t=type,i=id,f=fields, method="GET"))
+            content = self.request("/{t}/{i}/metadata?field={f}".format(t=type,i=entity_id,f=fields, method="GET"))
         else:
-            content = self.request("/%s/%s/metadata" % (type, id), method="GET")
+            content = self.request("/%s/%s/metadata" % (type, entity_id), method="GET")
 
         return self.fromXML(content,objectClass=type)
 

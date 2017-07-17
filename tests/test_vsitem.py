@@ -139,6 +139,7 @@ class TestVSItem(unittest2.TestCase):
             mock_request.assert_called_once_with("/item/VX-1234/metadata",method="GET")
             self.assertEqual(i.get("sometestfield"),"sometestvalue")
             self.assertEqual(i.get("someotherfield",allowArray=True),["valueone","valuetwo"])
+            self.assertEqual(i.name,"VX-1234")
 
     def test_fromxml(self):
         from gnmvidispine.vs_item import VSItem
