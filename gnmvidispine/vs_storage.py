@@ -316,6 +316,15 @@ class VSStorage(VSApi):
                                         'path': path})
         return VSFile(self, response)
 
+    def fileForID(self, vsid):
+        """
+        looks up a VSFile object for the fiven file ID
+        :param vsid: vidispine ID of a file
+        :return: populated VSFile object
+        """
+        response = self.request("/storage/{storage}/file/{fileid}?includeItem=true".format(storage=self.name,fileid=vsid))
+        return VSFile(self, response)
+
     @property
     def fileCount(self):
         response = self.request("/storage/{0}/file".format(self.name),method="GET",matrix={'number': 0})
@@ -330,11 +339,11 @@ class VSStorage(VSApi):
             raise
         
     def files(self, path='/', include_item=True):
-        got_files = -100
+        got_files = 0
         total_hits = -1
         pageSize = 100
 
-        while(got_files<total_hits):
+        while True:
             q = {
                 'path': path
             }
@@ -356,12 +365,17 @@ class VSStorage(VSApi):
                 total_hits = int(response.find("{0}hits".format(self.xmlns)).text)
                 logging.debug("Got {0} hits".format(total_hits))
 
+            start_num_files = got_files
             for filenode in response.findall("{0}file".format(self.xmlns)):
                 got_files += 1
                 yield VSFile(self,filenode)
 
+            if got_files == start_num_files: #no files returned => we got to the end
+                break
+
     def rescan(self):
         self.request("/storage/{0}/rescan".format(self.name),method="POST")
+
 
 def VSStoragePathMap(uriType=None,stripType=False,*args,**kwargs):
     """
