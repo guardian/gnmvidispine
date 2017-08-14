@@ -184,6 +184,26 @@ class VSFile(object):
 
         return response
 
+    def move(self, storage):
+        """
+        Move the file to another storage
+        :param storage: storage to move to, either a string of the name or a VSStorage object. Raises a TypeError if this is not correct.
+        :return:
+        """
+        if isinstance(storage,basestring):
+            destname = storage
+        elif isinstance(storage,VSStorage):
+            destname = storage.name
+        else:
+            raise TypeError
+
+        if not re.match(r'^\w{2}-\d+', destname):
+            raise ValueError("{0} is not a valid storage id".format(destname))
+
+        response = self.parent.request("/storage/{0}/file/{1}/storage/{2}".format(self.parent.name, self.name, destname),
+                                       method="POST",
+                                       query={'move': 'true'})
+
 
 class VSStorageMethod(object):
     def __init__(self, parent_storage, parsed_data):
