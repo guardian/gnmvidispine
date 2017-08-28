@@ -110,7 +110,7 @@ class VSFile(object):
             'thumbnails': 'true' if thumbnails else 'false',
             'priority': priority,
         }
-        if tags:
+        if tags and tags is not None:
             q['tag'] = ""
             for t in tags:
                 q['tag']+=t + ','
