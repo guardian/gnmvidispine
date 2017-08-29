@@ -204,6 +204,8 @@ class VSFile(object):
                                        method="POST",
                                        query={'move': 'true'})
 
+    def setState(self, newstate):
+        self.parent.request("/storage/{0}/file/{1}/state/{2}".format(self.parent.name, self.name, newstate), method="PUT")
 
 class VSStorageMethod(object):
     def __init__(self, parent_storage, parsed_data):
