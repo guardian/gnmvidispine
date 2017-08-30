@@ -24,6 +24,12 @@ class VSTranscodeError(VSException):
         return u"Transcode error: {0}".format(self.transcodeJob.errorMessage)
 
 
+class InvalidSourceError(StandardError):
+    """
+    Raised if the xml (or other) source does not contain the data that we expect
+    """
+
+
 class VSItem(VSApi):
     """
     This class represents a Vidispine item, and as such is one of the main pieces of functionality.
@@ -126,13 +132,12 @@ class VSItem(VSApi):
 
     def fromXML(self, xmldata=None, objectClass="item"):
         """
-        populate this item from the given XML document rather than directly from Vidispine
+        populate this item from the given XML document rather than directly from Vidispine.
+        raises InvalidSourceError if the XML does not contain what we need.
         :param xmlstring: XML to parse
         :param objectClass: is this an item or collection
         :return: self
         """
-        ElementType = type(ET.Element("nothing"))
-
         if isinstance(xmldata,basestring):
             self.dataContent = ET.fromstring(xmldata)
         else:
@@ -143,6 +148,8 @@ class VSItem(VSApi):
         namespace = "{http://xml.vidispine.com/schema/vidispine}"
         if self.type == "item":
             node = self.dataContent.find('{0}item'.format(namespace))
+            if node is None:
+                raise InvalidSourceError("VSItem::fromXML - declared as item but source document does not have an <item> node")
             self.name = node.attrib['id']
 
         if self.type == "item":
