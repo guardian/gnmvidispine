@@ -94,7 +94,16 @@ class VSFile(object):
     def dump(self):
         pprint(self.__dict__)
 
-    def importToItem(self, metadata, tags=['lowres','WebM'], priority="LOW", thumbnails=True):
+    def importToItem(self, metadata, jobMetadata=None, tags=['lowres','WebM'], priority="LOW", thumbnails=True):
+        """
+        Imports this file to a new item. Raises FileAlreadyImportedError if the VSFile already has an item association
+        :param metadata: VSMetadata object representing the metadata to put onto the item, or a compiled MetadataDocument xml as a string
+        :param jobMetadata: Dictionary of key/values for the job metadata - see Vidispine import documentation for details
+        :param tags: shape tags describing the formats to create as proxies
+        :param priority: job priority - LOWEST, LOW, MEDIUM, HIGH, and HIGHEST
+        :param thumbnails: boolean - true/false, should thumbnails be made or not
+        :return: VSJob object
+        """
         if self.memberOfItem is not None:
             msg = "The file {filename} is already associated with item {itemid}".format(filename=self.path,
                                                                                         itemid=self.memberOfItem.name)
@@ -110,6 +119,8 @@ class VSFile(object):
             'thumbnails': 'true' if thumbnails else 'false',
             'priority': priority,
         }
+        if jobMetadata is not None:
+            q['jobmetadata'] = map(lambda (k,v): "{0}={1}".format(k,v), jobMetadata.items())
         if tags and tags is not None:
             q['tag'] = ""
             for t in tags:
