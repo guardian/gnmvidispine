@@ -116,10 +116,6 @@ class VSFile(object):
                 q['tag']+=t + ','
             q['tag']=q['tag'][:-1]
 
-        print "query is"
-        pprint(q)
-        self.parent.debug = True
-        #raise StandardError("Testing")
         response = self.parent.request("/storage/{0}/file/{1}/import".format(self.parent.name, self.name),
                                        method="POST",
                                        query=q,

@@ -293,4 +293,53 @@ class TestVSApi(unittest2.TestCase):
         a.reset_http()
         conn.close.assert_called_once()
         self.assertNotEqual(conn,a._conn) #we should get a different object
-        
+
+    def test_querydict(self):
+        from gnmvidispine.vidispine_api import VSApi
+        sample_returned_xml = """<?xml version="1.0"?>
+        <root xmlns="http://xml.vidispine.com/schema/vidispine">
+          <element>string</element>
+        </root>"""
+
+        conn = httplib.HTTPConnection(host='localhost', port=8080)
+        conn.request = MagicMock()
+        conn.getresponse = MagicMock(return_value=self.MockedResponse(200, sample_returned_xml))
+
+        api = VSApi(user=self.fake_user, passwd=self.fake_passwd, conn=conn)
+        queryparams={
+            'query1': 'value1',
+            'query2': 'value2',
+            'query3': ['value3','value4','value5']
+        }
+
+        parsed_xml = api.request("/path/to/endpoint", query=queryparams, method="GET")
+
+        computed_auth = base64.b64encode("{0}:{1}".format(self.fake_user, self.fake_passwd))
+        conn.request.assert_called_with('GET', '/API/path/to/endpoint?query2=value2&query3=value3&query3=value4&query3=value5&query1=value1', None,
+                                        {'Authorization': "Basic " + computed_auth, 'Accept': 'application/xml'})
+        conn.getresponse.assert_called_with()
+
+    def test_matrixdict(self):
+        from gnmvidispine.vidispine_api import VSApi
+        sample_returned_xml = """<?xml version="1.0"?>
+        <root xmlns="http://xml.vidispine.com/schema/vidispine">
+          <element>string</element>
+        </root>"""
+
+        conn = httplib.HTTPConnection(host='localhost', port=8080)
+        conn.request = MagicMock()
+        conn.getresponse = MagicMock(return_value=self.MockedResponse(200, sample_returned_xml))
+
+        api = VSApi(user=self.fake_user, passwd=self.fake_passwd, conn=conn)
+        mtxparams={
+            'mtx1': 'value1',
+            'mtx2': 'value2',
+            'mtx3': ['value3','value4','value5']
+        }
+
+        parsed_xml = api.request("/path/to/endpoint", matrix=mtxparams, method="GET")
+
+        computed_auth = base64.b64encode("{0}:{1}".format(self.fake_user, self.fake_passwd))
+        conn.request.assert_called_with('GET', '/API/path/to/endpoint;mtx3=value3;mtx3=value4;mtx3=value5;mtx2=value2;mtx1=value1', None,
+                                        {'Authorization': "Basic " + computed_auth, 'Accept': 'application/xml'})
+        conn.getresponse.assert_called_with()

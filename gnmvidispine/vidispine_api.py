@@ -11,8 +11,10 @@ from time import sleep
 import io
 import os
 from socket import error as socket_error
+from itertools import chain, imap
 
 logger = logging.getLogger(__name__)
+
 
 class HTTPError(StandardError):
     """
@@ -141,6 +143,10 @@ class VSConflict(VSException):
     Exception raised if the operation would conflict with some other object, e.g. when creating something that already exists
     """
     pass
+
+
+def flatmap(f, items):
+    return chain.from_iterable(imap(f, items))
 
 
 class VSApi(object):
@@ -400,6 +406,19 @@ class VSApi(object):
         else:
             return "Success"
 
+    @staticmethod
+    def _escape_for_query(value):
+        return urllib.pathname2url(value).replace("/", "%2F")
+
+    @staticmethod
+    def _get_param_list(key, value):
+        if not isinstance(value,list):
+            toprocess = [value]
+        else:
+            toprocess = value
+
+        return map(lambda item: "{0}={1}".format(key, VSApi._escape_for_query(item)), toprocess)
+
     def raw_request(self,path,method="GET",matrix=None,query=None,body=None,accept="application/xml",
                     content_type='application/xml',extra_headers={}):
         """
@@ -416,34 +435,36 @@ class VSApi(object):
             base_headers['Content-Type'] = content_type
 
         base_headers.update(extra_headers)
-        matrixpart=""
 
         if matrix:
-            for key,value in matrix.items():
-                if isinstance(value,basestring):
-                    value=urllib.pathname2url(value)
-                    value=value.replace("/", "%2F")
-                if isinstance(key,basestring):
-                    key=urllib.pathname2url(key)
-                tmp=";%s=%s" % (key, value)
-                matrixpart=matrixpart+tmp
+            # for key,value in matrix.items():
+            #     if isinstance(value,basestring):
+            #         value=self._escape_for_query(value)
+            #     if isinstance(key,basestring):
+            #         key=urllib.pathname2url(key)
+            #     tmp=";%s=%s" % (key, value)
+            #     matrixpart=matrixpart+tmp
+            matrixpart = ";"+ ";".join(flatmap(lambda (k,v): self._get_param_list(k,v), matrix.items()))
+        else:
+            matrixpart=""
 
-        querypart=""
         if query:
-            for key,value in query.items():
-                if isinstance(value,basestring):
-                    value=urllib.pathname2url(value)
-                    value=value.replace("/", "%2F")
-                if isinstance(key,basestring):
-                    key=urllib.pathname2url(key)
-                querypart+="%s=%s&" % (urllib.pathname2url(key), value)
+            querypart = "&".join(flatmap(lambda (k,v): self._get_param_list(k,v), query.items()))
+            # for key,value in query.items():
+            #     if isinstance(key,basestring):
+            #         key=urllib.pathname2url(key)
+            #     if isinstance(value,list):
+            #         paramlist=map(lambda item: "{0}={1}".format(key,self._escape_for_query(item)),value)
+            #         querypart += "&".join(paramlist)
+            #     elif isinstance(value,basestring):
+            #         value=self._escape_for_query(value)
+            #         querypart+="%s=%s&" % (key, value)
+        else:
+            querypart = ""
 
         url="/API"+path+matrixpart
         if(len(querypart)> 0):
-            url+='?'+querypart[:-1]
-
-        if self.debug==True:
-            print "Performing %s on %s..." % (method, url)
+            url+='?'+querypart
 
         if method == "POST" and body is None:
             body = ""
