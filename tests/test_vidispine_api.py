@@ -309,13 +309,14 @@ class TestVSApi(unittest2.TestCase):
         queryparams={
             'query1': 'value1',
             'query2': 'value2',
-            'query3': ['value3','value4','value5']
+            'query3': ['value3','value4','value5'],
+            'query4': 37
         }
 
         parsed_xml = api.request("/path/to/endpoint", query=queryparams, method="GET")
 
         computed_auth = base64.b64encode("{0}:{1}".format(self.fake_user, self.fake_passwd))
-        conn.request.assert_called_with('GET', '/API/path/to/endpoint?query2=value2&query3=value3&query3=value4&query3=value5&query1=value1', None,
+        conn.request.assert_called_with('GET', '/API/path/to/endpoint?query2=value2&query3=value3&query3=value4&query3=value5&query1=value1&query4=37', None,
                                         {'Authorization': "Basic " + computed_auth, 'Accept': 'application/xml'})
         conn.getresponse.assert_called_with()
 
@@ -334,12 +335,13 @@ class TestVSApi(unittest2.TestCase):
         mtxparams={
             'mtx1': 'value1',
             'mtx2': 'value2',
+            'mtx4': 8,
             'mtx3': ['value3','value4','value5']
         }
 
         parsed_xml = api.request("/path/to/endpoint", matrix=mtxparams, method="GET")
 
         computed_auth = base64.b64encode("{0}:{1}".format(self.fake_user, self.fake_passwd))
-        conn.request.assert_called_with('GET', '/API/path/to/endpoint;mtx3=value3;mtx3=value4;mtx3=value5;mtx2=value2;mtx1=value1', None,
+        conn.request.assert_called_with('GET', '/API/path/to/endpoint;mtx4=8;mtx3=value3;mtx3=value4;mtx3=value5;mtx2=value2;mtx1=value1', None,
                                         {'Authorization': "Basic " + computed_auth, 'Accept': 'application/xml'})
         conn.getresponse.assert_called_with()

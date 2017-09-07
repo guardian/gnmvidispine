@@ -417,7 +417,7 @@ class VSApi(object):
         else:
             toprocess = value
 
-        return map(lambda item: "{0}={1}".format(key, VSApi._escape_for_query(item)), toprocess)
+        return map(lambda item: "{0}={1}".format(key, VSApi._escape_for_query(unicode(item))), toprocess)
 
     def raw_request(self,path,method="GET",matrix=None,query=None,body=None,accept="application/xml",
                     content_type='application/xml',extra_headers={}):
