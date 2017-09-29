@@ -54,7 +54,7 @@ class TestVSItem(unittest2.TestCase):
         from gnmvidispine.vs_item import VSItem
         i = VSItem(host=self.fake_host,port=self.fake_port,user=self.fake_user,passwd=self.fake_passwd)
         result = i.import_base()
-        self.assertEqual({'essence': 'false','no-transcode': 'false','priority': 'MEDIUM','tag': 'original', 'thumbnails': 'true'}, result)
+        self.assertEqual({'essence': 'false','priority': 'MEDIUM','tag': 'original', 'thumbnails': 'true'}, result)
 
     def test_import_base_jobmeta(self):
         from gnmvidispine.vs_item import VSItem
@@ -80,7 +80,7 @@ class TestVSItem(unittest2.TestCase):
         
         i.import_to_shape(uri=fake_uri,shape_tag="shapetagname",priority="HIGH")
         i.sendAuthorized.assert_called_with('POST',
-                                            '/API/item/VX-123/shape?thumbnails=true&essence=false&tag=shapetagname&uri={0}&priority=HIGH&no-transcode=false'.format(quoted_uri)
+                                            '/API/item/VX-123/shape?priority=HIGH&essence=false&tag=shapetagname&thumbnails=true&uri={0}'.format(quoted_uri)
                                             ,"",{'Accept':'application/xml'})
 
         fake_uri = "file:///path/to/" + quote("media with spaces.mxf",safe="/")
@@ -88,7 +88,7 @@ class TestVSItem(unittest2.TestCase):
         
         i.import_to_shape(uri=fake_uri, shape_tag="shapetagname", priority="HIGH")
         i.sendAuthorized.assert_called_with('POST',
-                                            '/API/item/VX-123/shape?thumbnails=true&essence=false&tag=shapetagname&uri={0}&priority=HIGH&no-transcode=false'.format(
+                                            '/API/item/VX-123/shape?priority=HIGH&essence=false&tag=shapetagname&thumbnails=true&uri={0}'.format(
                                                 quoted_uri)
                                             , "", {'Accept': 'application/xml'})
 
@@ -97,7 +97,7 @@ class TestVSItem(unittest2.TestCase):
         
         i.import_to_shape(uri=fake_uri, shape_tag="shapetagname", priority="HIGH")
         i.sendAuthorized.assert_called_with('POST',
-                                            '/API/item/VX-123/shape?thumbnails=true&essence=false&tag=shapetagname&uri={0}&priority=HIGH&no-transcode=false'.format(
+                                            '/API/item/VX-123/shape?priority=HIGH&essence=false&tag=shapetagname&thumbnails=true&uri={0}'.format(
                                                 quoted_uri)
                                             , "", {'Accept': 'application/xml'})
 
