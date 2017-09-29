@@ -61,7 +61,7 @@ class TestVSItem(unittest2.TestCase):
         i = VSItem(host=self.fake_host,port=self.fake_port,user=self.fake_user,passwd=self.fake_passwd)
         result = i.import_base(jobMetadata={'keyone': 'valueone','keytwo': 'valuetwo'})
         self.assertEqual({'essence': 'false', 'jobmetadata': ['keyone=valueone', 'keytwo=valuetwo'],
-                          'no-transcode': 'false','priority': 'MEDIUM','tag': 'original', 'thumbnails': 'true'},
+                          'priority': 'MEDIUM','tag': 'original', 'thumbnails': 'true'},
                          result)
 
 
