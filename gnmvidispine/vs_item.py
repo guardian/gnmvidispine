@@ -711,15 +711,15 @@ class VSItem(VSApi):
             except AssertionError:
                 logging.info(rtn)
 
-    def import_base(self,shape_tag='original', priority='MEDIUM',
-                        essence=False, thumbnails=True):
+    def import_base(self,shape_tag='original', priority='MEDIUM', essence=False, thumbnails=True, jobMetadata=None):
         """
         prepares arguments for an import call. This is an internal method, called by import_to_shape and streaming_import_to_shape
-        :param shape_tag:
-        :param priority:
-        :param essence:
-        :param thumbnails:
-        :return:
+        :param shape_tag: shape tag to import to. Defaults to 'original'
+        :param priority: priority for import job. Defaults to 'Medium'
+        :param essence: is this an essence update or not
+        :param thumbnails: should Vidispine re-create thumbnails or not
+        :param jobMetadata: Dictionary of key/values for the job metadata - see Vidispine import documentation for details
+        :return: dictionary of arguments for the import call.
         """
         if isinstance(shape_tag,basestring):
             shape_tag_string = shape_tag
@@ -738,12 +738,19 @@ class VSItem(VSApi):
         else:
             e = 'false'
 
-        return {
+        if jobMetadata is not None:
+            extra_args = {'jobmetadata': map(lambda (k,v): "{0}={1}".format(k,v), jobMetadata.items())}
+        else:
+            extra_args = {}
+
+        rtn = {
             'tag'         : shape_tag_string,
             'priority'    : priority,
             'thumbnails'  : t,
             'essence'     : e
         }
+        rtn.update(extra_args)
+        return rtn
         
     def streaming_import_to_shape(self, filename, transferPriority=500, throttle=True, rename=None, **kwargs):
         """
