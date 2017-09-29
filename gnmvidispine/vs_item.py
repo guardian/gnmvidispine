@@ -742,7 +742,6 @@ class VSItem(VSApi):
             'tag'         : shape_tag_string,
             'priority'    : priority,
             'thumbnails'  : t,
-            'no-transcode': nt,
             'essence'     : e
         }
         
