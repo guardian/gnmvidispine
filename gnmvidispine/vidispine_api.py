@@ -567,7 +567,7 @@ class VSApi(object):
         Returns a dictionary representing Portal "extra_data" associated with the object
         :param node: ElementTree node to examine
         :param ns: XML Namespace of the document, normally keep this to the default.
-        :return: Dictionary representing the contents of the Portal-specific data
+        :return: Dictionary representing the contents of the Portal-specific data, or None if no such data is present
         """
         child = self.findPortalDataNode(node)
 
@@ -575,9 +575,11 @@ class VSApi(object):
             return None
 
         value = child.text
-        #print "got extradata: %s" % value
-        self.portalData = json.loads(value)
-        return self.portalData
+        if value is None:
+            return None
+        else:
+            self.portalData = json.loads(value)
+            return self.portalData
 
 
     def updatePortalData(self,node,should_create=False):

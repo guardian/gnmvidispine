@@ -345,3 +345,18 @@ class TestVSApi(unittest2.TestCase):
         conn.request.assert_called_with('GET', '/API/path/to/endpoint;mtx4=8;mtx3=value3;mtx3=value4;mtx3=value5;mtx2=value2;mtx1=value1', None,
                                         {'Authorization': "Basic " + computed_auth, 'Accept': 'application/xml'})
         conn.getresponse.assert_called_with()
+
+    def test_find_portal_data_none(self):
+        """
+        find_portal_data should be able to handle a null value if extra portal data does not exist on a field
+        :return:
+        """
+        from gnmvidispine.vidispine_api import VSApi
+        from xml.etree.cElementTree import Element, SubElement
+
+        fake_elem = MagicMock(target=Element)
+        test_elem = Element("data")
+
+        api = VSApi(user=self.fake_user, passwd=self.fake_passwd)
+        api.findPortalDataNode = MagicMock(return_value=test_elem)
+        self.assertEqual(api.findPortalData(fake_elem), None)
