@@ -261,7 +261,7 @@ class VSApi(object):
         conn = self._conn
 
         if rawData == False and body is not None:
-            body_to_send = body.decode('utf-8',"backslashreplace")
+            body_to_send = body.decode('utf-8',"backslashreplace").encode('utf-8',"backslashreplace")
         else:
             body_to_send = body
 

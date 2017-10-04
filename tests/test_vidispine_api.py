@@ -382,7 +382,7 @@ class TestVSApi(unittest2.TestCase):
 
         api.sendAuthorized("GET","/path/to/fake/url", dodgy_string,{})
         api._conn.request.assert_called_once_with("GET",
-                                                  u"/path/to/fake/url",
-                                                  u'<?xml version=\'1.0\' encoding=\'UTF-8\'?>\n<MetadataDocument xmlns="http://xml.vidispine.com/schema/vidispine"><timespan end="+INF" start="-INF"><field><name>title</name><value>Thousands take to streets in Barcelona to protest against police violence \u2013 video </value></field><field><name>gnm_asset_category</name><value>Master</value></field><field><name>gnm_type</name><value>Master</value></field><fiel',
+                                                  "/path/to/fake/url",
+                                                  '<?xml version=\'1.0\' encoding=\'UTF-8\'?>\n<MetadataDocument xmlns="http://xml.vidispine.com/schema/vidispine"><timespan end="+INF" start="-INF"><field><name>title</name><value>Thousands take to streets in Barcelona to protest against police violence \xe2\x80\x93 video </value></field><field><name>gnm_asset_category</name><value>Master</value></field><field><name>gnm_type</name><value>Master</value></field><fiel',
                                                   {'Authorization': 'Basic {0}'.format(auth)}
                                                   )
