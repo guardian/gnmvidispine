@@ -107,10 +107,10 @@ class TestVSItem(unittest2.TestCase):
 
         i.name = "VX-123"
 
-        testdoc = i._make_metadata_document({"field1": "value1","field2": "value2"})
+        testdoc = i._make_metadata_document({"field1": "value1","field2": "value2","field3": 3})
 
         self.assertEqual(testdoc,"""<?xml version='1.0' encoding='UTF-8'?>
-<MetadataDocument xmlns="http://xml.vidispine.com/schema/vidispine"><timespan end="+INF" start="-INF"><field><name>field2</name><value>value2</value></field><field><name>field1</name><value>value1</value></field></timespan></MetadataDocument>""")
+<MetadataDocument xmlns="http://xml.vidispine.com/schema/vidispine"><timespan end="+INF" start="-INF"><field><name>field2</name><value>value2</value></field><field><name>field3</name><value>3</value></field><field><name>field1</name><value>value1</value></field></timespan></MetadataDocument>""")
 
         testdoc = i._make_metadata_document({"field1": ["value1","value2","value3"], "field2": "value2"})
         self.assertEqual(testdoc,"""<?xml version='1.0' encoding='UTF-8'?>
