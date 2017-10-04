@@ -263,7 +263,12 @@ class VSApi(object):
         while True:
             self.logger.debug("sending {0} request to {1} with headers {2}".format(method,url,headers))
             try:
-                conn.request(method,url.encode('utf-8'),body.encode('utf-8') if body else None,headers)
+                conn.request(
+                    method,
+                    url.decode('utf-8',"backslashreplace").encode('utf-8',"backslashreplace"),
+                    body.decode('utf-8',"backslashreplace") if body else None,
+                    headers
+                )
             except httplib.CannotSendRequest:
                 attempt+=1
                 logger.warning("HTTP connection re-use issue detected, resetting connection")

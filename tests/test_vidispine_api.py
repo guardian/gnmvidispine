@@ -1,3 +1,4 @@
+# *-* coding: UTF-8 --*
 from __future__ import absolute_import
 import unittest2
 from mock import MagicMock, patch
@@ -360,3 +361,25 @@ class TestVSApi(unittest2.TestCase):
         api = VSApi(user=self.fake_user, passwd=self.fake_passwd)
         api.findPortalDataNode = MagicMock(return_value=test_elem)
         self.assertEqual(api.findPortalData(fake_elem), None)
+
+    def test_unicode_body(self):
+        """
+        sendAuthorized should be able to handle unicode characters in the request body
+        :return:
+        """
+        dodgy_string = """<?xml version='1.0' encoding='UTF-8'?>
+<MetadataDocument xmlns="http://xml.vidispine.com/schema/vidispine"><timespan end="+INF" start="-INF"><field><name>title</name><value>Thousands take to streets in Barcelona to protest against police violence – video </value></field><field><name>gnm_asset_category</name><value>Master</value></field><field><name>gnm_type</name><value>Master</value></field><fiel"""
+
+        from gnmvidispine.vidispine_api import VSApi
+        from httplib2 import Http
+        api = VSApi(user=self.fake_user, passwd=self.fake_passwd)
+        auth = base64.encodestring('%s:%s' % (self.fake_user, self.fake_passwd)).replace('\n', '')
+
+        api._conn = MagicMock(target=Http)
+
+        api.sendAuthorized("GET","/path/to/fake/url", dodgy_string,{})
+        api._conn.request.assert_called_once_with("GET",
+                                                  u"/path/to/fake/url",
+                                                  u'<?xml version=\'1.0\' encoding=\'UTF-8\'?>\n<MetadataDocument xmlns="http://xml.vidispine.com/schema/vidispine"><timespan end="+INF" start="-INF"><field><name>title</name><value>Thousands take to streets in Barcelona to protest against police violence \u2013 video </value></field><field><name>gnm_asset_category</name><value>Master</value></field><field><name>gnm_type</name><value>Master</value></field><fiel',
+                                                  {'Authorization': 'Basic {0}'.format(auth)}
+                                                  )
