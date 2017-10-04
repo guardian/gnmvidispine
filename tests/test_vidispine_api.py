@@ -371,11 +371,11 @@ class TestVSApi(unittest2.TestCase):
 <MetadataDocument xmlns="http://xml.vidispine.com/schema/vidispine"><timespan end="+INF" start="-INF"><field><name>title</name><value>Thousands take to streets in Barcelona to protest against police violence – video </value></field><field><name>gnm_asset_category</name><value>Master</value></field><field><name>gnm_type</name><value>Master</value></field><fiel"""
 
         from gnmvidispine.vidispine_api import VSApi
-        from httplib2 import Http
+        from httplib import HTTPConnection
         api = VSApi(user=self.fake_user, passwd=self.fake_passwd)
         auth = base64.encodestring('%s:%s' % (self.fake_user, self.fake_passwd)).replace('\n', '')
 
-        api._conn = MagicMock(target=Http)
+        api._conn = MagicMock(target=HTTPConnection)
 
         api.sendAuthorized("GET","/path/to/fake/url", dodgy_string,{})
         api._conn.request.assert_called_once_with("GET",
