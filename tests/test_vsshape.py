@@ -489,7 +489,7 @@ class TestVSShape(unittest2.TestCase):
         s.add_storage_rule(newrule)
         s.sendAuthorized.assert_called_with('PUT','/API/item/VX-456/storage-rule/original',
                                             tostring(parsed_xml_doc),
-                                            {'Content-Type': 'application/xml', 'Accept': 'application/xml'})
+                                            {'Content-Type': 'application/xml', 'Accept': 'application/xml'}, rawData=True)
 
     def test_delete_storage_rule(self):
         from gnmvidispine.vs_shape import VSShape
@@ -501,4 +501,4 @@ class TestVSShape(unittest2.TestCase):
         s.sendAuthorized = MagicMock(return_value=self.MockedResponse(200, self.test_storage_rule))
 
         s.delete_storage_rule()
-        s.sendAuthorized.assert_called_with('DELETE', '/API/item/VX-456/storage-rule/original', None, {'Accept': 'application/xml'})
+        s.sendAuthorized.assert_called_with('DELETE', '/API/item/VX-456/storage-rule/original', None, {'Accept': 'application/xml'}, rawData=True)

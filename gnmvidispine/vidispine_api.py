@@ -240,7 +240,7 @@ class VSApi(object):
     def __ne__(self, other):
         return not self.__eq__(other)
     
-    def sendAuthorized(self,method,url,body,headers):
+    def sendAuthorized(self,method,url,body,headers,rawData=False):
         """
         Internal method to sign requests. Callers should use request() instead
         :param method:
@@ -263,12 +263,20 @@ class VSApi(object):
         while True:
             self.logger.debug("sending {0} request to {1} with headers {2}".format(method,url,headers))
             try:
-                conn.request(
-                    method,
-                    url.decode('utf-8',"backslashreplace").encode('utf-8',"backslashreplace"),
-                    body.decode('utf-8',"backslashreplace") if body else None,
-                    headers
-                )
+                if rawData == False:
+                    conn.request(
+                        method,
+                        url.decode('utf-8',"backslashreplace").encode('utf-8',"backslashreplace"),
+                        body.decode('utf-8',"backslashreplace") if body else None,
+                        headers
+                    )
+                else:
+                    conn.request(
+                        method,
+                        url.decode('utf-8',"backslashreplace").encode('utf-8',"backslashreplace"),
+                        body if body else None,
+                        headers
+                    )
             except httplib.CannotSendRequest:
                 attempt+=1
                 logger.warning("HTTP connection re-use issue detected, resetting connection")
@@ -352,9 +360,11 @@ class VSApi(object):
         self.logger.debug("Commencing upload from {0} in chunks of {1}".format(upload_io,chunk_size))
         self.logger.debug("uploading to {0} with account {1}".format(self.host,self.user))
 
+        size_to_send = int(str(total_size))
+
         for startbyte in range(0,total_size,chunk_size):
             headers = {
-                'size': chunk_size,
+                'size': size_to_send,
                 'index': startbyte
             }
             upload_io.seek(startbyte,my_seek_set)
@@ -478,7 +488,7 @@ class VSApi(object):
         if method == "POST" and body is None:
             body = ""
 
-        response=self.sendAuthorized(method,url,body,base_headers)
+        response=self.sendAuthorized(method,url,body,base_headers,rawData=True)
 
         if response.status<200 or response.status>299:
             raise HTTPError(response.status,method,url,response.status,response.reason,response.read()).to_VSException(method=method,url=url,body=body)

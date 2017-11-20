@@ -255,6 +255,8 @@ class TestVSApi(unittest2.TestCase):
                     'Content-Type': 'application/octet-stream',
                     'Accept': 'application/xml'
                 }
+
+                size_to_send = int(str(testfilesize))
                 
                 for byteindex in range(0,testfilesize,testchunksize):
                     should_have_qparams = {
@@ -265,7 +267,7 @@ class TestVSApi(unittest2.TestCase):
                     }
                     should_have_extra_headers = {
                         'index': byteindex,
-                        'size': testchunksize,
+                        'size': size_to_send,
                     }
                     api.raw_request.assert_any_call('/API/fakeupload', matrix=None, body=filecontent[byteindex:byteindex+testchunksize],
                                                        content_type='application/octet-stream', method="POST",
