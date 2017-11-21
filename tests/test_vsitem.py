@@ -81,7 +81,7 @@ class TestVSItem(unittest2.TestCase):
         i.import_to_shape(uri=fake_uri,shape_tag="shapetagname",priority="HIGH")
         i.sendAuthorized.assert_called_with('POST',
                                             '/API/item/VX-123/shape?priority=HIGH&essence=false&tag=shapetagname&thumbnails=true&uri={0}'.format(quoted_uri)
-                                            ,"",{'Accept':'application/xml'}, rawData=True)
+                                            ,"",{'Accept':'application/xml'}, rawData=False)
 
         fake_uri = "file:///path/to/" + quote("media with spaces.mxf",safe="/")
         quoted_uri = quote(fake_uri,"")  # we are embedding a URI as a parameter with another URL so it must be double-encoded
@@ -90,7 +90,7 @@ class TestVSItem(unittest2.TestCase):
         i.sendAuthorized.assert_called_with('POST',
                                             '/API/item/VX-123/shape?priority=HIGH&essence=false&tag=shapetagname&thumbnails=true&uri={0}'.format(
                                                 quoted_uri)
-                                            , "", {'Accept': 'application/xml'}, rawData=True)
+                                            , "", {'Accept': 'application/xml'}, rawData=False)
 
         fake_uri = "file:///path/to/" + quote("media+with+plusses.mxf",safe="/+")
         quoted_uri = quote(fake_uri,"")  # we are embedding a URI as a parameter with another URL so it must be double-encoded
@@ -99,7 +99,7 @@ class TestVSItem(unittest2.TestCase):
         i.sendAuthorized.assert_called_with('POST',
                                             '/API/item/VX-123/shape?priority=HIGH&essence=false&tag=shapetagname&thumbnails=true&uri={0}'.format(
                                                 quoted_uri)
-                                            , "", {'Accept': 'application/xml'}, rawData=True)
+                                            , "", {'Accept': 'application/xml'}, rawData=False)
 
     def test_make_metadata_document(self):
         from gnmvidispine.vs_item import VSItem

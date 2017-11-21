@@ -260,7 +260,7 @@ class VSApi(object):
         response = None
         conn = self._conn
 
-        if rawData == False:
+        if rawData == False and body is not None:
             body_to_send = body.decode('utf-8',"backslashreplace")
         else:
             body_to_send = body
@@ -353,21 +353,24 @@ class VSApi(object):
         else:
             raise RuntimeError("neither io nor os has SEEK_SET, this should not happen. Check your python interpreter")
 
+        if content_type == 'application/octet-stream':
+            raw_data = True
+        else:
+            raw_data = False
+
         total_uploaded = 0
         self.logger.debug("Commencing upload from {0} in chunks of {1}".format(upload_io,chunk_size))
         self.logger.debug("uploading to {0} with account {1}".format(self.host,self.user))
 
-        size_to_send = int(str(total_size))
-
         for startbyte in range(0,total_size,chunk_size):
             headers = {
-                'size': size_to_send,
+                'size': total_size,
                 'index': startbyte
             }
             upload_io.seek(startbyte,my_seek_set)
             body_buffer = upload_io.read(chunk_size)
             self.raw_request(path,method=method,matrix=matrix,query=query_params,body=body_buffer,
-                             content_type=content_type,rawData=True,extra_headers=headers)
+                             content_type=content_type,rawData=raw_data,extra_headers=headers)
             self.logger.debug("Uploaded a total of {0} bytes".format(startbyte+chunk_size))
             
     def request(self,path,method="GET",matrix=None,query=None,body=None, accept='application/xml'):
