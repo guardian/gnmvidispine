@@ -259,24 +259,21 @@ class VSApi(object):
 
         response = None
         conn = self._conn
-        
+
+        if rawData == False:
+            body_to_send = body.decode('utf-8',"backslashreplace")
+        else:
+            body_to_send = body
+
         while True:
             self.logger.debug("sending {0} request to {1} with headers {2}".format(method,url,headers))
             try:
-                if rawData == False:
-                    conn.request(
-                        method,
-                        url.decode('utf-8',"backslashreplace").encode('utf-8',"backslashreplace"),
-                        body.decode('utf-8',"backslashreplace") if body else None,
-                        headers
-                    )
-                else:
-                    conn.request(
-                        method,
-                        url.decode('utf-8',"backslashreplace").encode('utf-8',"backslashreplace"),
-                        body if body else None,
-                        headers
-                    )
+                conn.request(
+                    method,
+                    url.decode('utf-8',"backslashreplace").encode('utf-8',"backslashreplace"),
+                    body_to_send if body else None,
+                    headers
+                )
             except httplib.CannotSendRequest:
                 attempt+=1
                 logger.warning("HTTP connection re-use issue detected, resetting connection")
@@ -370,7 +367,7 @@ class VSApi(object):
             upload_io.seek(startbyte,my_seek_set)
             body_buffer = upload_io.read(chunk_size)
             self.raw_request(path,method=method,matrix=matrix,query=query_params,body=body_buffer,
-                             content_type=content_type,extra_headers=headers)
+                             content_type=content_type,rawData=True,extra_headers=headers)
             self.logger.debug("Uploaded a total of {0} bytes".format(startbyte+chunk_size))
             
     def request(self,path,method="GET",matrix=None,query=None,body=None, accept='application/xml'):
@@ -439,7 +436,7 @@ class VSApi(object):
         return map(lambda item: "{0}={1}".format(key, VSApi._escape_for_query(unicode(item))), toprocess)
 
     def raw_request(self,path,method="GET",matrix=None,query=None,body=None,accept="application/xml",
-                    content_type='application/xml',extra_headers={}):
+                    content_type='application/xml',rawData=False,extra_headers={}):
         """
         Internal method to build request parameters.  Callers should use request() instead.
         :param path:
@@ -488,7 +485,7 @@ class VSApi(object):
         if method == "POST" and body is None:
             body = ""
 
-        response=self.sendAuthorized(method,url,body,base_headers,rawData=True)
+        response=self.sendAuthorized(method,url,body,base_headers,rawData=rawData)
 
         if response.status<200 or response.status>299:
             raise HTTPError(response.status,method,url,response.status,response.reason,response.read()).to_VSException(method=method,url=url,body=body)
