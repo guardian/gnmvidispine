@@ -770,7 +770,15 @@ class VSItem(VSApi):
         self.chunked_upload_request(io.FileIO(filename),os.path.getsize(filename),chunk_size=1024*1024,
                                     path=url.format(self.name).format(self.name),filename=rename,
                                     transferPriority=transferPriority,throttle=throttle,query=args,method="POST")
-        
+
+    def add_placeholder_shape(self, shape_tag='original'):
+        """
+        Adds a placeholder shape to the item
+        :param shape_tag: shape tag to add
+        :return: None
+        """
+        self.request("/item/{0}/shape/placeholder",method="POST",query={'tag': shape_tag})
+
     def import_to_shape(self, uri=None, file_ref=None, **kwargs):
         """
         Imports a file given by URI (as seen by the Vidispine server; does not have to be a Vidispine storage) to the item
