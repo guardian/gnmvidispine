@@ -777,7 +777,9 @@ class VSItem(VSApi):
         :param shape_tag: shape tag to add
         :return: None
         """
-        self.request("/item/{0}/shape/placeholder",method="POST",query={'tag': shape_tag})
+        bodycontent = """<SimpleMetadataDocument xmlns="http://xml.vidispine.com/schema/vidispine"></SimpleMetadataDocument>"""
+        self.request("/item/{0}/shape/placeholder",method="POST",body=bodycontent, query={'tag': shape_tag, 'container': 1})
+
 
     def import_to_shape(self, uri=None, file_ref=None, **kwargs):
         """
