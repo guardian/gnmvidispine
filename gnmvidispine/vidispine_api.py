@@ -363,7 +363,7 @@ class VSApi(object):
                              content_type=content_type,extra_headers=headers)
             self.logger.debug("Uploaded a total of {0} bytes".format(startbyte+chunk_size))
             
-    def request(self,path,method="GET",matrix=None,query=None,body=None):
+    def request(self,path,method="GET",matrix=None,query=None,body=None,accept='application/xml'):
         """
         Send a request to Vidispine, returning a parsed XML element tree if XML content is returned or raising VSExceptions
         if not successful.  Automatically retries at 10s intervals if a 503 Server Unavailable is returned.
@@ -383,7 +383,7 @@ class VSApi(object):
         while True:
             try:
                 n+=1
-                raw_body=self.raw_request(path.replace(' ', '%20'),method=method,matrix=matrix,query=query,body=body)
+                raw_body=self.raw_request(path.replace(' ', '%20'),method=method,matrix=matrix,query=query,body=body,accept=accept)
                 break
             except HTTPError as e:
                 if e.code==503: #server unavailable
@@ -403,7 +403,10 @@ class VSApi(object):
 
         if raw_body.__len__() > 0:
             try:
-                return ET.fromstring(unicode(raw_body,errors='ignore'))
+                if accept=='application/xml':
+                    return ET.fromstring(unicode(raw_body,errors='ignore'))
+                else:
+                    return raw_body
             except ExpatError:
                 logging.error("XML that caused the error: ")
                 logging.error(raw_body)

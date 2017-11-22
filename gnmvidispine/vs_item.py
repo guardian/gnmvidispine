@@ -775,11 +775,15 @@ class VSItem(VSApi):
         """
         Adds a placeholder shape to the item
         :param shape_tag: shape tag to add
-        :return: None
+        :return: string, that forms the ID of the created shape
         """
         bodycontent = """<SimpleMetadataDocument xmlns="http://xml.vidispine.com/schema/vidispine"></SimpleMetadataDocument>"""
-        self.request("/item/{0}/shape/placeholder",method="POST",body=bodycontent, query={'tag': shape_tag, 'container': 1})
-
+        response = self.request("/item/{0}/shape/placeholder".format(self.name),
+                                method="POST",
+                                body=bodycontent,
+                                accept='text/plain',
+                                query={'tag': shape_tag, 'container': 1})
+        return response
 
     def import_to_shape(self, uri=None, file_ref=None, **kwargs):
         """
