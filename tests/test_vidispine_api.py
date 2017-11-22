@@ -1,7 +1,7 @@
 # *-* coding: UTF-8 --*
 from __future__ import absolute_import
 import unittest2
-from mock import MagicMock, patch
+from mock import MagicMock, patch, call
 import httplib
 import base64
 import logging
