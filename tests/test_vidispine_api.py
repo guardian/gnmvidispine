@@ -247,7 +247,7 @@ class TestVSApi(unittest2.TestCase):
             filecontent = bytes(urandom(testfilesize))
             f.write(filecontent)
             with patch('uuid.uuid4', side_effect=lambda: FakeUuid4()):
-                api.chunked_upload_request(f, testfilesize, testchunksize, '/API/fakeupload', transferPriority=100, throttle=False,
+                api.chunked_upload_request(f, testfilesize, testchunksize, '/API/fakeupload', matrix=None, transferPriority=100, throttle=False,
                                            method="POST", filename="fakefile.dat", extra_headers={'extra_header': 'true'})
                 
                 should_have_headers = {
@@ -255,7 +255,7 @@ class TestVSApi(unittest2.TestCase):
                     'Content-Type': 'application/octet-stream',
                     'Accept': 'application/xml'
                 }
-                
+
                 for byteindex in range(0,testfilesize,testchunksize):
                     should_have_qparams = {
                         'transferId': 'fa6032d61c7b4db19425c6404ea7b822',
@@ -265,11 +265,14 @@ class TestVSApi(unittest2.TestCase):
                     }
                     should_have_extra_headers = {
                         'index': byteindex,
-                        'size': testchunksize,
+                        'size': 100000,
                     }
+
                     api.raw_request.assert_any_call('/API/fakeupload', matrix=None, body=filecontent[byteindex:byteindex+testchunksize],
-                                                       content_type='application/octet-stream', method="POST",
-                                                       query=should_have_qparams, extra_headers=should_have_extra_headers)
+                                                        content_type='application/octet-stream', method="POST",
+                                                        query=should_have_qparams, rawData=True ,extra_headers=should_have_extra_headers)
+
+                self.assertEqual(api.raw_request.call_count, 100)
 
     def test_reuse(self):
         from gnmvidispine.vidispine_api import VSApi

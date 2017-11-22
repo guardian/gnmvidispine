@@ -240,7 +240,7 @@ class VSApi(object):
     def __ne__(self, other):
         return not self.__eq__(other)
     
-    def sendAuthorized(self,method,url,body,headers):
+    def sendAuthorized(self,method,url,body,headers,rawData=False):
         """
         Internal method to sign requests. Callers should use request() instead
         :param method:
@@ -259,14 +259,19 @@ class VSApi(object):
 
         response = None
         conn = self._conn
-        
+
+        if rawData == False and body is not None:
+            body_to_send = body.decode('utf-8',"backslashreplace")
+        else:
+            body_to_send = body
+
         while True:
             self.logger.debug("sending {0} request to {1} with headers {2}".format(method,url,headers))
             try:
                 conn.request(
                     method,
                     url.decode('utf-8',"backslashreplace").encode('utf-8',"backslashreplace"),
-                    body.decode('utf-8',"backslashreplace") if body else None,
+                    body_to_send if body else None,
                     headers
                 )
             except httplib.CannotSendRequest:
@@ -348,19 +353,24 @@ class VSApi(object):
         else:
             raise RuntimeError("neither io nor os has SEEK_SET, this should not happen. Check your python interpreter")
 
+        if content_type == 'application/octet-stream':
+            raw_data = True
+        else:
+            raw_data = False
+
         total_uploaded = 0
         self.logger.debug("Commencing upload from {0} in chunks of {1}".format(upload_io,chunk_size))
         self.logger.debug("uploading to {0} with account {1}".format(self.host,self.user))
 
         for startbyte in range(0,total_size,chunk_size):
             headers = {
-                'size': chunk_size,
+                'size': total_size,
                 'index': startbyte
             }
             upload_io.seek(startbyte,my_seek_set)
             body_buffer = upload_io.read(chunk_size)
             self.raw_request(path,method=method,matrix=matrix,query=query_params,body=body_buffer,
-                             content_type=content_type,extra_headers=headers)
+                             content_type=content_type,rawData=raw_data,extra_headers=headers)
             self.logger.debug("Uploaded a total of {0} bytes".format(startbyte+chunk_size))
             
     def request(self,path,method="GET",matrix=None,query=None,body=None, accept='application/xml'):
@@ -429,7 +439,7 @@ class VSApi(object):
         return map(lambda item: "{0}={1}".format(key, VSApi._escape_for_query(unicode(item))), toprocess)
 
     def raw_request(self,path,method="GET",matrix=None,query=None,body=None,accept="application/xml",
-                    content_type='application/xml',extra_headers={}):
+                    content_type='application/xml',rawData=False,extra_headers={}):
         """
         Internal method to build request parameters.  Callers should use request() instead.
         :param path:
@@ -478,7 +488,7 @@ class VSApi(object):
         if method == "POST" and body is None:
             body = ""
 
-        response=self.sendAuthorized(method,url,body,base_headers)
+        response=self.sendAuthorized(method,url,body,base_headers,rawData=rawData)
 
         if response.status<200 or response.status>299:
             raise HTTPError(response.status,method,url,response.status,response.reason,response.read()).to_VSException(method=method,url=url,body=body)
