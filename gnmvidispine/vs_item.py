@@ -690,26 +690,22 @@ class VSItem(VSApi):
     def placeholder_adopt(self, file_ref, shape_tag='original', priority='MEDIUM'):
         """
         'Adopts' the given file reference as the specified shape
-        :param file_ref:
+        :param file_ref: VSFile instance to adopt. A VSException will be raised if this is already assocaited with another item.
         :param shape_tag:
         :param priority:
         :return:
         """
         from vs_storage import VSFile
-        from xml.etree.cElementTree import tostring
         if not isinstance(file_ref,VSFile):
             raise TypeError("file_ref must be a VSFile")
 
         url = "/import/placeholder/{item}/container/adopt/{file}".format(item=self.name,file=file_ref.name)
-        rtn = self.request(url,method="POST")
+        rtn = self.request(url, method="POST")
 
         if rtn is None:
             logging.info("placeholder adopt returned no data")
         else:
-            try:
-                logging.info(tostring(rtn))
-            except AssertionError:
-                logging.info(rtn)
+            logging.info("placeholder adopt returned {rtn}".format(rtn=rtn))
 
     def import_base(self,shape_tag='original', priority='MEDIUM', essence=False, thumbnails=True, jobMetadata=None):
         """

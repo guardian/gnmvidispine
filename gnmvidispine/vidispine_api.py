@@ -363,7 +363,7 @@ class VSApi(object):
                              content_type=content_type,extra_headers=headers)
             self.logger.debug("Uploaded a total of {0} bytes".format(startbyte+chunk_size))
             
-    def request(self,path,method="GET",matrix=None,query=None,body=None,accept='application/xml'):
+    def request(self,path,method="GET",matrix=None,query=None,body=None, accept='application/xml'):
         """
         Send a request to Vidispine, returning a parsed XML element tree if XML content is returned or raising VSExceptions
         if not successful.  Automatically retries at 10s intervals if a 503 Server Unavailable is returned.
@@ -374,6 +374,7 @@ class VSApi(object):
         :param query: A dictionary of "query parameters" for the API call.  Consult Vidispine documentation for valid
         parameters for each call
         :param body: String representing the raw request body to send. Normally this will be representation of an XML or JSON document.
+        :param accept: String representing the MIME type of data to accept in return. Default is application/xml.
         :return: A parsed XML element tree if data is returned or the string "Success" if there is no data. Raises VSException
         subclasses if an error occurs.
         """
