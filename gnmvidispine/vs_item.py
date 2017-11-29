@@ -158,7 +158,10 @@ class VSItem(VSApi):
         elif self.type == "collection":
             for x in self.dataContent.findall('{0}timespan'.format(namespace)):
                 self.makeContentDict(x)
-            self.name = self.contentDict['collectionId']
+            try:
+                self.name = self.contentDict['collectionId']
+            except KeyError:
+                self.name = "INVALIDNAME"
         else:
             raise TypeError("item populate() called on something not identifying an item or collection")
         return self
@@ -351,6 +354,52 @@ class VSItem(VSApi):
             return self.contentDict[fieldname]
 
         return None
+
+    def _get_timespans(self):
+        if self.type == "item":
+            for ts in self.dataContent.findall('{0}item/{0}metadata/{0}timespan'.format(self.xmlns)):
+                yield ts
+        elif self.type == "collection":
+            for ts in self.dataContent.findall('{0}timespan'.format(self.xmlns)):
+                yield ts
+        else:
+            raise ValueError("looking for field node on something not an item or collection?")
+
+    def _find_field_nodes(self, timespan, fieldname):
+        def get_field_name(fieldnode):
+            try:
+                namenode = fieldnode.find('{0}name'.format(self.xmlns))
+                if namenode is not None:
+                    return namenode.text
+                else:
+                    return None
+            except AttributeError:
+                return None
+        return filter(lambda fieldnode: get_field_name(fieldnode)==fieldname, timespan.findall('{0}field'.format(self.xmlns)))
+
+    def get_metadata_attributes(self, fieldname):
+        """
+        Convienience method that consumes gen_metadata_attributes into a list
+        :param fieldname: field name to look for
+        :return: None if fieldname does not exist or a List of VSMetadataAttribute objects
+        """
+        value = map(lambda f: f, self.gen_metadata_attributes(fieldname))
+        if value==[]:
+            return None
+        else:
+            return value
+
+    def gen_metadata_attributes(self, fieldname):
+        """
+        Generator to get the full attributes of the metadata
+        :param fieldname: field name to look for
+        :return: yields a VSMetadataAttribute object for each occurrence of the field fieldname in each timespan
+        """
+        from vs_metadata import VSMetadataValue, VSMetadataAttribute
+
+        for ts in self._get_timespans():
+            for fieldnode in self._find_field_nodes(ts, fieldname):
+                yield VSMetadataAttribute(fieldnode)
 
     def copyToPlaceholder(self,host='localhost',port=8080,user='admin',passwd=None):
         """
