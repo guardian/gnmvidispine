@@ -1,6 +1,7 @@
 __author__ = 'Andy Gallagher <andy.gallagher@theguardian.com>'
 
 import xml.etree.ElementTree as ET
+import dateutil.parser
 
 
 class VSMetadata:
@@ -60,3 +61,58 @@ class VSMetadata:
             timespanEl.append(fieldEl)
 
         return ET.tostring(rootEl,encoding="UTF-8")
+
+
+class VSMetadataMixin(object):
+    _xmlns = "{http://xml.vidispine.com/schema/vidispine}"
+
+    @staticmethod
+    def _safe_get_attrib(xmlnode, attribute, default):
+        try:
+            return xmlnode.attrib[attribute]
+        except AttributeError:
+            return default
+
+    @staticmethod
+    def _safe_get_subvalue(xmlnode, subnode_name, default):
+        try:
+            node = xmlnode.find(subnode_name)
+            if node is not None:
+                return node.text
+            else:
+                return default
+        except AttributeError:
+            return default
+
+
+class VSMetadataValue(VSMetadataMixin):
+    def __init__(self, valuenode):
+        self.uuid = self._safe_get_attrib(valuenode,"uuid", None)
+        self.user = self._safe_get_attrib(valuenode, "user", None)
+        try:
+            self.timestamp = dateutil.parser.parse(self._safe_get_attrib(valuenode,"timestamp", None))
+        except TypeError: #dateutil.parser got nothing
+            self.timestamp = None
+        self.change = self._safe_get_attrib(valuenode, "change", None)
+        self.value = valuenode.text
+
+    def __repr__(self):
+        return "VSMetadataValue(\"{0}\")".format(self.value)
+
+
+class VSMetadataAttribute(VSMetadataMixin):
+    """
+    this class represents the full metadata present in an xml <field> entry
+    """
+    def __init__(self, fieldnode):
+        self.uuid = self._safe_get_attrib(fieldnode,"uuid", None)
+        self.user = self._safe_get_attrib(fieldnode, "user", None)
+        try:
+            self.timestamp = dateutil.parser.parse(self._safe_get_attrib(fieldnode,"timestamp", None))
+        except TypeError: #dateutil.parser got nothing
+            self.timestamp = None
+        self.change = self._safe_get_attrib(fieldnode,"change",None)
+        self.name = self._safe_get_subvalue(fieldnode, "{0}name".format(self._xmlns), None)
+
+        self.values = map(lambda value_node: VSMetadataValue(value_node), fieldnode.findall('{0}value'.format(self._xmlns)))
+

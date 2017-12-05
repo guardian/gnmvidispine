@@ -64,7 +64,6 @@ class TestVSItem(unittest2.TestCase):
                           'priority': 'MEDIUM','tag': 'original', 'thumbnails': 'true'},
                          result)
 
-
     def test_import_to_shape(self):
         from gnmvidispine.vs_item import VSItem
         i = VSItem(host=self.fake_host,port=self.fake_port,user=self.fake_user,passwd=self.fake_passwd)
@@ -192,3 +191,35 @@ class TestVSItem(unittest2.TestCase):
         i.fromXML(self.testdoc)
 
         self.assertEqual(fix.sub("",i.toXML()),output_testdoc)
+
+    def test_get_metadata_attributes(self):
+        fake_data = """<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<MetadataDocument xmlns="http://xml.vidispine.com/schema/vidispine">
+    <revision>KP-19029938,KP-19008430,KP-19008428,KP-19008429</revision>
+    <timespan start="-INF" end="+INF">
+        <field uuid="6062c7ee-b4fe-4bbb-b61e-5d3debb05713" user="richard_sprenger" timestamp="2017-06-02T17:46:59.926+01:00" change="KP-19029938">
+            <name>gnm_commission_status</name>
+            <value uuid="d44f4268-f7af-46aa-884f-905855026c74" user="richard_sprenger" timestamp="2017-06-02T17:46:59.926+01:00" change="KP-19029938">Completed</value>
+        </field>
+        <field uuid="9860f876-b9e8-4799-8e68-cb292818a9cd" user="richard_sprenger" timestamp="2017-06-02T11:26:41.478+01:00" change="KP-19008429">
+            <name>gnm_commission_owner</name>
+            <value uuid="19e2cfdd-dd4c-4dc6-b910-6ce55b0c9c93" user="richard_sprenger" timestamp="2017-06-02T11:26:41.478+01:00" change="KP-19008429">11</value>
+            <value uuid="EF41268C-00B4-431D-A36E-6D3B4D59A06A" user="bob_smith" timestamp="2017-06-02T11:26:44.478+01:00" change="KP-19008430">14</value>
+        </field>
+    </timespan>
+</MetadataDocument>"""
+
+        from gnmvidispine.vs_collection import VSCollection
+        i = VSCollection(host=self.fake_host, port=self.fake_port, user=self.fake_user, passwd=self.fake_passwd)
+        i.collectionId="VX-1234"
+        i.fromXML(fake_data, objectClass="collection")
+
+        result = i.get_metadata_attributes("gnm_commission_status")
+        self.assertEqual(result[0].uuid,"6062c7ee-b4fe-4bbb-b61e-5d3debb05713")
+        self.assertEqual(str(result[0].values),'[VSMetadataValue("Completed")]')
+
+        result2 = i.get_metadata_attributes("gnm_commission_owner")
+        self.assertEqual(str(result2[0].values),'[VSMetadataValue("11"), VSMetadataValue("14")]')
+
+        result3 = i.get_metadata_attributes("invalidfieldname")
+        self.assertEqual(result3, None)
