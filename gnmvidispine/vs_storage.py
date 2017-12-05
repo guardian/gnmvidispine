@@ -367,30 +367,64 @@ class VSStorage(VSApi):
         except ValueError:
             logging.error("storage::fileCount - entry in <hits> was not an integer")
             raise
-        
-    def files(self, path='/', include_item=True):
+
+    def _file_request(self, path, got_files, pageSize, state,include_item):
+        """
+        internal method to make storage-file request to server
+        :return:
+        """
+        q = {
+            'path': path
+        }
+        mtx = {
+            'start': got_files,
+            'number': pageSize
+        }
+        if state is not None:
+            q.update({'state': state})
+
+        if include_item:
+            mtx['includeItem'] = True
+
+        return self.request("/storage/{storage}/file".format(storage=self.name),
+                                method="GET",
+                                matrix=mtx,
+                                query=q
+                                )
+
+    def file_count(self, path='/', include_item=True, state=None):
+        """
+        Returns the file count for the given search parameters
+        :param path: Subpath to search. Defaults to "/"
+        :param include_item: Boolean indicating whether to return item information in the data. Defaults to True
+        :param state: Only return files in a specific State (OPEN, CLOSED, LOST, etc. - http://apidoc.vidispine.com/latest/storage/storage.html#file-states)
+        :return: file count
+        """
+        response = self._file_request(path, 0, 0, state=state, include_item=include_item)
+
+        try:
+            return int(response.find('{0}hits'.format(self.xmlns)).text)
+        except AttributeError:
+            logging.error("storage::fileCount - unable to get hits from returned storage document")
+            raise
+        except ValueError:
+            logging.error("storage::fileCount - entry in <hits> was not an integer")
+        raise
+
+    def files(self, path='/', include_item=True, state=None):
+        """
+        Generator that yields VSFile objects for each file on the storage
+        :param path: Subpath to search. Defaults to "/"
+        :param include_item: Boolean indicating whether to return item information in the data. Defaults to True
+        :param state: Only return files in a specific State (OPEN, CLOSED, LOST, etc. - http://apidoc.vidispine.com/latest/storage/storage.html#file-states)
+        :return: yields VSFile objects
+        """
         got_files = 0
         total_hits = -1
         pageSize = 100
 
         while True:
-            q = {
-                'path': path
-            }
-            mtx = {
-                'start': got_files,
-                'number': pageSize
-            }
-            if include_item:
-                mtx['includeItem'] = True
-            #
-            # if self.debug:
-            #     print
-            response = self.request("/storage/{storage}/file".format(storage=self.name),
-                                    method="GET",
-                                    matrix=mtx,
-                                    query=q
-                                    )
+            response = self._file_request(path, got_files, pageSize, state, include_item)
             if total_hits == -1:
                 total_hits = int(response.find("{0}hits".format(self.xmlns)).text)
                 logging.debug("Got {0} hits".format(total_hits))
