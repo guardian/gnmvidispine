@@ -956,7 +956,7 @@ class VSMetadataBuilder(VSApi):
                 value=[value]
             for v in value:
                 fieldvalue = ET.SubElement(fieldnode,"value")
-                fieldvalue.text = v
+                fieldvalue.text = unicode(v)
 
     def _groupContent(self,parentNode,meta,subgroupmode="add"):
         """
