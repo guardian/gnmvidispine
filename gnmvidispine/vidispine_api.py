@@ -12,6 +12,7 @@ import io
 import os
 from socket import error as socket_error
 from itertools import chain, imap
+import requests
 
 logger = logging.getLogger(__name__)
 
@@ -165,7 +166,7 @@ class VSApi(object):
 
     xmlns = "{http://xml.vidispine.com/schema/vidispine}"
 
-    def __init__(self,host="localhost",port=8080,user="",passwd="",url=None,run_as=None, conn=None, logger=None):
+    def __init__(self,host="localhost",port=8080,user="",passwd="",url=None,run_as=None, conn=None, logger=None, session=None, request=None):
         """
         Initialise a new Vidispine connection.
         :param host: Hostname to connect to Vidispine on
@@ -199,7 +200,8 @@ class VSApi(object):
                 self.host = bits.netloc
 
         self._conn = conn if conn is not None else httplib.HTTPConnection(self.host, self.port)
-        
+        self._session = session if session is not None else requests.Session()
+
     class NotPopulatedError(StandardError):
         """
         Exception explaining that the Vidispine object must have been populated by a call to populate() or similar
@@ -259,6 +261,7 @@ class VSApi(object):
 
         response = None
         conn = self._conn
+        session = self._session
 
         if rawData == False and body is not None:
             body_to_send = body.decode('utf-8',"backslashreplace")
@@ -268,12 +271,22 @@ class VSApi(object):
         while True:
             self.logger.debug("sending {0} request to {1} with headers {2}".format(method,url,headers))
             try:
-                conn.request(
+                req = requests.Request(
                     method,
-                    url.decode('utf-8',"backslashreplace").encode('utf-8',"backslashreplace"),
-                    body_to_send if body else None,
-                    headers
+                    'http://{0}:{1}{2}'.format(self.host,self.port,url.decode('utf-8',"backslashreplace").encode('utf-8',"backslashreplace")),
+                    data=body_to_send if body else None,
+                    headers=headers
                 )
+
+                prepped = req.prepare()
+
+                resp = session.send(prepped)
+#                conn.request(
+#                    method,
+#                    url.decode('utf-8',"backslashreplace").encode('utf-8',"backslashreplace"),
+##                    body_to_send if body else None,
+#                    headers
+#                )
             except httplib.CannotSendRequest:
                 attempt+=1
                 logger.warning("HTTP connection re-use issue detected, resetting connection")
@@ -291,22 +304,15 @@ class VSApi(object):
                     raise
                 continue
 
-            response = conn.getresponse()
-            if response.status == 303:
-                url = response.msg.dict['location']
-                logger.debug("Response was a redirect to {0}".format(url))
-                conn = httplib.HTTPConnection(self.host,self.port)
-            elif response.status == 504:    #gateway timeout
-                #if we're getting timeouts, apply an exponential backoff
-                if self._delay==0:
-                    self._delay = 1
-                else:
-                    self._delay *= 2
-                self._delayedcounter+=1
-                self._undelayedcounter=0
+            print(resp.status_code)
 
-                logger.warning("Gateway timeout error communicating with {0}. Waiting {1} seconds before trying again.".format(url,self._delay))
-                time.sleep(self._delay)
+            pprint(resp)
+            print resp
+
+            if resp.status_code == 303:
+                print 'Code was 303'
+            elif resp.status_code == 504:
+                print 'Code was 504'
             else:
                 self._undelayedcounter+=1
                 if self._delay>0 and self._undelayedcounter>10*self._delayedcounter:
@@ -315,7 +321,35 @@ class VSApi(object):
                     self._delayedcounter=0
                 break
 
-        return response
+        return resp
+
+
+
+        #    response = conn.getresponse()
+        #    if response.status == 303:
+        #        url = response.msg.dict['location']
+        #        logger.debug("Response was a redirect to {0}".format(url))
+        #        conn = httplib.HTTPConnection(self.host,self.port)
+        #    elif response.status == 504:    #gateway timeout
+        #        #if we're getting timeouts, apply an exponential backoff
+        ##        if self._delay==0:
+        #            self._delay = 1
+        #        else:
+        #            self._delay *= 2
+        #        self._delayedcounter+=1
+        #        self._undelayedcounter=0
+
+        #        logger.warning("Gateway timeout error communicating with {0}. Waiting {1} seconds before trying again.".format(url,self._delay))
+        #        time.sleep(self._delay)
+        #    else:
+        #        self._undelayedcounter+=1
+        #        if self._delay>0 and self._undelayedcounter>10*self._delayedcounter:
+        #            logger.warning("{0} attempts have now suceeded with no delay, so removing the delay.".format(self._undelayedcounter))
+        #            self._delay=0
+        #            self._delayedcounter=0
+        #        break
+
+        #return response
 
     def chunked_upload_request(self,upload_io,total_size,chunk_size,
                                path,transferPriority=500,throttle=True,method="GET",matrix=None,query=None,
@@ -490,10 +524,10 @@ class VSApi(object):
 
         response=self.sendAuthorized(method,url,body,base_headers,rawData=rawData)
 
-        if response.status<200 or response.status>299:
-            raise HTTPError(response.status,method,url,response.status,response.reason,response.read()).to_VSException(method=method,url=url,body=body)
+        if response.status_code<200 or response.status_code>299:
+            raise HTTPError(response.status_code,method,url,response.status_code,response.reason,response.content).to_VSException(method=method,url=url,body=body)
 
-        return response.read()
+        return response.content
 
     def xml_content(self):
         """
