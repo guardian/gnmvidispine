@@ -223,3 +223,25 @@ class TestVSItem(unittest2.TestCase):
 
         result3 = i.get_metadata_attributes("invalidfieldname")
         self.assertEqual(result3, None)
+
+
+class TestVsMetadataBuilder(unittest2.TestCase):
+    maxDiff = None
+
+    def test_builder_refs(self):
+        """
+        Builder should recognise VSMetadataReference objects
+        :return:
+        """
+        from gnmvidispine.vs_metadata import VSMetadataReference
+        from gnmvidispine.vs_item import VSMetadataBuilder, VSItem
+        mock_item = MagicMock(target=VSItem)
+
+        ref = VSMetadataReference()
+        ref.uuid = "ED047409-706B-43B7-9F35-0DDBC6F2689E"
+
+        b = VSMetadataBuilder(mock_item)
+        b.addMeta({'test_field': ref})
+
+        self.assertEqual(b.as_xml("UTF-8"),u"""<?xml version='1.0' encoding='UTF-8'?>
+<MetadataDocument xmlns="http://xml.vidispine.com/schema/vidispine"><timespan end="+INF" start="-INF"><field><name>test_field</name><reference>ED047409-706B-43B7-9F35-0DDBC6F2689E</reference></field></timespan></MetadataDocument>""")

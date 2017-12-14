@@ -86,33 +86,81 @@ class VSMetadataMixin(object):
 
 
 class VSMetadataValue(VSMetadataMixin):
-    def __init__(self, valuenode):
-        self.uuid = self._safe_get_attrib(valuenode,"uuid", None)
-        self.user = self._safe_get_attrib(valuenode, "user", None)
-        try:
-            self.timestamp = dateutil.parser.parse(self._safe_get_attrib(valuenode,"timestamp", None))
-        except TypeError: #dateutil.parser got nothing
-            self.timestamp = None
-        self.change = self._safe_get_attrib(valuenode, "change", None)
-        self.value = valuenode.text
+    def __init__(self, valuenode=None, uuid=None):
+        self.user = None
+        self.uuid = None
+        self.timestamp = None
+        self.change = None
+        self.value = None
+
+        if valuenode is not None:
+            self.uuid = self._safe_get_attrib(valuenode,"uuid", None)
+            self.user = self._safe_get_attrib(valuenode, "user", None)
+            try:
+                self.timestamp = dateutil.parser.parse(self._safe_get_attrib(valuenode,"timestamp", None))
+            except TypeError: #dateutil.parser got nothing
+                self.timestamp = None
+            self.change = self._safe_get_attrib(valuenode, "change", None)
+            self.value = valuenode.text
+        elif uuid is not None:
+            self.uuid = uuid
 
     def __repr__(self):
         return "VSMetadataValue(\"{0}\")".format(self.value)
+
+    def __eq__(self, other):
+        return other.uuid==self.uuid
+
+
+class VSMetadataReference(VSMetadataMixin):
+    def __init__(self, refnode=None, uuid=None):
+        """
+        Initialises, either to an empty reference, to an existing uuid or to an xml fragment
+        :param uuid: string representing the uuid of something to reference
+        :param refnode: pointer to an elementtree node of <referenced> in a MetadataDocument
+        """
+        if refnode is not None:
+            self.uuid = self._safe_get_attrib(refnode,"uuid",None)
+            self.id = self._safe_get_attrib(refnode,"id",None)
+            self.type = self._safe_get_attrib(refnode,"type",None)
+        if refnode is None and uuid is not None:
+            self.uuid=uuid
+            self.id = None
+            self.type = None
+
+    def __repr__(self):
+        return "VSMetadataReference {0} to {1} {2}".format(self.uuid,self.type,self.id)
+
+    def __eq__(self, other):
+        return other.uuid==self.uuid
 
 
 class VSMetadataAttribute(VSMetadataMixin):
     """
     this class represents the full metadata present in an xml <field> entry
     """
-    def __init__(self, fieldnode):
-        self.uuid = self._safe_get_attrib(fieldnode,"uuid", None)
-        self.user = self._safe_get_attrib(fieldnode, "user", None)
-        try:
-            self.timestamp = dateutil.parser.parse(self._safe_get_attrib(fieldnode,"timestamp", None))
-        except TypeError: #dateutil.parser got nothing
+    def __init__(self, fieldnode=None):
+        if fieldnode is not None:
+            self.uuid = self._safe_get_attrib(fieldnode,"uuid", None)
+            self.user = self._safe_get_attrib(fieldnode, "user", None)
+
+            try:
+                self.timestamp = dateutil.parser.parse(self._safe_get_attrib(fieldnode,"timestamp", None))
+            except TypeError: #dateutil.parser got nothing
+                self.timestamp = None
+            self.change = self._safe_get_attrib(fieldnode,"change",None)
+            self.name = self._safe_get_subvalue(fieldnode, "{0}name".format(self._xmlns), None)
+
+            self.values = map(lambda value_node: VSMetadataValue(value_node), fieldnode.findall('{0}value'.format(self._xmlns)))
+            self.references = map(lambda ref_node: VSMetadataReference(ref_node), fieldnode.findall('{0}referenced'.format(self._xmlns)))
+        else:
+            self.uuid = None
+            self.user = None
             self.timestamp = None
-        self.change = self._safe_get_attrib(fieldnode,"change",None)
-        self.name = self._safe_get_subvalue(fieldnode, "{0}name".format(self._xmlns), None)
+            self.change = None
+            self.name = None
+            self.values = []
+            self.references = []
 
-        self.values = map(lambda value_node: VSMetadataValue(value_node), fieldnode.findall('{0}value'.format(self._xmlns)))
-
+    def __eq__(self, other):
+        return other.uuid==self.uuid
