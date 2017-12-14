@@ -86,18 +86,30 @@ class VSMetadataMixin(object):
 
 
 class VSMetadataValue(VSMetadataMixin):
-    def __init__(self, valuenode):
-        self.uuid = self._safe_get_attrib(valuenode,"uuid", None)
-        self.user = self._safe_get_attrib(valuenode, "user", None)
-        try:
-            self.timestamp = dateutil.parser.parse(self._safe_get_attrib(valuenode,"timestamp", None))
-        except TypeError: #dateutil.parser got nothing
-            self.timestamp = None
-        self.change = self._safe_get_attrib(valuenode, "change", None)
-        self.value = valuenode.text
+    def __init__(self, uuid=None, valuenode=None):
+        self.user = None
+        self.uuid = None
+        self.timestamp = None
+        self.change = None
+        self.value = None
+
+        if valuenode is not None:
+            self.uuid = self._safe_get_attrib(valuenode,"uuid", None)
+            self.user = self._safe_get_attrib(valuenode, "user", None)
+            try:
+                self.timestamp = dateutil.parser.parse(self._safe_get_attrib(valuenode,"timestamp", None))
+            except TypeError: #dateutil.parser got nothing
+                self.timestamp = None
+            self.change = self._safe_get_attrib(valuenode, "change", None)
+            self.value = valuenode.text
+        elif uuid is not None:
+            self.uuid = uuid
 
     def __repr__(self):
         return "VSMetadataValue(\"{0}\")".format(self.value)
+
+    def __eq__(self, other):
+        return other.uuid==self.uuid
 
 
 class VSMetadataReference(VSMetadataMixin):
@@ -113,9 +125,14 @@ class VSMetadataReference(VSMetadataMixin):
             self.type = self._safe_get_attrib(refnode,"type",None)
         if refnode is None and uuid is not None:
             self.uuid=uuid
+            self.id = None
+            self.type = None
 
     def __repr__(self):
         return "VSMetadataReference {0} to {1} {2}".format(self.uuid,self.type,self.id)
+
+    def __eq__(self, other):
+        return other.uuid==self.uuid
 
 
 class VSMetadataAttribute(VSMetadataMixin):
@@ -144,3 +161,6 @@ class VSMetadataAttribute(VSMetadataMixin):
             self.name = None
             self.values = []
             self.references = []
+
+    def __eq__(self, other):
+        return other.uuid==self.uuid
