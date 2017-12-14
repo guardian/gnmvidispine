@@ -977,13 +977,13 @@ class VSMetadataBuilder(VSApi):
                 fieldname.text = key
                 for item in value:
                     fieldvalue = ET.SubElement(fieldnode,"value")
-                    fieldvalue.text = unicode(item)
+                    fieldvalue.text = unicode(item).decode("UTF-8")
             else:
                 fieldnode = ET.SubElement(parentNode,"field")
                 fieldname = ET.SubElement(fieldnode,"name")
-                fieldname.text = key.decode("UTF-8")
+                fieldname.text = unicode(key).decode("UTF-8")
                 fieldvalue = ET.SubElement(fieldnode,"value")
-                fieldvalue.text = unicode(value)
+                fieldvalue.text = unicode(value).decode("UTF-8")
 
     def _groupContent(self,parentNode,meta,subgroupmode="add"):
         """

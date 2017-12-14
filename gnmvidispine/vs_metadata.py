@@ -86,7 +86,7 @@ class VSMetadataMixin(object):
 
 
 class VSMetadataValue(VSMetadataMixin):
-    def __init__(self, uuid=None, valuenode=None):
+    def __init__(self, valuenode=None, uuid=None):
         self.user = None
         self.uuid = None
         self.timestamp = None
@@ -113,7 +113,7 @@ class VSMetadataValue(VSMetadataMixin):
 
 
 class VSMetadataReference(VSMetadataMixin):
-    def __init__(self, uuid=None, refnode=None):
+    def __init__(self, refnode=None, uuid=None):
         """
         Initialises, either to an empty reference, to an existing uuid or to an xml fragment
         :param uuid: string representing the uuid of something to reference
