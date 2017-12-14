@@ -101,11 +101,18 @@ class VSMetadataValue(VSMetadataMixin):
 
 
 class VSMetadataReference(VSMetadataMixin):
-    def __init__(self, refnode=None):
+    def __init__(self, uuid=None, refnode=None):
+        """
+        Initialises, either to an empty reference, to an existing uuid or to an xml fragment
+        :param uuid: string representing the uuid of something to reference
+        :param refnode: pointer to an elementtree node of <referenced> in a MetadataDocument
+        """
         if refnode is not None:
             self.uuid = self._safe_get_attrib(refnode,"uuid",None)
             self.id = self._safe_get_attrib(refnode,"id",None)
             self.type = self._safe_get_attrib(refnode,"type",None)
+        if refnode is None and uuid is not None:
+            self.uuid=uuid
 
     def __repr__(self):
         return "VSMetadataReference {0} to {1} {2}".format(self.uuid,self.type,self.id)
