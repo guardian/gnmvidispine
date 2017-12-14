@@ -950,6 +950,21 @@ class VSMetadataBuilder(VSApi):
 
         self._setkeyvalue(self.tsNode, None, meta)
 
+    def _setcontentnode(self, parentNode, value):
+        """
+        Internal method to generate a value or reference node
+        :param parentNode:
+        :param value:
+        :return:
+        """
+        from vs_metadata import VSMetadataReference
+        if isinstance(value, VSMetadataReference):
+            node = ET.SubElement(parentNode, "reference")
+            node.text = str(value.uuid)
+        else:
+            node = ET.SubElement(parentNode, "value")
+            node.text = unicode(value).decode("UTF-8")
+
     def _setkeyvalue(self,parentNode, params, meta):
         """
         Internal method to set value nodes within a field or group
@@ -958,15 +973,8 @@ class VSMetadataBuilder(VSApi):
         :param meta: dictionary of metadata to add
         :return: None
         """
-        from vs_metadata import VSMetadataReference
         for key,value in meta.items():
-            if isinstance(value,VSMetadataReference):
-                fieldnode = ET.SubElement(parentNode, "field")
-                fieldname = ET.SubElement(fieldnode,"name")
-                fieldname.text = key
-                fieldref = ET.SubElement(fieldnode,"reference")
-                fieldref.text = str(value.uuid)
-            elif isinstance(value,dict):
+            if isinstance(value,dict):
                 subgroupnode = ET.SubElement(parentNode,"group",params)
                 subgroupname = ET.SubElement(subgroupnode,"name")
                 subgroupname.text = key
@@ -976,14 +984,12 @@ class VSMetadataBuilder(VSApi):
                 fieldname = ET.SubElement(fieldnode,"name")
                 fieldname.text = key
                 for item in value:
-                    fieldvalue = ET.SubElement(fieldnode,"value")
-                    fieldvalue.text = unicode(item).decode("UTF-8")
+                    self._setcontentnode(fieldnode, item)
             else:
                 fieldnode = ET.SubElement(parentNode,"field")
                 fieldname = ET.SubElement(fieldnode,"name")
                 fieldname.text = unicode(key).decode("UTF-8")
-                fieldvalue = ET.SubElement(fieldnode,"value")
-                fieldvalue.text = unicode(value).decode("UTF-8")
+                self._setcontentnode(fieldnode, value)
 
     def _groupContent(self,parentNode,meta,subgroupmode="add"):
         """
