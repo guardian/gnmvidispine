@@ -60,3 +60,22 @@ class TestVSMetadataAttribute(unittest2.TestCase):
         self.assertEqual(field.name,"gnm_commission_owner")
         #test using repr() that it actually works. assume that VSMetadataValue does its thang based on the unit test for it.
         self.assertEqual(str(field.values),"[VSMetadataValue(\"11\"), VSMetadataValue(\"14\")]")
+
+    def test_references(self):
+        """
+        VSMetadataAttribute should load in external references from a valid field entry
+        :return:
+        """
+        from gnmvidispine.vs_metadata import VSMetadataAttribute
+        testdata = ET.fromstring("""<field xmlns="http://xml.vidispine.com/schema/vidispine" uuid="982ae13e-ee13-4b75-9ba6-8defa584efb7" user="adam_sich" timestamp="2017-11-14T11:33:30.631Z" change="KP-22501063">
+            <name>gnm_commission_title</name>
+            <referenced id="KP-23891" uuid="a8765513-8872-48f2-8549-ac1468405e8a" type="collection"/>
+            <value uuid="97fe0bc2-291a-4fa8-a327-0a79f57b563e" user="adam_sich" timestamp="2017-02-16T16:36:21.066Z" change="KP-16051833">Owen Jones 2017</value>
+        </field>""")
+
+        field = VSMetadataAttribute(testdata)
+        self.assertEqual(field.uuid,"982ae13e-ee13-4b75-9ba6-8defa584efb7")
+        self.assertEqual(field.user,"adam_sich")
+        self.assertEqual(field.change,"KP-22501063")
+        self.assertEqual(field.name,"gnm_commission_title")
+        self.assertEqual(str(field.references),"[VSMetadataReference a8765513-8872-48f2-8549-ac1468405e8a to collection KP-23891]")

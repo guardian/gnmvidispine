@@ -100,6 +100,17 @@ class VSMetadataValue(VSMetadataMixin):
         return "VSMetadataValue(\"{0}\")".format(self.value)
 
 
+class VSMetadataReference(VSMetadataMixin):
+    def __init__(self, refnode=None):
+        if refnode is not None:
+            self.uuid = self._safe_get_attrib(refnode,"uuid",None)
+            self.id = self._safe_get_attrib(refnode,"id",None)
+            self.type = self._safe_get_attrib(refnode,"type",None)
+
+    def __repr__(self):
+        return "VSMetadataReference {0} to {1} {2}".format(self.uuid,self.type,self.id)
+
+
 class VSMetadataAttribute(VSMetadataMixin):
     """
     this class represents the full metadata present in an xml <field> entry
@@ -107,6 +118,7 @@ class VSMetadataAttribute(VSMetadataMixin):
     def __init__(self, fieldnode):
         self.uuid = self._safe_get_attrib(fieldnode,"uuid", None)
         self.user = self._safe_get_attrib(fieldnode, "user", None)
+
         try:
             self.timestamp = dateutil.parser.parse(self._safe_get_attrib(fieldnode,"timestamp", None))
         except TypeError: #dateutil.parser got nothing
@@ -115,4 +127,4 @@ class VSMetadataAttribute(VSMetadataMixin):
         self.name = self._safe_get_subvalue(fieldnode, "{0}name".format(self._xmlns), None)
 
         self.values = map(lambda value_node: VSMetadataValue(value_node), fieldnode.findall('{0}value'.format(self._xmlns)))
-
+        self.references = map(lambda ref_node: VSMetadataReference(ref_node), fieldnode.findall('{0}referenced'.format(self._xmlns)))
