@@ -948,30 +948,32 @@ class VSMetadataBuilder(VSApi):
         if not isinstance(meta,dict):
             raise TypeError
 
-        for key,value in meta.items():
-            fieldnode = ET.SubElement(self.tsNode,"field")
-            fieldname = ET.SubElement(fieldnode,"name")
-            fieldname.text = key
-            if not isinstance(value,list):
-                value=[value]
-            for v in value:
-                fieldvalue = ET.SubElement(fieldnode,"value")
-                fieldvalue.text = unicode(v)
+        self._setkeyvalue(self.tsNode, None, meta)
 
-    def _groupContent(self,parentNode,meta,subgroupmode="add"):
+    def _setcontentnode(self, parentNode, value):
         """
-        Private internal method
+        Internal method to generate a value or reference node
         :param parentNode:
-        :param meta:
-        :param subgroupmode:
+        :param value:
         :return:
         """
-        params = {}
-        if subgroupmode is not None:
-            params={'mode': subgroupmode}
+        from vs_metadata import VSMetadataReference
+        if isinstance(value, VSMetadataReference):
+            node = ET.SubElement(parentNode, "reference")
+            node.text = str(value.uuid)
+        else:
+            node = ET.SubElement(parentNode, "value")
+            node.text = unicode(value).decode("UTF-8")
+
+    def _setkeyvalue(self,parentNode, params, meta):
+        """
+        Internal method to set value nodes within a field or group
+        :param parentNode: parent node to attach to
+        :param params: dictionary of node attributes for subgroup nodes
+        :param meta: dictionary of metadata to add
+        :return: None
+        """
         for key,value in meta.items():
-            #print key
-            #pprint(value)
             if isinstance(value,dict):
                 subgroupnode = ET.SubElement(parentNode,"group",params)
                 subgroupname = ET.SubElement(subgroupnode,"name")
@@ -982,14 +984,26 @@ class VSMetadataBuilder(VSApi):
                 fieldname = ET.SubElement(fieldnode,"name")
                 fieldname.text = key
                 for item in value:
-                    fieldvalue = ET.SubElement(fieldnode,"value")
-                    fieldvalue.text = item
+                    self._setcontentnode(fieldnode, item)
             else:
                 fieldnode = ET.SubElement(parentNode,"field")
                 fieldname = ET.SubElement(fieldnode,"name")
-                fieldname.text = key
-                fieldvalue = ET.SubElement(fieldnode,"value")
-                fieldvalue.text = value
+                fieldname.text = unicode(key).decode("UTF-8")
+                self._setcontentnode(fieldnode, value)
+
+    def _groupContent(self,parentNode,meta,subgroupmode="add"):
+        """
+        Private internal method
+        :param parentNode: xml elementtree node to add this group to
+        :param meta: dictionary of metadata
+        :param subgroupmode: mode, "add" or "remove"
+        :return:
+        """
+
+        params = {}
+        if subgroupmode is not None:
+            params={'mode': subgroupmode}
+        return self._setkeyvalue(parentNode,params,meta)
 
     def addGroup(self,groupname,meta,mode=None,subgroubmode=None):
         """
