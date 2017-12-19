@@ -245,3 +245,32 @@ class TestVsMetadataBuilder(unittest2.TestCase):
 
         self.assertEqual(b.as_xml("UTF-8"),u"""<?xml version='1.0' encoding='UTF-8'?>
 <MetadataDocument xmlns="http://xml.vidispine.com/schema/vidispine"><timespan end="+INF" start="-INF"><field><name>test_field</name><reference>ED047409-706B-43B7-9F35-0DDBC6F2689E</reference></field></timespan></MetadataDocument>""")
+
+    def test_serialize_float(self):
+        """
+        Builder should be able to serialize floats
+        :return:
+        """
+        from gnmvidispine.vs_item import VSMetadataBuilder, VSItem
+        mock_item = MagicMock(target=VSItem)
+
+        b = VSMetadataBuilder(mock_item)
+        b.addMeta({'test_field': 1.234})
+        self.assertEqual(b.as_xml("UTF-8"),"""<?xml version='1.0' encoding='UTF-8'?>
+<MetadataDocument xmlns="http://xml.vidispine.com/schema/vidispine"><timespan end="+INF" start="-INF"><field><name>test_field</name><value>1.234</value></field></timespan></MetadataDocument>""")
+
+    def test_serialize_datetime(self):
+        """
+        Builder should be able to serialize datetimes
+        :return:
+        """
+        from gnmvidispine.vs_item import VSMetadataBuilder, VSItem
+        from datetime import datetime
+        import pytz
+
+        mock_item = MagicMock(target=VSItem)
+
+        b = VSMetadataBuilder(mock_item)
+        b.addMeta({'test_field': datetime(2015,07,12,23,04,31,0,pytz.timezone("Europe/London"))})
+        self.assertEqual(b.as_xml("UTF-8"),"""<?xml version='1.0' encoding='UTF-8'?>
+<MetadataDocument xmlns="http://xml.vidispine.com/schema/vidispine"><timespan end="+INF" start="-INF"><field><name>test_field</name><value>2015-07-12T23:04:31-00:01</value></field></timespan></MetadataDocument>""")

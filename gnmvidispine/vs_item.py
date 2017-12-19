@@ -958,9 +958,13 @@ class VSMetadataBuilder(VSApi):
         :return:
         """
         from vs_metadata import VSMetadataReference
+        from datetime import datetime
         if isinstance(value, VSMetadataReference):
             node = ET.SubElement(parentNode, "reference")
             node.text = str(value.uuid)
+        elif isinstance(value, datetime):
+            node = ET.SubElement(parentNode, "value")
+            node.text = value.isoformat('T')
         else:
             node = ET.SubElement(parentNode, "value")
             node.text = unicode(value).decode("UTF-8")
