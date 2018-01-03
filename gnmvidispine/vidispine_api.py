@@ -427,7 +427,11 @@ class VSApi(object):
 
     @staticmethod
     def _escape_for_query(value):
-        return urllib.pathname2url(value).replace("/", "%2F")
+        if isinstance(value,basestring):
+            toprocess = value.encode("UTF-8")
+        else:
+            toprocess = str(value)
+        return urllib.pathname2url(toprocess).replace("/", "%2F")
 
     @staticmethod
     def _get_param_list(key, value):
@@ -436,7 +440,7 @@ class VSApi(object):
         else:
             toprocess = value
 
-        return map(lambda item: "{0}={1}".format(key, VSApi._escape_for_query(unicode(item))), toprocess)
+        return map(lambda item: "{0}={1}".format(key, VSApi._escape_for_query(item)), toprocess)
 
     def raw_request(self,path,method="GET",matrix=None,query=None,body=None,accept="application/xml",
                     content_type='application/xml',rawData=False,extra_headers={}):
@@ -456,28 +460,12 @@ class VSApi(object):
         base_headers.update(extra_headers)
 
         if matrix:
-            # for key,value in matrix.items():
-            #     if isinstance(value,basestring):
-            #         value=self._escape_for_query(value)
-            #     if isinstance(key,basestring):
-            #         key=urllib.pathname2url(key)
-            #     tmp=";%s=%s" % (key, value)
-            #     matrixpart=matrixpart+tmp
             matrixpart = ";"+ ";".join(flatmap(lambda (k,v): self._get_param_list(k,v), matrix.items()))
         else:
             matrixpart=""
 
         if query:
             querypart = "&".join(flatmap(lambda (k,v): self._get_param_list(k,v), query.items()))
-            # for key,value in query.items():
-            #     if isinstance(key,basestring):
-            #         key=urllib.pathname2url(key)
-            #     if isinstance(value,list):
-            #         paramlist=map(lambda item: "{0}={1}".format(key,self._escape_for_query(item)),value)
-            #         querypart += "&".join(paramlist)
-            #     elif isinstance(value,basestring):
-            #         value=self._escape_for_query(value)
-            #         querypart+="%s=%s&" % (key, value)
         else:
             querypart = ""
 

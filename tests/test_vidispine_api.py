@@ -386,3 +386,9 @@ class TestVSApi(unittest2.TestCase):
                                                   '<?xml version=\'1.0\' encoding=\'UTF-8\'?>\n<MetadataDocument xmlns="http://xml.vidispine.com/schema/vidispine"><timespan end="+INF" start="-INF"><field><name>title</name><value>Thousands take to streets in Barcelona to protest against police violence \xe2\x80\x93 video </value></field><field><name>gnm_asset_category</name><value>Master</value></field><field><name>gnm_type</name><value>Master</value></field><fiel',
                                                   {'Authorization': 'Basic {0}'.format(auth)}
                                                   )
+
+    def test_param_list_unicode(self):
+        from gnmvidispine.vidispine_api import VSApi
+        response = VSApi._get_param_list("keyname",u"arséne wenger est allée en vacances. Häppy hølidåys")
+        #ensure that the unicode string has been urlencoded properly
+        self.assertEqual(response, ['keyname=ars%C3%A9ne%20wenger%20est%20all%C3%A9e%20en%20vacances.%20H%C3%A4ppy%20h%C3%B8lid%C3%A5ys'])
