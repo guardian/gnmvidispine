@@ -427,7 +427,11 @@ class VSApi(object):
 
     @staticmethod
     def _escape_for_query(value):
-        return urllib.pathname2url(value).replace("/", "%2F")
+        if isinstance(value,basestring):
+            toprocess = value.encode("UTF-8")
+        else:
+            toprocess = str(value)
+        return urllib.pathname2url(toprocess).replace("/", "%2F")
 
     @staticmethod
     def _get_param_list(key, value):
@@ -436,7 +440,7 @@ class VSApi(object):
         else:
             toprocess = value
 
-        return map(lambda item: "{0}={1}".format(key, VSApi._escape_for_query(item.encode("UTF-8"))), toprocess)
+        return map(lambda item: "{0}={1}".format(key, VSApi._escape_for_query(item)), toprocess)
 
     def raw_request(self,path,method="GET",matrix=None,query=None,body=None,accept="application/xml",
                     content_type='application/xml',rawData=False,extra_headers={}):
