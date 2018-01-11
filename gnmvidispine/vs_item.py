@@ -967,7 +967,10 @@ class VSMetadataBuilder(VSApi):
             node.text = value.isoformat('T')
         else:
             node = ET.SubElement(parentNode, "value")
-            node.text = unicode(value).decode("UTF-8")
+            if isinstance(value, basestring):
+                node.text = value.encode("UTF-8","xmlcharrefreplace").decode("UTF-8","xmlcharrefreplace")
+            else:
+                node.text = unicode(value)
 
     def _setkeyvalue(self,parentNode, params, meta):
         """
