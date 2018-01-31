@@ -428,7 +428,10 @@ class VSApi(object):
     @staticmethod
     def _escape_for_query(value):
         if isinstance(value,basestring):
-            toprocess = value.encode("UTF-8")
+            try:
+                toprocess = value.encode("UTF-8")
+            except UnicodeDecodeError:
+                toprocess = value
         else:
             toprocess = str(value)
         return urllib.pathname2url(toprocess).replace("/", "%2F")
