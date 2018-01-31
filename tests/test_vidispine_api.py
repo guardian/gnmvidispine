@@ -392,3 +392,12 @@ class TestVSApi(unittest2.TestCase):
         response = VSApi._get_param_list("keyname",u"arséne wenger est allée en vacances. Häppy hølidåys")
         #ensure that the unicode string has been urlencoded properly
         self.assertEqual(response, ['keyname=ars%C3%A9ne%20wenger%20est%20all%C3%A9e%20en%20vacances.%20H%C3%A4ppy%20h%C3%B8lid%C3%A5ys'])
+
+    def test_escape_for_query(self):
+        """
+        _escape_for_query should not blow up if it's given unicode text
+        :return:
+        """
+        from gnmvidispine.vidispine_api import VSApi
+
+        VSApi._escape_for_query("/srv/Multimedia2/Media Production/Assets/Multimedia_News/FEARLESS_women_in_India/ekaterina_ochagavia_FEARLESS_women_in_India_2/ASSETS/SOME MUSIC/IRENE/ES_Colored Spirals 4 - Johannes Bornlöf/ES_Colored Spirals 4 STEMS DRUMS.mp3")
