@@ -903,6 +903,21 @@ class VSItem(VSApi):
                 cref.name = uri_entry.text
             yield cref
 
+    def to_cache(self):
+        """
+        Returns a dictionary of the data in the object
+        :return: dictionary of data in the object
+        """
+        return self.contentDict
+
+    def from_cache(self, input_dictionary):
+        """
+        Takes a dictionary and loads it into the object. Returns a VSItem object
+        :return: self
+        """
+        self.contentDict = input_dictionary
+        return self
+
 
 class VSMetadataBuilder(VSApi):
     """
