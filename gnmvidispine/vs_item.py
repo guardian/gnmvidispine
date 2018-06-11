@@ -968,7 +968,10 @@ class VSMetadataBuilder(VSApi):
         else:
             node = ET.SubElement(parentNode, "value")
             if isinstance(value, basestring):
-                node.text = value.encode("UTF-8","xmlcharrefreplace").decode("UTF-8","xmlcharrefreplace")
+                try:
+                    node.text = value.encode("UTF-8","xmlcharrefreplace").decode("UTF-8","xmlcharrefreplace")
+                except UnicodeDecodeError:
+                    node.text = value.decode("UTF-8","xmlcharrefreplace")
             else:
                 node.text = unicode(value)
 
