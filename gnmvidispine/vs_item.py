@@ -908,14 +908,18 @@ class VSItem(VSApi):
         Returns a dictionary of the data in the object
         :return: dictionary of data in the object
         """
-        return self.contentDict
+        from copy import deepcopy
+
+        return deepcopy(self.contentDict)
 
     def from_cache(self, input_dictionary):
         """
         Takes a dictionary and loads it into the object. Returns a VSItem object
         :return: self
         """
-        self.contentDict = input_dictionary
+        from copy import deepcopy
+
+        self.contentDict = deepcopy(input_dictionary)
         return self
 
 
