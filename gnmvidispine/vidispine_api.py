@@ -415,7 +415,7 @@ class VSApi(object):
         if raw_body.__len__() > 0:
             try:
                 if accept=='application/xml':
-                    return ET.fromstring(unicode(raw_body,errors='ignore'))
+                    return ET.fromstring(raw_body)
                 else:
                     return raw_body
             except ExpatError:
