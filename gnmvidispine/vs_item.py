@@ -910,7 +910,11 @@ class VSItem(VSApi):
         """
         from copy import deepcopy
 
-        return deepcopy(self.contentDict)
+        dictionary_to_return = deepcopy(self.contentDict)
+
+        dictionary_to_return['_vidispine_id'] = deepcopy(self.name)
+
+        return dictionary_to_return
 
     def from_cache(self, input_dictionary):
         """
@@ -920,6 +924,8 @@ class VSItem(VSApi):
         from copy import deepcopy
 
         self.contentDict = deepcopy(input_dictionary)
+        self.name = deepcopy(input_dictionary['_vidispine_id'])
+
         return self
 
 
