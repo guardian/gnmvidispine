@@ -75,10 +75,11 @@ jobs:
     ###TEST
     - run: source ~/virtualenvs/gnmvidispine/bin/activate && PYTHONPATH=~/virtualenvs/gnmvidispine/lib/python2.7/site-packages nosetests --with-xunit
     # Deployment
-    # Your existing circle.yml file contains deployment steps.
-    # The config translation tool does not support translating deployment steps
-    # since deployment in CircleCI 2.0 are better handled through workflows.
-    # See the documentation for more information https://circleci.com/docs/2.0/workflows/
+
+    - run: chmod a+x setup.py
+    - run: ./setup.py sdist
+    - run: ./setup.py buildrpms
+    - run: ./setup.py awsupload --bucket ${UPLOAD_BUCKET} --path gnmvidispine --region eu-west-1  --acl public-read
     # Teardown
     #   If you break your build into multiple jobs with workflows, you will probably want to do the parts of this that are relevant in each
     # Save test results
