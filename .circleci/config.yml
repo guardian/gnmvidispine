@@ -79,7 +79,7 @@ jobs:
     - run: chmod a+x setup.py
     - run: ./setup.py sdist
     - run: ./setup.py buildrpms
-    - run: ./setup.py awsupload --bucket ${UPLOAD_BUCKET} --path gnmvidispine --region eu-west-1  --acl public-read
+    - run: PYTHONPATH=~/virtualenvs/gnmvidispine/lib/python2.7/site-packages ./setup.py awsupload --bucket ${UPLOAD_BUCKET} --path gnmvidispine --region eu-west-1  --acl public-read
     # Teardown
     #   If you break your build into multiple jobs with workflows, you will probably want to do the parts of this that are relevant in each
     # Save test results
