@@ -123,6 +123,11 @@ class BuildRpms(Command):
             shutil.move(os.path.join(rpm_buildpath, "RPMS", "noarch", filename), os.path.join("dist", filename))
 
     def run(self):
+        pass
+
+
+class BuildRegularRpm(BuildRpms):
+    def run(self):
         sourcefile = self.distribution.get_name() + "-" + self.distribution.get_version() + ".tar.gz"
         #build the standard RPM
         self.make_rpm(sourcefile,"gnmvidispine-build.spec",
@@ -135,6 +140,11 @@ class BuildRpms(Command):
             r'gnmvidispine-.*/INSTALLED_FILES': '{0}-{1}/INSTALLED_FILES'.format(self.distribution.get_name(),
                                                                                  self.distribution.get_version())
         })
+
+
+class BuildCantemoRpm(BuildRpms):
+    def run(self):
+        sourcefile = self.distribution.get_name() + "-" + self.distribution.get_version() + ".tar.gz"
         #build another RPM that targets Portal
         self.make_rpm(sourcefile,"gnmvidispine-portal.spec",
         {
@@ -147,13 +157,16 @@ class BuildRpms(Command):
             r'--prefix=/usr':' --prefix=/opt/cantemo/python',
             r'^cd gnmvidispine-.*$': 'cd {0}-{1}'.format(self.distribution.get_name(), self.distribution.get_version()),
             r'gnmvidispine-.*/INSTALLED_FILES': '{0}-{1}/INSTALLED_FILES'.format(self.distribution.get_name(),
-                                                                                 self.distribution.get_version())
+                                                                                 self.distribution.get_version()),
+            r'cp -a doc/html/* $RPM_BUILD_ROOT/usr/share/doc/gnmvidispine': ''  #don't include documentation or it may conflict with regular package
         })
+
 
 setup(
     cmdclass={
         'awsupload': AwsUploadCommand,
-        'buildrpms': BuildRpms
+        'buildrpm': BuildRegularRpm,
+        'buildcantemorpm': BuildCantemoRpm
     },
     name="gnmvidispine",
     version=version,
