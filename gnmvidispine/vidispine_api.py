@@ -369,9 +369,11 @@ class VSApi(object):
             }
             upload_io.seek(startbyte,my_seek_set)
             body_buffer = upload_io.read(chunk_size)
-            self.raw_request(path,method=method,matrix=matrix,query=query_params,body=body_buffer,
+            request = self.raw_request(path,method=method,matrix=matrix,query=query_params,body=body_buffer,
                              content_type=content_type,rawData=raw_data,extra_headers=headers)
             self.logger.debug("Uploaded a total of {0} bytes".format(startbyte+chunk_size))
+
+        return request
             
     def request(self,path,method="GET",matrix=None,query=None,body=None, accept='application/xml'):
         """
@@ -415,7 +417,7 @@ class VSApi(object):
         if raw_body.__len__() > 0:
             try:
                 if accept=='application/xml':
-                    return ET.fromstring(raw_body)
+                    return ET.fromstring(unicode(raw_body,errors='ignore'))
                 else:
                     return raw_body
             except ExpatError:

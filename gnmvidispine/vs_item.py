@@ -812,9 +812,11 @@ class VSItem(VSApi):
         url = "/item/{0}/shape/raw"
         if rename is None: rename=os.path.basename(filename)
         
-        self.chunked_upload_request(io.FileIO(filename),os.path.getsize(filename),chunk_size=1024*1024,
+        request = self.chunked_upload_request(io.FileIO(filename),os.path.getsize(filename),chunk_size=1024*1024,
                                     path=url.format(self.name).format(self.name),filename=rename,
                                     transferPriority=transferPriority,throttle=throttle,query=args,method="POST")
+
+        return request
 
     def add_placeholder_shape(self, shape_tag='original'):
         """
