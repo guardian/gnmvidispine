@@ -224,6 +224,32 @@ class TestVSItem(unittest2.TestCase):
         result3 = i.get_metadata_attributes("invalidfieldname")
         self.assertEqual(result3, None)
 
+    def test_add_external_id(self):
+        """
+        add_external_id should call to VS to set an external ID
+        :return:
+        """
+        with patch('gnmvidispine.vs_item.VSItem.request') as mock_request:
+            from gnmvidispine.vs_item import VSItem
+            i = VSItem(host="localhost",port=1234,user="me",passwd="secret")
+
+            i.name="VX-1234"
+            i.add_external_id("08473AFA-E7D5-4B92-9C4F-81035523A492")
+            mock_request.assert_called_once_with("/item/VX-1234/external-id/08473AFA-E7D5-4B92-9C4F-81035523A492", method="PUT")
+
+    def test_remove_external_id(self):
+        """
+        remove_external_id should call VS to delete external id
+        :return:
+        """
+        with patch('gnmvidispine.vs_item.VSItem.request') as mock_request:
+            from gnmvidispine.vs_item import VSItem
+            i = VSItem(host="localhost",port=1234,user="me",passwd="secret")
+
+            i.name="VX-1234"
+            i.remove_external_id("08473AFA-E7D5-4B92-9C4F-81035523A492")
+            mock_request.assert_called_once_with("/item/VX-1234/external-id/08473AFA-E7D5-4B92-9C4F-81035523A492", method="DELETE")
+
 
 class TestVsMetadataBuilder(unittest2.TestCase):
     maxDiff = None

@@ -169,7 +169,7 @@ class VSItem(VSApi):
     def populate(self, entity_id=None, type="item", specificFields=None):
         """
         Loads metadata about the item from Vidispine.
-        :param id: VS ID of the item to load. You only need to specify this if you're loading an item from a specific ID;
+        :param id: VS ID (or external ID) of the item to load. You only need to specify this if you're loading an item from a specific ID;
         if you have got the item from a VSSearch you only need to call populate() if you specified shouldPopulate=False
         in the results() call.  In that case, you can call with no id parameter and it will populate with the ID in item.name
         :param type: either "item" (default) or "collection"
@@ -598,6 +598,24 @@ class VSItem(VSApi):
                 logging.debug("shape tag %s" % shape.tag())
 
             yield shape
+
+    def add_external_id(self, new_id):
+        """
+        Add an external ID to the item. For this to work, new_id  must validate against a known namespace
+        :param new_id:
+        :return:
+        """
+        path = "/item/{0}/external-id/{1}".format(self.name, new_id)
+        self.request(path,method="PUT")
+
+    def remove_external_id(self, old_id):
+        """
+        Remove a given external ID from the item
+        :param old_id: ID to remove
+        :return:
+        """
+        path = "/item/{0}/external-id/{1}".format(self.name, old_id)
+        self.request(path,method="DELETE")
 
     def transcode(self, shapetag, priority='MEDIUM', wait=True, allow_object=False):
         """
