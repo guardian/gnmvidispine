@@ -409,7 +409,7 @@ class VSStorage(VSApi):
             raise
         except ValueError:
             logging.error("storage::fileCount - entry in <hits> was not an integer")
-        raise
+            raise
 
     def files(self, path='/', include_item=True, state=None):
         """
