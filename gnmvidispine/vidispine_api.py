@@ -165,7 +165,7 @@ class VSApi(object):
 
     xmlns = "{http://xml.vidispine.com/schema/vidispine}"
 
-    def __init__(self,host="localhost",port=8080,user="",passwd="",url=None,run_as=None, conn=None, logger=None):
+    def __init__(self,host="localhost",port=8080,user="",passwd="",url=None,run_as=None, conn=None, logger=None, https=False):
         """
         Initialise a new Vidispine connection.
         :param host: Hostname to connect to Vidispine on
@@ -177,6 +177,7 @@ class VSApi(object):
         authenticate with administrator credentials.  Allows a program to have admin credentials but run requests on behalf of users.
         :param conn: Use this httplib connection object rather than initiating a new one. Only for testing.
         :param logger: Use this logger object rather than initiating a new one. Only for testing.
+        :param https: Set this to True to use https
         """
         from urlparse import urlparse
         self.user=user
@@ -198,7 +199,13 @@ class VSApi(object):
             else:
                 self.host = bits.netloc
 
-        self._conn = conn if conn is not None else httplib.HTTPConnection(self.host, self.port)
+        if conn is not None:
+            self._conn = conn
+        else:
+            if https:
+                self._conn = httplib.HTTPSConnection(self.host, self.port, strict=False)
+            else:
+                self._conn = httplib.HTTPConnection(self.host, self.port)
         
     class NotPopulatedError(StandardError):
         """
