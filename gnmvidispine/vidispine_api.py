@@ -312,6 +312,9 @@ class VSApi(object):
                 self._delayedcounter+=1
                 self._undelayedcounter=0
 
+                if self._delay > 8192:
+                    self._delay = 1
+
                 logger.warning("Gateway timeout error communicating with {0}. Waiting {1} seconds before trying again.".format(url,self._delay))
                 time.sleep(self._delay)
             else:
