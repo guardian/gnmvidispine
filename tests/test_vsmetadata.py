@@ -1,8 +1,8 @@
 # -*- coding: UTF-8 -*-
-from __future__ import absolute_import
+
 import unittest2
 from mock import MagicMock, patch
-from urllib2 import quote
+from urllib.parse import quote
 import xml.etree.cElementTree as ET
 import re
 from datetime import datetime

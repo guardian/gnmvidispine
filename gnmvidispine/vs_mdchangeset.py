@@ -1,4 +1,4 @@
-from vidispine_api import VSApi
+from .vidispine_api import VSApi
 import xml.etree.cElementTree as ET
 import dateutil.parser
 
@@ -39,7 +39,7 @@ class VSMDChange(object):
                 self.value=self.value[0]
 
     def __unicode__(self):
-        return u'{id}: {f} changed by {u} to {v} at {t}'.format(id=self.name,u=self.username,
+        return '{id}: {f} changed by {u} to {v} at {t}'.format(id=self.name,u=self.username,
                                                                 f=self.fieldname,v=self.value,t=self.timestamp)
 
     def __str__(self):
@@ -117,7 +117,7 @@ class VSMDChangeSet(VSApi):
                 yield c
 
     def __unicode__(self):
-        return u'Changeset ID {0} comprising fields {1}'.format(self.name,self.fields)
+        return 'Changeset ID {0} comprising fields {1}'.format(self.name,self.fields)
 
 if __name__ == "__main__":
     import logging
@@ -134,4 +134,4 @@ if __name__ == "__main__":
         if len(sys.argv)>2:
             f=sys.argv[2]
         for c in cs.changes(fieldname=f):
-            logging.info(unicode(c))
+            logging.info(str(c))

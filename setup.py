@@ -26,7 +26,7 @@ class AwsUploadCommand(Command):
     @staticmethod
     def upload_callback(bytes_transferred, bytes_total):
         percent = (float(bytes_transferred)/float(bytes_total))*100
-        print "awsupload: uploading %02d%%" % int(percent)
+        print("awsupload: uploading %02d%%" % int(percent))
         
     def initialize_options(self):
         self.region = "eu-west-1"
@@ -36,12 +36,12 @@ class AwsUploadCommand(Command):
         
     def finalize_options(self):
         self.path = os.path.join(re.sub(r'^/+','', self.path), buildnum)
-        print "awsupload: uploading to region {0}, bucket {1}, path {2}".format(self.region, self.bucket, self.path)
+        print("awsupload: uploading to region {0}, bucket {1}, path {2}".format(self.region, self.bucket, self.path))
         
     def do_upload_file(self, bucket, localpath, filename):
         import boto.s3 as s3
         destpath = os.path.join(self.path,filename)
-        print "awsupload: uploading to s3://{0}/{1} with {2} permissions".format(self.bucket,destpath, self.acl)
+        print("awsupload: uploading to s3://{0}/{1} with {2} permissions".format(self.bucket,destpath, self.acl))
         key = s3.key.Key(bucket=bucket, name=destpath)
         with open(os.path.join(localpath, filename),"r") as f:
             key.set_contents_from_file(f, replace=False, cb=self.upload_callback, policy=self.acl)
@@ -80,13 +80,13 @@ class BuildRpms(Command):
         :return: new filename
         """
         import re
-        compiled_replacements = dict(map(lambda (regexstring,replacement): (re.compile(regexstring), replacement), replacements.items()))
+        compiled_replacements = dict([(re.compile(regexstring_replacement[0]), regexstring_replacement[1]) for regexstring_replacement in list(replacements.items())])
 
         with open(specfile,"r") as fread:
             with open(destfile,"w") as fwrite:
                 for line in fread.readlines():
                     newstring = line
-                    for regex, replacement in compiled_replacements.items():
+                    for regex, replacement in list(compiled_replacements.items()):
                         if regex.search(line):
                             newstring = regex.sub(replacement, newstring)
                     fwrite.write(newstring)
@@ -110,11 +110,11 @@ class BuildRpms(Command):
                 os.mkdir(os.path.join(rpm_buildpath,f))
 
         if not os.path.exists(source_dist):
-            print "Could not find {0}.  Try running setup.py sdist first.".format(source_dist)
+            print("Could not find {0}.  Try running setup.py sdist first.".format(source_dist))
             exit(1)
-        print "Using source distribution {0}".format(source_dist)
+        print("Using source distribution {0}".format(source_dist))
         self.modify_specfile('gnmvidispine-py27.spec',dest_spec,replacements)
-        print "RPM build path is {0}".format(rpm_buildpath)
+        print("RPM build path is {0}".format(rpm_buildpath))
         shutil.copy(source_dist,os.path.join(rpm_buildpath, "SOURCES", sourcefile))
 
         os.system("rpmbuild -bb {0}".format(dest_spec))

@@ -1,8 +1,8 @@
 # -*- coding: UTF-8 -*-
-from __future__ import absolute_import
+
 import unittest2
 from mock import MagicMock, patch
-from urllib2 import quote
+from urllib.parse import quote
 import xml.etree.cElementTree as ET
 import re
 
@@ -149,7 +149,7 @@ class TestVSItem(unittest2.TestCase):
     def test_import_external_xml_with_unicode(self):
         with patch('gnmvidispine.vs_item.VSItem.raw_request') as mock_request:
             from gnmvidispine.vs_item import VSItem
-            testdoc = u"""<?xml version="1.0" encoding="UTF-8"?>
+            testdoc = """<?xml version="1.0" encoding="UTF-8"?>
             <external-metadata>
                 <somefieldname>Arséne Wenger est alleé en vacances</somefieldname>
                 <someotherfield>This — is a silly long -, as in — not -</someotherfield>
@@ -294,7 +294,7 @@ class TestVsMetadataBuilder(unittest2.TestCase):
         b = VSMetadataBuilder(mock_item)
         b.addMeta({'test_field': ref})
 
-        self.assertEqual(b.as_xml("UTF-8"),u"""<?xml version='1.0' encoding='UTF-8'?>
+        self.assertEqual(b.as_xml("UTF-8"),"""<?xml version='1.0' encoding='UTF-8'?>
 <MetadataDocument xmlns="http://xml.vidispine.com/schema/vidispine"><timespan end="+INF" start="-INF"><field><name>test_field</name><reference>ED047409-706B-43B7-9F35-0DDBC6F2689E</reference></field></timespan></MetadataDocument>""")
 
     def test_serialize_float(self):
@@ -322,7 +322,7 @@ class TestVsMetadataBuilder(unittest2.TestCase):
         mock_item = MagicMock(target=VSItem)
 
         b = VSMetadataBuilder(mock_item)
-        b.addMeta({'test_field': datetime(2015,07,12,23,04,31,0,pytz.timezone("Europe/London"))})
+        b.addMeta({'test_field': datetime(2015,0o7,12,23,0o4,31,0,pytz.timezone("Europe/London"))})
         self.assertEqual(b.as_xml("UTF-8"),"""<?xml version='1.0' encoding='UTF-8'?>
 <MetadataDocument xmlns="http://xml.vidispine.com/schema/vidispine"><timespan end="+INF" start="-INF"><field><name>test_field</name><value>2015-07-12T23:04:31-00:01</value></field></timespan></MetadataDocument>""")
 
@@ -339,9 +339,9 @@ class TestVsMetadataBuilder(unittest2.TestCase):
 
 
         b = VSMetadataBuilder(mock_item)
-        b.addMeta({'test_field': u"£1 for a house: made in Stoke-on-Trent"})
+        b.addMeta({'test_field': "£1 for a house: made in Stoke-on-Trent"})
         self.assertEqual(b.as_xml("UTF-8"),"""<?xml version='1.0' encoding='UTF-8'?>\n<MetadataDocument xmlns="http://xml.vidispine.com/schema/vidispine"><timespan end="+INF" start="-INF"><field><name>test_field</name><value>£1 for a house: made in Stoke-on-Trent</value></field></timespan></MetadataDocument>""")
 
         b = VSMetadataBuilder(mock_item)
-        b.addMeta({'test_field': u"Fire at Trump Tower – video "})
+        b.addMeta({'test_field': "Fire at Trump Tower – video "})
         self.assertEqual(b.as_xml("UTF-8"),"""<?xml version='1.0' encoding='UTF-8'?>\n<MetadataDocument xmlns="http://xml.vidispine.com/schema/vidispine"><timespan end="+INF" start="-INF"><field><name>test_field</name><value>Fire at Trump Tower – video </value></field></timespan></MetadataDocument>""")

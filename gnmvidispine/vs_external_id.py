@@ -1,4 +1,4 @@
-from vidispine_api import VSApi
+from .vidispine_api import VSApi
 import xml.etree.cElementTree as ET
 
 

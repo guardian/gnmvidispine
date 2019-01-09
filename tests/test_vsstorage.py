@@ -1,5 +1,5 @@
 # -*- coding: UTF-8 -*-
-from __future__ import absolute_import
+
 import unittest2
 from mock import MagicMock, patch, call
 
@@ -411,7 +411,7 @@ class TestVSStorage(unittest2.TestCase):
         s.sendAuthorized = MagicMock(side_effect=[self.MockedResponse(200, self.test_list_doc),
                                                   self.MockedResponse(200, self.test_list_doc_end)])
 
-        files_list = map(lambda f: f, s.files())
+        files_list = [f for f in s.files()]
         self.assertEqual(len(files_list),10)
         s.sendAuthorized.assert_has_calls([
             call('GET', '/API/storage/INVALIDNAME/file;start=0;includeItem=True;number=100?path=%2F', None, {'Accept': 'application/xml'}, rawData=False),
@@ -426,7 +426,7 @@ class TestVSStorage(unittest2.TestCase):
         s.sendAuthorized = MagicMock(side_effect=[self.MockedResponse(200, self.test_list_doc),
                                                   self.MockedResponse(200, self.test_list_doc_end)])
 
-        files_list = map(lambda f: f, s.files(path="/some/long/filepath"))
+        files_list = [f for f in s.files(path="/some/long/filepath")]
         self.assertEqual(len(files_list),10)
         s.sendAuthorized.assert_has_calls([
             call('GET', '/API/storage/INVALIDNAME/file;start=0;includeItem=True;number=100?path=%2Fsome%2Flong%2Ffilepath', None, {'Accept': 'application/xml'}, rawData=False),
@@ -441,7 +441,7 @@ class TestVSStorage(unittest2.TestCase):
         s.sendAuthorized = MagicMock(side_effect=[self.MockedResponse(200, self.test_list_doc),
                                                   self.MockedResponse(200, self.test_list_doc_end)])
 
-        files_list = map(lambda f: f, s.files(state='CLOSED'))
+        files_list = [f for f in s.files(state='CLOSED')]
         self.assertEqual(len(files_list),10)
         s.sendAuthorized.assert_has_calls([
             call('GET', '/API/storage/INVALIDNAME/file;start=0;includeItem=True;number=100?path=%2F&state=CLOSED', None, {'Accept': 'application/xml'}, rawData=False),

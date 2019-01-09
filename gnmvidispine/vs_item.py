@@ -1,17 +1,17 @@
 import xml.etree.cElementTree as ET
-from vidispine_api import InvalidData, VSBadRequest
-from vs_job import VSJob, VSJobFailed
-from vs_shape import VSShape
-from vs_acl import VSAcl
-from vs_thumbnail import VSThumbnailCollection
+from .vidispine_api import InvalidData, VSBadRequest
+from .vs_job import VSJob, VSJobFailed
+from .vs_shape import VSShape
+from .vs_acl import VSAcl
+from .vs_thumbnail import VSThumbnailCollection
 import os.path
 from pprint import pprint
 from time import sleep
 import logging
 import re
 
-from vidispine_api import HTTPError, VSApi, VSException, VSNotFound
-from vs_storage_rule import VSStorageRule
+from .vidispine_api import HTTPError, VSApi, VSException, VSNotFound
+from .vs_storage_rule import VSStorageRule
 import io
 
 
@@ -21,10 +21,10 @@ class VSTranscodeError(VSException):
         self.transcodeJob = failedJob
 
     def __unicode__(self):
-        return u"Transcode error: {0}".format(self.transcodeJob.errorMessage)
+        return "Transcode error: {0}".format(self.transcodeJob.errorMessage)
 
 
-class InvalidSourceError(StandardError):
+class InvalidSourceError(Exception):
     """
     Raised if the xml (or other) source does not contain the data that we expect
     """
@@ -96,7 +96,7 @@ class VSItem(VSApi):
         rqbody = None
         if isinstance(metadata,dict):
             rqbody = self._make_metadata_document(metadata, group=group)
-        elif isinstance(metadata,basestring):
+        elif isinstance(metadata,str):
             rqbody = metadata
         elif metadata is not None:
             raise TypeError("Metadata should be a dictionary or XML document string, not {0}".format(metadata.__class__.__name__))
@@ -113,7 +113,7 @@ class VSItem(VSApi):
                                     query={'container': 1, 'video': 1,
                                     })
         except VSBadRequest as e:
-            print rqbody
+            print(rqbody)
             raise
 
         try:
@@ -138,7 +138,7 @@ class VSItem(VSApi):
         :param objectClass: is this an item or collection
         :return: self
         """
-        if isinstance(xmldata,basestring):
+        if isinstance(xmldata,str):
             self.dataContent = ET.fromstring(xmldata)
         else:
             self.dataContent = xmldata
@@ -243,14 +243,14 @@ class VSItem(VSApi):
                 except AttributeError:
                     key = ""
 
-                logging.debug(u"key is {0}".format(key))
+                logging.debug("key is {0}".format(key))
                 #try:
                 for valNode in child.findall('{0}value'.format(ns)):
                     try:
                         val = valNode.text
                     except AttributeError:
                         val = ""
-                    logging.debug(u"got {0} for {1}".format(val,key))
+                    logging.debug("got {0} for {1}".format(val,key))
                     if key in self.contentDict:
                         #raise Exception("contentDict already has a value %s for %s, trying to insert new value %s\n" % (self.contentDict[key],key,val))
                         if isinstance(self.contentDict[key],list):
@@ -280,17 +280,17 @@ class VSItem(VSApi):
         if isinstance(fields[0],int):
             level=fields[0]
 
-        print "Item:"
+        print("Item:")
         for n in range(0,level):
-            print "\t",
+            print("\t", end=' ')
 
-        print "ID: %s" % (self.name.encode('utf-8'))
+        print("ID: %s" % (self.name.encode('utf-8')))
         for f in fields:
             if isinstance(f,int): continue
             try:
                 for n in range(0,level):
-                    print "\t",
-                print "%s: %s" % (f, self.contentDict[f])
+                    print("\t", end=' ')
+                print("%s: %s" % (f, self.contentDict[f]))
             except:
                 pass
 
@@ -299,7 +299,7 @@ class VSItem(VSApi):
         Returns an XML of the item's MetadataDocument as a string
         :return: string of xml
         """
-        print ET.tostring(self.dataContent)
+        print(ET.tostring(self.dataContent))
 
     def delete(self, keepShapeTagMedia=None, keepShapeTagStorage=None):
         """
@@ -309,7 +309,7 @@ class VSItem(VSApi):
         :param keepShapeTagStorage: If specified, a list or tuple of either storage IDs as strings or VSStorage objects
         :return: None
         """
-        from vs_storage import VSStorage
+        from .vs_storage import VSStorage
         qp = {}
 
         if keepShapeTagStorage is not None:
@@ -356,8 +356,8 @@ class VSItem(VSApi):
                         str=""
                         for x in self.contentDict[fieldname]:
                             try:
-                                str += unicode(x) + '|'
-                            except StandardError:
+                                str += str(x) + '|'
+                            except Exception:
                                 pass
                         return str[0:-2]
             return self.contentDict[fieldname]
@@ -384,7 +384,7 @@ class VSItem(VSApi):
                     return None
             except AttributeError:
                 return None
-        return filter(lambda fieldnode: get_field_name(fieldnode)==fieldname, timespan.findall('{0}field'.format(self.xmlns)))
+        return [fieldnode for fieldnode in timespan.findall('{0}field'.format(self.xmlns)) if get_field_name(fieldnode)==fieldname]
 
     def get_metadata_attributes(self, fieldname):
         """
@@ -392,7 +392,7 @@ class VSItem(VSApi):
         :param fieldname: field name to look for
         :return: None if fieldname does not exist or a List of VSMetadataAttribute objects
         """
-        value = map(lambda f: f, self.gen_metadata_attributes(fieldname))
+        value = [f for f in self.gen_metadata_attributes(fieldname)]
         if value==[]:
             return None
         else:
@@ -404,7 +404,7 @@ class VSItem(VSApi):
         :param fieldname: field name to look for
         :return: yields a VSMetadataAttribute object for each occurrence of the field fieldname in each timespan
         """
-        from vs_metadata import VSMetadataValue, VSMetadataAttribute
+        from .vs_metadata import VSMetadataValue, VSMetadataAttribute
 
         for ts in self._get_timespans():
             for fieldnode in self._find_field_nodes(ts, fieldname):
@@ -439,7 +439,7 @@ class VSItem(VSApi):
         tsNode = ET.SubElement(root,"timespan",{'start': '-INF', 'end': '+INF'})
 
         ignored_field = re.compile(r'^_')
-        for fieldname,value in self.contentDict.items():
+        for fieldname,value in list(self.contentDict.items()):
             if ignored_field.match(fieldname): continue
             if fieldname == "itemId" or fieldname == "collectionId": continue
             #logging.debug('took field {0}'.format(fieldname))
@@ -461,7 +461,7 @@ class VSItem(VSApi):
         Generator that yields VSMDChangeSet objects for each changeset on the item
         :return: yields MDChangeSet objects
         """
-        from vs_mdchangeset import VSMDChangeSet
+        from .vs_mdchangeset import VSMDChangeSet
 
         doctree = self.request("/{c}/{i}/metadata/changes".format(c=self.type,i=self.name))
         for node in doctree.findall('{0}changeSet'.format(self.xmlns)):
@@ -476,7 +476,7 @@ class VSItem(VSApi):
         :return: list of VSMDChangeSet objects
         """
 
-        return map(lambda x:x,self.metadata_changesets())
+        return [x for x in self.metadata_changesets()]
 
     def metadata_changesets_for_field(self,fieldname):
         """
@@ -551,7 +551,7 @@ class VSItem(VSApi):
             rootgroupnode.text = root_group
 
         groupnode = ET.SubElement(timespan,"group",{'mode': mode})
-        for key,value in meta.items():
+        for key,value in list(meta.items()):
             fieldnode = ET.SubElement(groupnode,"field")
             fieldname = ET.SubElement(fieldnode,"name")
             fieldname.text = key
@@ -693,18 +693,18 @@ class VSItem(VSApi):
             args['metadata'] = 'true'
 
         if self.debug:
-            print "item::export: arguments:"
+            print("item::export: arguments:")
             pprint(args)
 
         jobDocument = self.request(path, method="POST", query=args)
         jobID = jobDocument.find("{0}jobId".format(ns)).text
-        print "Export job ID is %s" % jobID
+        print("Export job ID is %s" % jobID)
 
         while True:
             job = VSJob(host=self.host, port=self.port, user=self.user, passwd=self.passwd)
             job.populate(jobID)
 
-            print "Job %s has status %s" % (job.name, job.status())
+            print("Job %s has status %s" % (job.name, job.status()))
             if job.status() == "FINISHED":
                 break
 
@@ -771,7 +771,7 @@ class VSItem(VSApi):
         :param priority:
         :return:
         """
-        from vs_storage import VSFile
+        from .vs_storage import VSFile
         if not isinstance(file_ref,VSFile):
             raise TypeError("file_ref must be a VSFile")
 
@@ -793,7 +793,7 @@ class VSItem(VSApi):
         :param jobMetadata: Dictionary of key/values for the job metadata - see Vidispine import documentation for details
         :return: dictionary of arguments for the import call.
         """
-        if isinstance(shape_tag,basestring):
+        if isinstance(shape_tag,str):
             shape_tag_string = shape_tag
         else:
             shape_tag_string = ",".join(shape_tag)
@@ -811,7 +811,7 @@ class VSItem(VSApi):
             e = 'false'
 
         if jobMetadata is not None:
-            extra_args = {'jobmetadata': map(lambda (k,v): "{0}={1}".format(k,v), jobMetadata.items())}
+            extra_args = {'jobmetadata': ["{0}={1}".format(k_v[0],k_v[1]) for k_v in list(jobMetadata.items())]}
         else:
             extra_args = {}
 
@@ -867,7 +867,7 @@ class VSItem(VSApi):
         :param priority: job priority
         :return: VSJob describing the import job
         """
-        from vs_storage import VSFile
+        from .vs_storage import VSFile
         if uri is None and file_ref is None:
             raise ValueError("You must specify a uri to import_to_shape")
 
@@ -919,7 +919,7 @@ class VSItem(VSApi):
         :param: shouldPopulate - (default False) - if set to True, this will pre-load the metadata of the collection for you
         :return: yields VSCollection objects
         """
-        from vs_collection import VSCollection
+        from .vs_collection import VSCollection
 
         response = self.request("/item/{0}/collections".format(self.name),method="GET")
         for uri_entry in response.findall('{0}uri'.format(self.xmlns)):
@@ -1011,7 +1011,7 @@ class VSMetadataBuilder(VSApi):
         :param value:
         :return:
         """
-        from vs_metadata import VSMetadataReference
+        from .vs_metadata import VSMetadataReference
         from datetime import datetime
         if isinstance(value, VSMetadataReference):
             node = ET.SubElement(parentNode, "reference")
@@ -1021,13 +1021,13 @@ class VSMetadataBuilder(VSApi):
             node.text = value.isoformat('T')
         else:
             node = ET.SubElement(parentNode, "value")
-            if isinstance(value, basestring):
+            if isinstance(value, str):
                 try:
                     node.text = value.encode("UTF-8","xmlcharrefreplace").decode("UTF-8","xmlcharrefreplace")
                 except UnicodeDecodeError:
                     node.text = value.decode("UTF-8","xmlcharrefreplace")
             else:
-                node.text = unicode(value)
+                node.text = str(value)
 
     def _setkeyvalue(self,parentNode, params, meta):
         """
@@ -1037,7 +1037,7 @@ class VSMetadataBuilder(VSApi):
         :param meta: dictionary of metadata to add
         :return: None
         """
-        for key,value in meta.items():
+        for key,value in list(meta.items()):
             if isinstance(value,dict):
                 subgroupnode = ET.SubElement(parentNode,"group",params)
                 subgroupname = ET.SubElement(subgroupnode,"name")
@@ -1052,7 +1052,7 @@ class VSMetadataBuilder(VSApi):
             else:
                 fieldnode = ET.SubElement(parentNode,"field")
                 fieldname = ET.SubElement(fieldnode,"name")
-                fieldname.text = unicode(key).decode("UTF-8")
+                fieldname.text = str(key).decode("UTF-8")
                 self._setcontentnode(fieldnode, value)
 
     def _groupContent(self,parentNode,meta,subgroupmode="add"):
@@ -1114,5 +1114,5 @@ class VSMetadataBuilder(VSApi):
             self.request(path,method="PUT",body=self.as_xml(encoding="UTF-8"))
         except VSBadRequest as e:
             logging.error(e)
-            logging.error(unicode(self.as_xml(encoding="UTF-8")))
+            logging.error(str(self.as_xml(encoding="UTF-8")))
             raise

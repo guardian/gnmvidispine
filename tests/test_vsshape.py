@@ -1,8 +1,8 @@
 # -*- coding: UTF-8 -*-
-from __future__ import absolute_import
+
 import unittest2
 from mock import MagicMock, patch
-import httplib
+import http.client
 import base64
 import logging
 import tempfile

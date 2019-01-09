@@ -1,5 +1,5 @@
-import httplib
-import urllib
+import http.client
+import urllib.request, urllib.parse, urllib.error
 import base64
 import string
 import xml.etree.ElementTree as ET
@@ -11,12 +11,12 @@ from time import sleep
 import io
 import os
 from socket import error as socket_error
-from itertools import chain, imap
+from itertools import chain
 
 logger = logging.getLogger(__name__)
 
 
-class HTTPError(StandardError):
+class HTTPError(Exception):
     """
     Class to represent a generic HTTP error returned from Vidispine
     """
@@ -54,7 +54,7 @@ class HTTPError(StandardError):
             return self
 
 
-class VSException(StandardError):
+class VSException(Exception):
     xmlns = '{http://xml.vidispine.com/schema/vidispine}'
     
     def __init__(self,*args,**kwargs):
@@ -131,7 +131,7 @@ class VSNotFound(VSException):
     pass
 
 
-class InvalidData(StandardError):
+class InvalidData(Exception):
     """
     Exception raised if data is passed to a VS Api function that is not valid, before sending it to Vidispine
     """
@@ -146,7 +146,7 @@ class VSConflict(VSException):
 
 
 def flatmap(f, items):
-    return chain.from_iterable(imap(f, items))
+    return chain.from_iterable(map(f, items))
 
 
 class VSApi(object):
@@ -179,7 +179,7 @@ class VSApi(object):
         :param logger: Use this logger object rather than initiating a new one. Only for testing.
         :param https: Set this to True to use https
         """
-        from urlparse import urlparse
+        from urllib.parse import urlparse
         self.user=user
         self.passwd=passwd
         self.host=host
@@ -203,11 +203,11 @@ class VSApi(object):
             self._conn = conn
         else:
             if https:
-                self._conn = httplib.HTTPSConnection(self.host, self.port, strict=False)
+                self._conn = http.client.HTTPSConnection(self.host, self.port, strict=False)
             else:
-                self._conn = httplib.HTTPConnection(self.host, self.port)
+                self._conn = http.client.HTTPConnection(self.host, self.port)
         
-    class NotPopulatedError(StandardError):
+    class NotPopulatedError(Exception):
         """
         Exception explaining that the Vidispine object must have been populated by a call to populate() or similar
         before the given operation can complete
@@ -234,7 +234,7 @@ class VSApi(object):
                 self._conn.close()
         except:
             pass
-        self._conn = httplib.HTTPConnection(self.host,self.port)
+        self._conn = http.client.HTTPConnection(self.host,self.port)
 
     def __eq__(self, other):
         if not isinstance(self,VSApi) or not isinstance(other,VSApi):
@@ -281,7 +281,7 @@ class VSApi(object):
                     body_to_send if body else None,
                     headers
                 )
-            except httplib.CannotSendRequest:
+            except http.client.CannotSendRequest:
                 attempt+=1
                 logger.warning("HTTP connection re-use issue detected, resetting connection")
                 self.reset_http()
@@ -302,7 +302,7 @@ class VSApi(object):
             if response.status == 303:
                 url = response.msg.dict['location']
                 logger.debug("Response was a redirect to {0}".format(url))
-                conn = httplib.HTTPConnection(self.host,self.port)
+                conn = http.client.HTTPConnection(self.host,self.port)
             elif response.status == 504:    #gateway timeout
                 #if we're getting timeouts, apply an exponential backoff
                 if self._delay==0:
@@ -415,8 +415,8 @@ class VSApi(object):
                         raise e
                 else:
                     raise e
-            except httplib.BadStatusLine as e: #retry if we got a bad status line
-                logging.warning("Bad status line: {0}".format(unicode(e)))
+            except http.client.BadStatusLine as e: #retry if we got a bad status line
+                logging.warning("Bad status line: {0}".format(str(e)))
                 sleep(self.retry_delay)
                 if n>self.retry_attempts:
                     self.logger.error("Did not work after %d tries, giving up" % self.retry_attempts)
@@ -437,14 +437,14 @@ class VSApi(object):
 
     @staticmethod
     def _escape_for_query(value):
-        if isinstance(value,basestring):
+        if isinstance(value,str):
             try:
                 toprocess = value.encode("UTF-8")
             except UnicodeDecodeError:
                 toprocess = value
         else:
             toprocess = str(value)
-        return urllib.pathname2url(toprocess).replace("/", "%2F")
+        return urllib.request.pathname2url(toprocess).replace("/", "%2F")
 
     @staticmethod
     def _get_param_list(key, value):
@@ -453,7 +453,7 @@ class VSApi(object):
         else:
             toprocess = value
 
-        return map(lambda item: "{0}={1}".format(key, VSApi._escape_for_query(item)), toprocess)
+        return ["{0}={1}".format(key, VSApi._escape_for_query(item)) for item in toprocess]
 
     def raw_request(self,path,method="GET",matrix=None,query=None,body=None,accept="application/xml",
                     content_type='application/xml',rawData=False,extra_headers={}):
@@ -473,12 +473,12 @@ class VSApi(object):
         base_headers.update(extra_headers)
 
         if matrix:
-            matrixpart = ";"+ ";".join(flatmap(lambda (k,v): self._get_param_list(k,v), matrix.items()))
+            matrixpart = ";"+ ";".join(flatmap(lambda k_v: self._get_param_list(k_v[0],k_v[1]), list(matrix.items())))
         else:
             matrixpart=""
 
         if query:
-            querypart = "&".join(flatmap(lambda (k,v): self._get_param_list(k,v), query.items()))
+            querypart = "&".join(flatmap(lambda k_v1: self._get_param_list(k_v1[0],k_v1[1]), list(query.items())))
         else:
             querypart = ""
 
@@ -512,7 +512,7 @@ class VSApi(object):
         :return: Result of the request() call
         """
         doc='<SimpleMetadataDocument xmlns="http://xml.vidispine.com/schema/vidispine">'
-        for key,value in md.items():
+        for key,value in list(md.items()):
             if mode == "add":
                 doc=doc+'\n<field><key>%s</key><value mode="add">%s</value></field>' % (key,value)
             else:

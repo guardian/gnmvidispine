@@ -1,6 +1,6 @@
 __author__ = 'Andy Gallagher <andy.gallagher@theguardian.com>'
 
-from vidispine_api import VSApi,VSException
+from .vidispine_api import VSApi,VSException
 import re
 import datetime
 import xml.etree.ElementTree as ET
@@ -168,10 +168,10 @@ class VSJob(VSApi):
         if startTimeNode is not None:
             try:
                 #remove microseconds from the time string. Ugly but it should work.
-                timeString=re.sub(u'\.\d+','',startTimeNode.text)
+                timeString=re.sub('\.\d+','',startTimeNode.text)
                 self.contentDict['started'] = datetime.datetime.strptime(timeString,"%Y-%m-%dT%H:%M:%SZ")
             except ValueError as e: #if the date doesn't parse
-                print "WARNING: %s" % e.message
+                print("WARNING: %s" % e.message)
                 pass
 
     @property
@@ -260,11 +260,11 @@ class VSJob(VSApi):
                 else:
                     raise VSJobFailed(self)
             return False
-        raise StandardError("Job definition did not have a status!")
+        raise Exception("Job definition did not have a status!")
 
     def hasWarning(self):
         if 'status' in self.contentDict:
-            if re.match(u'_WARNING',self.contentDict['status']):
+            if re.match('_WARNING',self.contentDict['status']):
                 return True
             return False
         return True
@@ -320,7 +320,7 @@ class VSJobStep(XMLPropMixin):
         return self._find_prop('status')
 
     def __unicode__(self):
-        return u"Step {n}: {d} {s}".format(n=self.number, d=self.description, s=self.status)
+        return "Step {n}: {d} {s}".format(n=self.number, d=self.description, s=self.status)
 
     def __str__(self):
         return self.__unicode__().encode('ascii')
@@ -377,10 +377,10 @@ class VSJobTask(XMLPropMixin):
             yield VSJobStep(node)
 
     def __unicode__(self):
-        return u"Task {id}: {desc} {status} attempt {att} at {time}".format(
+        return "Task {id}: {desc} {status} attempt {att} at {time}".format(
             id=self.task_id,
             desc=self.description,
             status=self.status,
             att=self.attempts,
-            time=unicode(self.timestamp),
+            time=str(self.timestamp),
         )

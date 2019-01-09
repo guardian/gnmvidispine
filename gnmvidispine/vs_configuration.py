@@ -1,4 +1,4 @@
-from vidispine_api import HTTPError,VSApi,VSException,VSNotFound
+from .vidispine_api import HTTPError,VSApi,VSException,VSNotFound
 import string
 
 configheader="""<ConfigurationPropertyDocument xmlns="http://xml.vidispine.com/schema/vidispine">
@@ -43,13 +43,13 @@ class VSConfiguration(VSApi):
             raise TypeError("You need to pass a dictionary to VSConfiguration::set")
     
         myconfig=configheader
-        for key,value in values.iteritems():
+        for key,value in values.items():
             element=string.replace(configbody,'{{ keyname }}',key)
             element=string.replace(element,'{{ value }}',value)
             myconfig+=element
         myconfig+=configfooter
         
-        print myconfig
+        print(myconfig)
     
         return
 

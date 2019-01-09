@@ -1,5 +1,5 @@
-from vidispine_api import VSApi,VSException,VSNotFound
-from vs_field import VSField
+from .vidispine_api import VSApi,VSException,VSNotFound
+from .vs_field import VSField
 import xml.etree.ElementTree as ET
 
 
@@ -29,7 +29,7 @@ class VSMDGroup(VSApi):
                     newfield.populate(fieldname.replace(' ','%20'))
                     self.fields.append(newfield)
                 except VSNotFound as e:
-                    print "Warning: %s was not found as a field (might be a sub-group)" % fieldname
+                    print("Warning: %s was not found as a field (might be a sub-group)" % fieldname)
 
     def has_field(self, fieldname):
         if fieldname in self.portalData['field_order']: return True
@@ -102,7 +102,7 @@ class VSMDGroup(VSApi):
                 namenode=node.find('{0}name'.format(self.xmlns))
 
                 if namenode.text==name:
-                    print "%s" % node.text
+                    print("%s" % node.text)
                     return node
 
         return None
@@ -148,14 +148,14 @@ class VSMDGroup(VSApi):
         self.request("/metadata-field/field-group/%s" % self.name,method="PUT",body=ET.tostring(self.dataContent))
 
     def dump_text(self, *fields):
-        print "Metadata Group:"
-        print "\tName: %s" % (self.name)
+        print("Metadata Group:")
+        print("\tName: %s" % (self.name))
 
     #    for f in fields:
     #        print "\t%s: %s" % (f, self.contentDict[f])
 
-        print "\tPortal data:\n"
-        for f, v in self.portalData.items():
-            print "\t%s: %s" % (f, v)
+        print("\tPortal data:\n")
+        for f, v in list(self.portalData.items()):
+            print("\t%s: %s" % (f, v))
 
-        print "\tField count: %d" % self.fields.__len__()
+        print("\tField count: %d" % self.fields.__len__())

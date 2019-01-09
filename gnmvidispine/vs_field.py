@@ -1,6 +1,6 @@
 __author__ = 'andy.gallagher@theguardian.com'
 
-from vidispine_api import *
+from .vidispine_api import *
 import xml.etree.ElementTree as ET
 import logging
 
@@ -98,7 +98,7 @@ class VSField(VSApi):
         node.text = type
         if default_value is not None:
             node = SubElement(self.dataContent, 'defaultValue')
-            node.text = unicode(default_value)
+            node.text = str(default_value)
         node = SubElement(self.dataContent, 'origin')
         node.text = origin
         node = SubElement(self.dataContent, 'data')
@@ -109,7 +109,7 @@ class VSField(VSApi):
         #SubElement(self.dataContent,'data')
 
         self.dataContent = ET.fromstring(ET.tostring(self.dataContent))
-        print ET.tostring(self.dataContent)
+        print(ET.tostring(self.dataContent))
         if commit:
             self.commitXML()
         return self
@@ -152,7 +152,7 @@ class VSField(VSApi):
         if not isinstance(data,dict):
             raise TypeError
 
-        for k,v in data.items():
+        for k,v in list(data.items()):
             self.portalData[k] = v
 
         parent_node = self.dataContent.find('{0}data'.format(self.xmlns))
@@ -171,16 +171,16 @@ class VSField(VSApi):
         :param fields: optionally, a list of extra fields to display
         :return: None
         """
-        print "Metadata Field:"
-        print "\tID: %s" % (self.name)
-        print "\tData type: %s" % (self.type)
-        print "\tOrigin: %s" % (self.origin)
+        print("Metadata Field:")
+        print("\tID: %s" % (self.name))
+        print("\tData type: %s" % (self.type))
+        print("\tOrigin: %s" % (self.origin))
     #    for f in fields:
     #        print "\t%s: %s" % (f, self.contentDict[f])
 
-        print "\tPortal data:\n"
-        for f, v in self.portalData.items():
-            print "\t%s: %s" % (f, v)
+        print("\tPortal data:\n")
+        for f, v in list(self.portalData.items()):
+            print("\t%s: %s" % (f, v))
 
     def commitXML(self):
         """

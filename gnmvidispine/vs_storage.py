@@ -1,26 +1,26 @@
 __author__ = 'Andy Gallagher <andy.gallagher@theguardian.com>'
 
 import xml.etree.ElementTree as ET
-from vs_job import VSJob, VSJobFailed
-from vs_shape import VSShape
-from vs_item import VSItem
-from vs_metadata import VSMetadata
+from .vs_job import VSJob, VSJobFailed
+from .vs_shape import VSShape
+from .vs_item import VSItem
+from .vs_metadata import VSMetadata
 
 import os.path
 from pprint import pprint
 import re
-import urllib
+import urllib.request, urllib.parse, urllib.error
 from time import sleep
 import logging
 import json
 
-from vidispine_api import HTTPError, VSApi, VSException, VSNotFound
+from .vidispine_api import HTTPError, VSApi, VSException, VSNotFound
 
 
-class FileAlreadyImportedError(StandardError):
+class FileAlreadyImportedError(Exception):
     pass
 
-class FileDoesNotExistError(StandardError):
+class FileDoesNotExistError(Exception):
     pass
 
 
@@ -61,7 +61,7 @@ class VSFile(object):
                 self.memberOfItem.name = idNode.text
 
     def __unicode__(self):
-        return u'Vidispine file {0}: {1} on storage {2}'.format(self.name,self.path,self.storageName)
+        return 'Vidispine file {0}: {1} on storage {2}'.format(self.name,self.path,self.storageName)
 
     def _valueOrNone(self, path):
         namespace = "{http://xml.vidispine.com/schema/vidispine}"
@@ -110,7 +110,7 @@ class VSFile(object):
             raise FileAlreadyImportedError(msg)
 
         mdtext = ""
-        if isinstance(metadata, basestring):
+        if isinstance(metadata, str):
             mdtext = metadata
         elif isinstance(metadata, VSMetadata):
             mdtext = metadata.toXML()
@@ -120,7 +120,7 @@ class VSFile(object):
             'priority': priority,
         }
         if jobMetadata is not None:
-            q['jobmetadata'] = map(lambda (k,v): "{0}={1}".format(k,v), jobMetadata.items())
+            q['jobmetadata'] = ["{0}={1}".format(k_v[0],k_v[1]) for k_v in list(jobMetadata.items())]
         if tags and tags is not None:
             q['tag'] = ""
             for t in tags:
@@ -162,9 +162,9 @@ class VSFile(object):
         if storage is not None:
             if isinstance(storage, VSStorage):
                 q['storage'] = storage.name
-            elif isinstance(storage,basestring):
+            elif isinstance(storage,str):
                 if not re.match(storage, r'^\w{2}-\d+'):
-                    raise StandardError("When specifying a storage as a string, it must be in the form VV-nnnnn where VV is the side identifier and nnnnn is the numeric ID")
+                    raise Exception("When specifying a storage as a string, it must be in the form VV-nnnnn where VV is the side identifier and nnnnn is the numeric ID")
                 q['storage'] = storage
             else:
                 raise TypeError("storage parameter must be either a VSStorage or a string identifying the storage")
@@ -180,10 +180,10 @@ class VSFile(object):
         Initiate download of a file
         :return: HTTPResponse object. Call .read() on this to get the data
         """
-        import httplib
+        import http.client
         logging.debug("trying to download {0} from storage {1}".format(self.name,self.storageName))
 
-        conn=httplib.HTTPConnection(self.parent.host, self.parent.port)
+        conn=http.client.HTTPConnection(self.parent.host, self.parent.port)
         response = self.parent.sendAuthorized('GET','/API/storage/file/{0}/data'.format(self.name),'',{'Accept': '*'})
         if response.status < 200 or response.status > 299:
             pprint(response.msg.__dict__)
@@ -197,7 +197,7 @@ class VSFile(object):
         :param storage: storage to move to, either a string of the name or a VSStorage object. Raises a TypeError if this is not correct.
         :return:
         """
-        if isinstance(storage,basestring):
+        if isinstance(storage,str):
             destname = storage
         elif isinstance(storage,VSStorage):
             destname = storage.name
@@ -323,9 +323,9 @@ class VSStorage(VSApi):
                 found_uri = m.uri
                 if pathOnly:
                     # remove the URI descriptor from the start
-                    found_uri = re.sub(u'^{0}://'.format(uriType), '', found_uri)
+                    found_uri = re.sub('^{0}://'.format(uriType), '', found_uri)
                 if decode:
-                    found_uri = urllib.url2pathname(found_uri)
+                    found_uri = urllib.request.url2pathname(found_uri)
                 yield found_uri
 
     #if the given path starts with one of our own paths, remove that part
@@ -467,9 +467,9 @@ def VSStoragePathMap(uriType=None,stripType=False,*args,**kwargs):
                 if uriType:
                     if not m.uri.startswith(uriType):
                         continue
-                uri = urllib.url2pathname(m.uri)
+                uri = urllib.request.url2pathname(m.uri)
                 if stripType:
-                    uri = re.sub(u'^[^:]+://','',uri)
+                    uri = re.sub('^[^:]+://','',uri)
 
                 rtn[uri] = st
             except:

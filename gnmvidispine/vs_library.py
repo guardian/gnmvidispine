@@ -1,4 +1,4 @@
-import httplib
+import http.client
 import base64
 import string
 import xml.etree.ElementTree as ET
@@ -6,10 +6,10 @@ from pprint import pprint
 
 import traceback
 
-from vidispine_api import HTTPError, VSApi,VSException,InvalidData
-from vs_storage_rule import VSStorageRule
+from .vidispine_api import HTTPError, VSApi,VSException,InvalidData
+from .vs_storage_rule import VSStorageRule
 
-from vs_item import VSItem
+from .vs_item import VSItem
 
 def allLibraries(vsapi):
     result = vsapi.request("/library",method="GET")
@@ -61,7 +61,7 @@ class VSLibrary(VSApi, list):
         self.hits = int(self.dataContent.find("{0}hits".format(namespace)).text)
         self.name = self.dataContent.find('{0}library'.format(namespace)).text
 
-        print "Got new library %s with %d items" % (self.name, self.hits)
+        print("Got new library %s with %d items" % (self.name, self.hits))
 
         if not noyield:
             namespace = "{http://xml.vidispine.com/schema/vidispine}"
@@ -112,7 +112,7 @@ class VSLibrary(VSApi, list):
 
     def delete(self):
         response = self.request("/library/%s" % self.name, method="DELETE")
-        print "VSLibrary::delete: got %s" % response
+        print("VSLibrary::delete: got %s" % response)
 
     def set_metadata(self, md):
         return super(VSLibrary, self).set_metadata("/library/%s" % self.name, md)

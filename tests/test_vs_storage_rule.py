@@ -1,7 +1,7 @@
-from __future__ import absolute_import
+
 import unittest2
 from mock import MagicMock, patch
-import httplib
+import http.client
 import base64
 import logging
 import tempfile
@@ -27,7 +27,7 @@ class TestVSStorageRule(unittest2.TestCase):
         
         collection.populate_from_xml(fromstring(self.test_storagerule_doc))
         
-        rules = map(lambda x: x, collection.rules())
+        rules = [x for x in collection.rules()]
         self.assertEqual(len(rules), 1)
         self.assertEqual(rules[0].storage_count, 3)
         self.assertEqual(rules[0].precedence, "MEDIUM")

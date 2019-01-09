@@ -1,13 +1,13 @@
 # *-* coding: UTF-8 --*
-from __future__ import absolute_import
+
 import unittest2
 from mock import MagicMock, patch
-import httplib
+import http.client
 import base64
 import logging
 import tempfile
 from os import urandom
-from httplib import CannotSendRequest
+from http.client import CannotSendRequest
 
 class TestVSApi(unittest2.TestCase):
     fake_host='localhost'
@@ -35,7 +35,7 @@ class TestVSApi(unittest2.TestCase):
           <element>string</element>
         </root>"""
         
-        conn = httplib.HTTPConnection(host='localhost',port=8080)
+        conn = http.client.HTTPConnection(host='localhost',port=8080)
         conn.request = MagicMock()
         conn.getresponse = MagicMock(return_value=self.MockedResponse(200,sample_returned_xml))
         
@@ -65,7 +65,7 @@ class TestVSApi(unittest2.TestCase):
           <returned-element>string</returned-element>
         </response>
         """
-        conn = httplib.HTTPConnection(host=self.fake_host, port=self.fake_port)
+        conn = http.client.HTTPConnection(host=self.fake_host, port=self.fake_port)
         conn.request = MagicMock()
         conn.getresponse = MagicMock(return_value=self.MockedResponse(200, sample_returned_xml)) #simulate empty OK response
     
@@ -91,7 +91,7 @@ class TestVSApi(unittest2.TestCase):
           <element>string</element>
         </root>"""
     
-        conn = httplib.HTTPConnection(host=self.fake_host, port=self.fake_port)
+        conn = http.client.HTTPConnection(host=self.fake_host, port=self.fake_port)
         conn.request = MagicMock()
         conn.getresponse = MagicMock(return_value=self.MockedResponse(201, ""))  # simulate empty OK response
     
@@ -115,7 +115,7 @@ class TestVSApi(unittest2.TestCase):
   </notFound>
 </ExceptionDocument>"""
         
-        conn = httplib.HTTPConnection(host='localhost', port=8080)
+        conn = http.client.HTTPConnection(host='localhost', port=8080)
         conn.request = MagicMock()
         conn.getresponse = MagicMock(return_value=self.MockedResponse(404, exception_response, reason="Test 404 failure"))
     
@@ -147,7 +147,7 @@ class TestVSApi(unittest2.TestCase):
 </MetadataDocument>"""  #invalid namespace will raise bad request error
         exception_response = """<?xml version="1.0" encoding="UTF-8" standalone="yes"?><ExceptionDocument xmlns="http://xml.vidispine.com/schema/vidispine"><invalidInput><context>metadata</context><id>VX-3245</id><explanation>Couldn't transform the input according to the projection.</explanation></invalidInput></ExceptionDocument>"""
 
-        conn = httplib.HTTPConnection(host='localhost', port=8080)
+        conn = http.client.HTTPConnection(host='localhost', port=8080)
         conn.request = MagicMock()
         conn.getresponse = MagicMock(return_value=self.MockedResponse(400, exception_response, reason="Test 40- failure"))
     
@@ -172,7 +172,7 @@ class TestVSApi(unittest2.TestCase):
         from gnmvidispine.vidispine_api import VSApi,HTTPError
         from time import time
         
-        conn = httplib.HTTPConnection(host=self.fake_host, port=self.fake_port)
+        conn = http.client.HTTPConnection(host=self.fake_host, port=self.fake_port)
         conn.request = MagicMock()
         conn.getresponse = MagicMock(return_value=self.MockedResponse(503, "No server available"))
 
@@ -218,7 +218,7 @@ class TestVSApi(unittest2.TestCase):
         """
         from gnmvidispine.vidispine_api import VSApi,HTTPError
         
-        conn = httplib.HTTPConnection(host=self.fake_host, port=self.fake_port)
+        conn = http.client.HTTPConnection(host=self.fake_host, port=self.fake_port)
         conn.request = MagicMock()
         
         logging.basicConfig(level=logging.INFO)
@@ -276,7 +276,7 @@ class TestVSApi(unittest2.TestCase):
 
     def test_reuse(self):
         from gnmvidispine.vidispine_api import VSApi
-        conn = httplib.HTTPConnection(host='localhost',port=8080)
+        conn = http.client.HTTPConnection(host='localhost',port=8080)
         conn.request = MagicMock(side_effect=CannotSendRequest())
         
         a = VSApi(host='localhost',user='testuser',passwd='testpasswd',conn=conn)
@@ -290,7 +290,7 @@ class TestVSApi(unittest2.TestCase):
     
     def test_reset_http(self):
         from gnmvidispine.vidispine_api import VSApi
-        conn = httplib.HTTPConnection(host='localhost', port=8080)
+        conn = http.client.HTTPConnection(host='localhost', port=8080)
         conn.close = MagicMock()
 
         a = VSApi(host='localhost', user='testuser', passwd='testpasswd', conn=conn)
@@ -305,7 +305,7 @@ class TestVSApi(unittest2.TestCase):
           <element>string</element>
         </root>"""
 
-        conn = httplib.HTTPConnection(host='localhost', port=8080)
+        conn = http.client.HTTPConnection(host='localhost', port=8080)
         conn.request = MagicMock()
         conn.getresponse = MagicMock(return_value=self.MockedResponse(200, sample_returned_xml))
 
@@ -331,7 +331,7 @@ class TestVSApi(unittest2.TestCase):
           <element>string</element>
         </root>"""
 
-        conn = httplib.HTTPConnection(host='localhost', port=8080)
+        conn = http.client.HTTPConnection(host='localhost', port=8080)
         conn.request = MagicMock()
         conn.getresponse = MagicMock(return_value=self.MockedResponse(200, sample_returned_xml))
 
@@ -374,7 +374,7 @@ class TestVSApi(unittest2.TestCase):
 <MetadataDocument xmlns="http://xml.vidispine.com/schema/vidispine"><timespan end="+INF" start="-INF"><field><name>title</name><value>Thousands take to streets in Barcelona to protest against police violence – video </value></field><field><name>gnm_asset_category</name><value>Master</value></field><field><name>gnm_type</name><value>Master</value></field><fiel"""
 
         from gnmvidispine.vidispine_api import VSApi
-        from httplib import HTTPConnection
+        from http.client import HTTPConnection
         api = VSApi(user=self.fake_user, passwd=self.fake_passwd)
         auth = base64.encodestring('%s:%s' % (self.fake_user, self.fake_passwd)).replace('\n', '')
 
@@ -389,7 +389,7 @@ class TestVSApi(unittest2.TestCase):
 
     def test_param_list_unicode(self):
         from gnmvidispine.vidispine_api import VSApi
-        response = VSApi._get_param_list("keyname",u"arséne wenger est allée en vacances. Häppy hølidåys")
+        response = VSApi._get_param_list("keyname","arséne wenger est allée en vacances. Häppy hølidåys")
         #ensure that the unicode string has been urlencoded properly
         self.assertEqual(response, ['keyname=ars%C3%A9ne%20wenger%20est%20all%C3%A9e%20en%20vacances.%20H%C3%A4ppy%20h%C3%B8lid%C3%A5ys'])
 

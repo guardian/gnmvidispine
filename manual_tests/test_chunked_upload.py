@@ -20,7 +20,7 @@ class TestChunkedUpload(unittest.TestCase):
     
     def test_placeholder_upload(self):
         if "CI" in os.environ:
-            print "CI environment detected, not running upload tests"
+            print("CI environment detected, not running upload tests")
             return True
         
         filename = "testfile.mp4"
