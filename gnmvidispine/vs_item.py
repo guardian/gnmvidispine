@@ -1052,7 +1052,11 @@ class VSMetadataBuilder(VSApi):
             else:
                 fieldnode = ET.SubElement(parentNode,"field")
                 fieldname = ET.SubElement(fieldnode,"name")
-                fieldname.text = str(key).decode("UTF-8")
+                if isinstance(key, bytes):
+                    fieldname.text = key.decode("UTF-8")
+                else:
+                    fieldname.text = key
+
                 self._setcontentnode(fieldnode, value)
 
     def _groupContent(self,parentNode,meta,subgroupmode="add"):

@@ -32,7 +32,6 @@ class HTTPError(Exception):
         return "Request was: %s to %s\n\nServer returned %d (%s)\n%s" % (self.method,self.url,self.status, self.reason, self.body)
 
     def to_VSException(self, method=None, url=None, body=None):
-        #print str(self)
         try:
             if self.code == 404:
                 newexcept = VSNotFound()
@@ -259,7 +258,7 @@ class VSApi(object):
         import time
         attempt = 0
         str = '%s:%s' % (self.user, self.passwd)
-        auth = base64.encodestring(str.encode("UTF-8")).replace('\n', '')
+        auth = base64.encodestring(str.encode("UTF-8")).decode().replace('\n', '')
 
         headers['Authorization']="Basic %s" % auth
         if self.run_as is not None:
@@ -269,7 +268,10 @@ class VSApi(object):
         conn = self._conn
 
         if rawData == False and body is not None:
-            body_to_send = body.decode('utf-8',"backslashreplace").encode('utf-8',"backslashreplace")
+            try:
+                body_to_send = body.decode('utf-8', "backslashreplace").encode('utf-8', "backslashreplace")
+            except AttributeError: #if body is a string as opposed to bytes, we get this error
+                body_to_send = body.encode('utf-8', "backslashreplace")
         else:
             body_to_send = body
 
@@ -292,7 +294,7 @@ class VSApi(object):
                 continue
             except socket_error as e:
                 attempt +=1
-                logger.warning("Socket error: {0}, resetting conection".format(str(e)))
+                logger.warning("Socket error: {0}, resetting conection".format(e))
                 self.reset_http()
                 time.sleep(1)
                 if attempt>10:
@@ -417,7 +419,7 @@ class VSApi(object):
                 else:
                     raise e
             except http.client.BadStatusLine as e: #retry if we got a bad status line
-                logging.warning("Bad status line: {0}".format(str(e)))
+                logging.warning("Bad status line: {0}".format(e))
                 sleep(self.retry_delay)
                 if n>self.retry_attempts:
                     self.logger.error("Did not work after %d tries, giving up" % self.retry_attempts)
@@ -542,7 +544,7 @@ class VSApi(object):
                 val=nodeset.find('{0}value'.format("{http://xml.vidispine.com/schema/vidispine}")).text
                 rtn[key]=val
             except AttributeError as e:
-                self.logger.warning(str(e))
+                self.logger.warning(e)
 
         for nodeset in dataContent.findall('{0}timespan/{0}field'.format("{http://xml.vidispine.com/schema/vidispine}")):
             try:
@@ -550,7 +552,7 @@ class VSApi(object):
                 val=nodeset.find('{0}value'.format("{http://xml.vidispine.com/schema/vidispine}")).text
                 rtn[key]=val
             except AttributeError as e:
-                self.logger.warning(str(e))
+                self.logger.warning(e)
 
         return rtn
 
