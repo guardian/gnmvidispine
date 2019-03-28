@@ -258,7 +258,8 @@ class VSApi(object):
         """
         import time
         attempt = 0
-        auth = base64.encodestring('%s:%s' % (self.user, self.passwd)).replace('\n', '')
+        str = '%s:%s' % (self.user, self.passwd)
+        auth = base64.encodestring(str.encode("UTF-8")).replace('\n', '')
 
         headers['Authorization']="Basic %s" % auth
         if self.run_as is not None:
@@ -277,7 +278,7 @@ class VSApi(object):
             try:
                 conn.request(
                     method,
-                    url.decode('utf-8',"backslashreplace").encode('utf-8',"backslashreplace"),
+                    url,
                     body_to_send if body else None,
                     headers
                 )
