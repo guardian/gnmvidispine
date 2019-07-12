@@ -182,7 +182,7 @@ class VSItem(VSApi):
 
         if isinstance(specificFields,list) or isinstance(specificFields,tuple):
             fields=",".join(specificFields)
-            content = self.request("/{t}/{i}/metadata?field={f}".format(t=type,i=entity_id,f=fields, method="GET"))
+            content = self.request("/{t}/{i}/metadata;field={f}".format(t=type,i=entity_id,f=fields, method="GET"))
         else:
             content = self.request("/%s/%s/metadata" % (type, entity_id), method="GET")
 
