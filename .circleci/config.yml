@@ -41,7 +41,7 @@ jobs:
     # This is based on your 1.0 configuration file or project settings
     - run:
         working_directory: ~/fredex42/gnmvidispine
-        command: mkdir -p /opt/cantemo/python/
+        command: mkdir -p /opt/cantemo/python/§
 
     #set up virtualenv
     - run: virtualenv ~/virtualenvs/gnmvidispine
