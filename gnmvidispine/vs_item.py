@@ -149,11 +149,19 @@ class VSItem(VSApi):
         if self.type == "item":
             node = self.dataContent.find('{0}item'.format(namespace))
             if node is None:
-                raise InvalidSourceError("VSItem::fromXML - declared as item but source document does not have an <item> node")
-            self.name = node.attrib['id']
+                if self.dataContent.tag == '{0}ItemDocument'.format(namespace):
+                    self.name = self.dataContent.attrib['id']
+                    self.type = "itemdocument"
+                else:
+                    raise InvalidSourceError("VSItem::fromXML - declared as item but source document does not have an <item> or <ItemDocument> node")
+            else:
+                self.name = node.attrib['id']
 
         if self.type == "item":
             for x in self.dataContent.findall('{0}item/{0}metadata/{0}timespan'.format(namespace)):
+                self.makeContentDict(x)
+        elif self.type == "itemdocument":
+            for x in self.dataContent.findall('{0}metadata/{0}timespan'.format(namespace)):
                 self.makeContentDict(x)
         elif self.type == "collection":
             for x in self.dataContent.findall('{0}timespan'.format(namespace)):
