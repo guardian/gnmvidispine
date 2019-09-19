@@ -938,6 +938,7 @@ class VSItem(VSApi):
 
         dictionary_to_return = {}
         dictionary_to_return['data'] = deepcopy(self.dataContent)
+        dictionary_to_return['content'] = deepcopy(self.contentDict)
         dictionary_to_return['_vidispine_id'] = deepcopy(self.name)
 
         return dictionary_to_return
@@ -950,8 +951,8 @@ class VSItem(VSApi):
         from copy import deepcopy
 
         self.dataContent = deepcopy(input_dictionary['data'])
+        self.contentDict = deepcopy(input_dictionary['content'])
         self.name = deepcopy(input_dictionary['_vidispine_id'])
-        self.fromXML(xmldata=self.dataContent)
 
         return self
 
