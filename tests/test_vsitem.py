@@ -41,6 +41,23 @@ class TestVSItem(unittest2.TestCase):
         </item>
     </MetadataListDocument>"""
 
+    testdoctwo = """<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+    <ItemDocument id="VX-1234" xmlns="http://xml.vidispine.com/schema/vidispine">
+    <metadata>
+        <timespan start="-INF" end="+INF">
+            <field>
+                <name>sometestfield</name>
+                <value>sometestvalue</value>
+            </field>
+            <field>
+                <name>someotherfield</name>
+                <value>valueone</value>
+                <value>valuetwo</value>
+            </field>
+        </timespan>
+        </metadata>
+    </ItemDocument>"""
+
     class MockedResponse(object):
         def __init__(self, status_code, content, reason=""):
             self.status = status_code
@@ -159,6 +176,14 @@ class TestVSItem(unittest2.TestCase):
         from gnmvidispine.vs_item import VSItem
         i = VSItem(host=self.fake_host, port=self.fake_port, user=self.fake_user, passwd=self.fake_passwd)
         i.fromXML(self.testdoc)
+
+        self.assertEqual(i.get("sometestfield"),"sometestvalue")
+        self.assertEqual(i.get("someotherfield", allowArray=True),["valueone","valuetwo"])
+
+    def test_fromxml_can_code_with_ItemDocument(self):
+        from gnmvidispine.vs_item import VSItem
+        i = VSItem(host=self.fake_host, port=self.fake_port, user=self.fake_user, passwd=self.fake_passwd)
+        i.fromXML(self.testdoctwo)
 
         self.assertEqual(i.get("sometestfield"),"sometestvalue")
         self.assertEqual(i.get("someotherfield", allowArray=True),["valueone","valuetwo"])
