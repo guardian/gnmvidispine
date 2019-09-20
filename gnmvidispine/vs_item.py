@@ -161,6 +161,7 @@ class VSItem(VSApi):
             for x in self.dataContent.findall('{0}item/{0}metadata/{0}timespan'.format(namespace)):
                 self.makeContentDict(x)
         elif self.type == "itemdocument":
+            self.type = "item"
             for x in self.dataContent.findall('{0}metadata/{0}timespan'.format(namespace)):
                 self.makeContentDict(x)
         elif self.type == "collection":
