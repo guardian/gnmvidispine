@@ -1,5 +1,6 @@
 # -*- coding: UTF-8 -*-
-
+from future.standard_library import install_aliases
+install_aliases()
 import unittest2
 from mock import MagicMock, patch
 from urllib.parse import quote

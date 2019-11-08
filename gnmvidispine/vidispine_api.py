@@ -1,3 +1,5 @@
+from future.standard_library import install_aliases
+install_aliases()
 import http.client
 import urllib.request, urllib.parse, urllib.error
 import base64
@@ -258,7 +260,7 @@ class VSApi(object):
         import time
         attempt = 0
         str = '%s:%s' % (self.user, self.passwd)
-        auth = base64.encodestring(str.encode("UTF-8")).decode().replace('\n', '')
+        auth = base64.encodebytes(str.encode("UTF-8")).decode().replace('\n', '')
 
         headers['Authorization']="Basic %s" % auth
         if self.run_as is not None:

@@ -139,7 +139,7 @@ class TestVSApi(unittest2.TestCase):
         :return:
         """
         from gnmvidispine.vidispine_api import VSApi, VSBadRequest
-        request_body = """<MetadataDocument xmlns="http://xml.vidispine.com/">
+        request_body = b"""<MetadataDocument xmlns="http://xml.vidispine.com/">
   <field>
     <name>blah</name>
     <value>smith</value>
@@ -159,8 +159,8 @@ class TestVSApi(unittest2.TestCase):
         self.assertEqual("VX-3245", ex.exception.exceptionID)
         self.assertEqual("invalidInput", ex.exception.exceptionType)
         self.assertEqual("Couldn't transform the input according to the projection.", ex.exception.exceptionWhat)
-    
-        computed_auth = base64.b64encode("{0}:{1}".format(self.fake_user, self.fake_passwd))
+
+        computed_auth = str(base64.b64encode(u"{0}:{1}".format(self.fake_user, self.fake_passwd)))
         conn.request.assert_called_with('PUT', '/API/item/VX-3245/metadata', request_body,
                                         {'Content-Type': 'application/xml', 'Authorization': "Basic " + computed_auth, 'Accept': 'application/xml'})
         

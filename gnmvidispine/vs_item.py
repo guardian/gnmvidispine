@@ -1,3 +1,4 @@
+from __future__ import print_function
 import xml.etree.cElementTree as ET
 from .vidispine_api import InvalidData, VSBadRequest
 from .vs_job import VSJob, VSJobFailed
