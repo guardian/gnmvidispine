@@ -149,11 +149,20 @@ class VSItem(VSApi):
         if self.type == "item":
             node = self.dataContent.find('{0}item'.format(namespace))
             if node is None:
-                raise InvalidSourceError("VSItem::fromXML - declared as item but source document does not have an <item> node")
-            self.name = node.attrib['id']
+                if self.dataContent.tag == '{0}ItemDocument'.format(namespace):
+                    self.name = self.dataContent.attrib['id']
+                    self.type = "itemdocument"
+                else:
+                    raise InvalidSourceError("VSItem::fromXML - declared as item but source document does not have an <item> or <ItemDocument> node")
+            else:
+                self.name = node.attrib['id']
 
         if self.type == "item":
             for x in self.dataContent.findall('{0}item/{0}metadata/{0}timespan'.format(namespace)):
+                self.makeContentDict(x)
+        elif self.type == "itemdocument":
+            self.type = "item"
+            for x in self.dataContent.findall('{0}metadata/{0}timespan'.format(namespace)):
                 self.makeContentDict(x)
         elif self.type == "collection":
             for x in self.dataContent.findall('{0}timespan'.format(namespace)):
@@ -182,7 +191,7 @@ class VSItem(VSApi):
 
         if isinstance(specificFields,list) or isinstance(specificFields,tuple):
             fields=",".join(specificFields)
-            content = self.request("/{t}/{i}/metadata?field={f}".format(t=type,i=entity_id,f=fields, method="GET"))
+            content = self.request("/{t}/{i}/metadata;field={f}".format(t=type,i=entity_id,f=fields, method="GET"))
         else:
             content = self.request("/%s/%s/metadata" % (type, entity_id), method="GET")
 
@@ -928,8 +937,9 @@ class VSItem(VSApi):
         """
         from copy import deepcopy
 
-        dictionary_to_return = deepcopy(self.contentDict)
-
+        dictionary_to_return = {}
+        dictionary_to_return['data'] = deepcopy(self.dataContent)
+        dictionary_to_return['content'] = deepcopy(self.contentDict)
         dictionary_to_return['_vidispine_id'] = deepcopy(self.name)
 
         return dictionary_to_return
@@ -941,7 +951,8 @@ class VSItem(VSApi):
         """
         from copy import deepcopy
 
-        self.contentDict = deepcopy(input_dictionary)
+        self.dataContent = deepcopy(input_dictionary['data'])
+        self.contentDict = deepcopy(input_dictionary['content'])
         self.name = deepcopy(input_dictionary['_vidispine_id'])
 
         return self
