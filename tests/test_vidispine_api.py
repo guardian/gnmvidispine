@@ -160,9 +160,10 @@ class TestVSApi(unittest2.TestCase):
         self.assertEqual("invalidInput", ex.exception.exceptionType)
         self.assertEqual("Couldn't transform the input according to the projection.", ex.exception.exceptionWhat)
 
-        computed_auth = str(base64.b64encode(u"{0}:{1}".format(self.fake_user, self.fake_passwd)))
+        authstring = u"{0}:{1}".format(self.fake_user, self.fake_passwd)
+        computed_auth = base64.b64encode(authstring.encode("UTF-8"))
         conn.request.assert_called_with('PUT', '/API/item/VX-3245/metadata', request_body,
-                                        {'Content-Type': 'application/xml', 'Authorization': "Basic " + computed_auth, 'Accept': 'application/xml'})
+                                        {'Content-Type': 'application/xml', 'Authorization': "Basic " + computed_auth.decode("UTF-8"), 'Accept': 'application/xml'})
         
     def test_503(self):
         """
