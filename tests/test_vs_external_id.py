@@ -31,7 +31,7 @@ class TestExternalIdNamespace(unittest2.TestCase):
         ExternalIdNamespace.create should build an XML document and PUT it to the server
         :return:
         """
-        expected_doc = '<?xml version=\'1.0\' encoding=\'UTF-8\'?>\n<ExternalIdentifierNamespaceListDocument xmlns="http://xml.vidispine.com/schema/vidispine"><name>test</name><pattern>aaaa</pattern><priority>4</priority></ExternalIdentifierNamespaceListDocument>'
+        expected_doc = b'<?xml version=\'1.0\' encoding=\'utf8\'?>\n<ExternalIdentifierNamespaceListDocument xmlns="http://xml.vidispine.com/schema/vidispine"><name>test</name><pattern>aaaa</pattern><priority>4</priority></ExternalIdentifierNamespaceListDocument>'
         with patch("gnmvidispine.vs_external_id.ExternalIdNamespace.request", return_value=ET.fromstring(expected_doc)) as mock_request:
             from gnmvidispine.vs_external_id import ExternalIdNamespace
             n = ExternalIdNamespace(host="localhost", port=1234, user="me", passwd="secret")
@@ -59,7 +59,7 @@ class TestExternalIdNamespace(unittest2.TestCase):
             self.assertEqual(n.name, "updated name")
 
     def test_save(self):
-        expected_doc = '<?xml version=\'1.0\' encoding=\'UTF-8\'?>\n<ns0:ExternalIdentifierNamespaceDocument xmlns:ns0="http://xml.vidispine.com/schema/vidispine">\n    <ns0:name>uuid</ns0:name>\n    <ns0:pattern>aaaa</ns0:pattern>\n    <ns0:priority>4</ns0:priority>\n</ns0:ExternalIdentifierNamespaceDocument>'
+        expected_doc = b'<?xml version=\'1.0\' encoding=\'utf8\'?>\n<ns0:ExternalIdentifierNamespaceDocument xmlns:ns0="http://xml.vidispine.com/schema/vidispine">\n    <ns0:name>uuid</ns0:name>\n    <ns0:pattern>aaaa</ns0:pattern>\n    <ns0:priority>4</ns0:priority>\n</ns0:ExternalIdentifierNamespaceDocument>'
         with patch("gnmvidispine.vs_external_id.ExternalIdNamespace.request", return_value=ET.fromstring(expected_doc)) as mock_request:
             from gnmvidispine.vs_external_id import ExternalIdNamespace
             n = ExternalIdNamespace(host="localhost", port=1234, user="me", passwd="secret")

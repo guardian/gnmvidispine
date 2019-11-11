@@ -37,7 +37,7 @@ class ExternalIdNamespace(VSApi):
 
         path = "/external-id/{0}".format(name)
         self.name = name
-        self._xmldoc = self.request(path, method="PUT", body=ET.tostring(root, "UTF-8"))
+        self._xmldoc = self.request(path, method="PUT", body=ET.tostring(root, encoding='utf8', method='xml'))
         return self
 
     def save(self):
@@ -46,7 +46,7 @@ class ExternalIdNamespace(VSApi):
         :return: self, or raises VSException
         """
         path = "/external-id/{0}".format(self.name)
-        self.request(path,method="PUT",body=ET.tostring(self._xmldoc,encoding="UTF-8"))
+        self.request(path,method="PUT",body=ET.tostring(self._xmldoc,encoding="utf8"))
         return self
 
     def safe_get(self, xpath, default=None):

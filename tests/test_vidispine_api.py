@@ -41,9 +41,10 @@ class TestVSApi(unittest2.TestCase):
         
         api = VSApi(user=self.fake_user,passwd=self.fake_passwd,conn=conn)
         parsed_xml = api.request("/path/to/endpoint",method="GET")
-        
-        computed_auth = base64.b64encode("{0}:{1}".format(self.fake_user,self.fake_passwd))
-        conn.request.assert_called_with('GET','/API/path/to/endpoint', None, {'Authorization': "Basic " + computed_auth, 'Accept': 'application/xml'})
+
+        authstring = u"{0}:{1}".format(self.fake_user, self.fake_passwd)
+        computed_auth = base64.b64encode(authstring.encode("UTF-8"))
+        conn.request.assert_called_with('GET','/API/path/to/endpoint', None, {'Authorization': "Basic " + computed_auth.decode("UTF-8"), 'Accept': 'application/xml'})
         conn.getresponse.assert_called_with()
         
         teststring = parsed_xml.find('{0}element'.format("{http://xml.vidispine.com/schema/vidispine}"))
@@ -55,7 +56,7 @@ class TestVSApi(unittest2.TestCase):
         :return:
         """
         from gnmvidispine.vidispine_api import VSApi
-        sample_send_xml = """<?xml version="1.0"?>
+        sample_send_xml = b"""<?xml version="1.0"?>
         <root xmlns="http://xml.vidispine.com/schema/vidispine">
           <element>string</element>
         </root>"""
@@ -71,10 +72,11 @@ class TestVSApi(unittest2.TestCase):
     
         api = VSApi(user=self.fake_user, passwd=self.fake_passwd, conn=conn)
         parsed_xml = api.request("/path/to/endpoint", method="PUT", body=sample_send_xml)
-    
-        computed_auth = base64.b64encode("{0}:{1}".format(self.fake_user, self.fake_passwd))
+
+        authstring = u"{0}:{1}".format(self.fake_user, self.fake_passwd)
+        computed_auth = base64.b64encode(authstring.encode("UTF-8"))
         conn.request.assert_called_with('PUT', '/API/path/to/endpoint', sample_send_xml,
-                                        {'Content-Type': 'application/xml', 'Authorization': "Basic " + computed_auth, 'Accept': 'application/xml'})
+                                        {'Content-Type': 'application/xml', 'Authorization': "Basic " + computed_auth.decode("UTF-8"), 'Accept': 'application/xml'})
         conn.getresponse.assert_called_with()
 
         teststring = parsed_xml.find('{0}returned-element'.format("{http://xml.vidispine.com/schema/vidispine}"))
@@ -86,7 +88,7 @@ class TestVSApi(unittest2.TestCase):
         :return:
         """
         from gnmvidispine.vidispine_api import VSApi
-        sample_send_xml = """<?xml version="1.0"?>
+        sample_send_xml = b"""<?xml version="1.0"?>
         <root xmlns="http://xml.vidispine.com/schema/vidispine">
           <element>string</element>
         </root>"""
@@ -97,10 +99,11 @@ class TestVSApi(unittest2.TestCase):
     
         api = VSApi(user=self.fake_user, passwd=self.fake_passwd, conn=conn)
         api.request("/path/to/endpoint", method="POST", body=sample_send_xml)
-    
-        computed_auth = base64.b64encode("{0}:{1}".format(self.fake_user, self.fake_passwd))
+
+        authstring = u"{0}:{1}".format(self.fake_user, self.fake_passwd)
+        computed_auth = base64.b64encode(authstring.encode("UTF-8"))
         conn.request.assert_called_with('POST', '/API/path/to/endpoint', sample_send_xml,
-                                        {'Content-Type': 'application/xml', 'Authorization': "Basic " + computed_auth,
+                                        {'Content-Type': 'application/xml', 'Authorization': "Basic " + computed_auth.decode("UTF-8"),
                                          'Accept'      : 'application/xml'})
         conn.getresponse.assert_called_with()
         
@@ -127,10 +130,11 @@ class TestVSApi(unittest2.TestCase):
         self.assertEqual("SD-46362",ex.exception.exceptionID)
         self.assertEqual("notFound",ex.exception.exceptionType)
         self.assertEqual("no explanation provided",ex.exception.exceptionWhat)
-            
-        computed_auth = base64.b64encode("{0}:{1}".format(self.fake_user, self.fake_passwd))
+
+        authstring = u"{0}:{1}".format(self.fake_user, self.fake_passwd)
+        computed_auth = base64.b64encode(authstring.encode("UTF-8"))
         conn.request.assert_called_with('GET', '/API/item/SD-46362/metadata', None,
-                                        {'Authorization': "Basic " + computed_auth, 'Accept': 'application/xml'})
+                                        {'Authorization': "Basic " + computed_auth.decode("UTF-8"), 'Accept': 'application/xml'})
         conn.getresponse.assert_called_with()
         
     def test_400(self):
@@ -191,10 +195,11 @@ class TestVSApi(unittest2.TestCase):
             api.request("/path/to/endpoint", method="GET")
 
         end_time = time()
-        
-        computed_auth = base64.b64encode("{0}:{1}".format(self.fake_user, self.fake_passwd))
+
+        authstring = u"{0}:{1}".format(self.fake_user, self.fake_passwd)
+        computed_auth = base64.b64encode(authstring.encode("UTF-8"))
         conn.request.assert_called_with('GET', '/API/path/to/endpoint', None,
-                                        {'Authorization': "Basic " + computed_auth, 'Accept': 'application/xml'})
+                                        {'Authorization': "Basic " + computed_auth.decode("UTF-8"), 'Accept': 'application/xml'})
         conn.getresponse.assert_called_with()
 
         self.assertEqual(cm.exception.code, 503)
@@ -231,8 +236,9 @@ class TestVSApi(unittest2.TestCase):
         api = VSApi(user=self.fake_user, passwd=self.fake_passwd, conn=conn, logger=logger)
         api.raw_request = MagicMock()
 
-        computed_auth = base64.b64encode("{0}:{1}".format(self.fake_user, self.fake_passwd))
-        
+        authstring = u"{0}:{1}".format(self.fake_user, self.fake_passwd)
+        computed_auth = base64.b64encode(authstring.encode("UTF-8"))
+
         #create a test file
         testfilesize = 100000
         testchunksize = 1000
@@ -252,7 +258,7 @@ class TestVSApi(unittest2.TestCase):
                                            method="POST", filename="fakefile.dat", extra_headers={'extra_header': 'true'})
                 
                 should_have_headers = {
-                    'Authorization': "Basic " + computed_auth,
+                    'Authorization': "Basic " + computed_auth.decode("UTF-8"),
                     'Content-Type': 'application/octet-stream',
                     'Accept': 'application/xml'
                 }
@@ -301,6 +307,7 @@ class TestVSApi(unittest2.TestCase):
 
     def test_querydict(self):
         from gnmvidispine.vidispine_api import VSApi
+        from collections import OrderedDict
         sample_returned_xml = """<?xml version="1.0"?>
         <root xmlns="http://xml.vidispine.com/schema/vidispine">
           <element>string</element>
@@ -311,18 +318,18 @@ class TestVSApi(unittest2.TestCase):
         conn.getresponse = MagicMock(return_value=self.MockedResponse(200, sample_returned_xml))
 
         api = VSApi(user=self.fake_user, passwd=self.fake_passwd, conn=conn)
-        queryparams={
-            'query1': 'value1',
+        queryparams = OrderedDict({
             'query2': 'value2',
             'query3': ['value3','value4','value5'],
+            'query1': 'value1',
             'query4': 37
-        }
-
+        })
         parsed_xml = api.request("/path/to/endpoint", query=queryparams, method="GET")
 
-        computed_auth = base64.b64encode("{0}:{1}".format(self.fake_user, self.fake_passwd))
+        authstring = u"{0}:{1}".format(self.fake_user, self.fake_passwd)
+        computed_auth = base64.b64encode(authstring.encode("UTF-8"))
         conn.request.assert_called_with('GET', '/API/path/to/endpoint?query2=value2&query3=value3&query3=value4&query3=value5&query1=value1&query4=37', None,
-                                        {'Authorization': "Basic " + computed_auth, 'Accept': 'application/xml'})
+                                        {'Authorization': "Basic " + computed_auth.decode("UTF-8"), 'Accept': 'application/xml'})
         conn.getresponse.assert_called_with()
 
     def test_matrixdict(self):
@@ -338,17 +345,18 @@ class TestVSApi(unittest2.TestCase):
 
         api = VSApi(user=self.fake_user, passwd=self.fake_passwd, conn=conn)
         mtxparams={
-            'mtx1': 'value1',
-            'mtx2': 'value2',
             'mtx4': 8,
-            'mtx3': ['value3','value4','value5']
+            'mtx3': ['value3','value4','value5'],
+            'mtx2': 'value2',
+            'mtx1': 'value1'
         }
 
         parsed_xml = api.request("/path/to/endpoint", matrix=mtxparams, method="GET")
 
-        computed_auth = base64.b64encode("{0}:{1}".format(self.fake_user, self.fake_passwd))
+        authstring = u"{0}:{1}".format(self.fake_user, self.fake_passwd)
+        computed_auth = base64.b64encode(authstring.encode("UTF-8"))
         conn.request.assert_called_with('GET', '/API/path/to/endpoint;mtx4=8;mtx3=value3;mtx3=value4;mtx3=value5;mtx2=value2;mtx1=value1', None,
-                                        {'Authorization': "Basic " + computed_auth, 'Accept': 'application/xml'})
+                                        {'Authorization': "Basic " + computed_auth.decode("UTF-8"), 'Accept': 'application/xml'})
         conn.getresponse.assert_called_with()
 
     def test_find_portal_data_none(self):
@@ -377,15 +385,17 @@ class TestVSApi(unittest2.TestCase):
         from gnmvidispine.vidispine_api import VSApi
         from http.client import HTTPConnection
         api = VSApi(user=self.fake_user, passwd=self.fake_passwd)
-        auth = base64.encodestring('%s:%s' % (self.fake_user, self.fake_passwd)).replace('\n', '')
+        authstring = u"{0}:{1}".format(self.fake_user, self.fake_passwd)
+        computed_auth = base64.b64encode(authstring.encode("UTF-8"))
+        #auth = base64.encodestring('%s:%s' % (self.fake_user, self.fake_passwd)).replace('\n', '')
 
         api._conn = MagicMock(target=HTTPConnection)
 
         api.sendAuthorized("GET","/path/to/fake/url", dodgy_string,{})
         api._conn.request.assert_called_once_with("GET",
                                                   "/path/to/fake/url",
-                                                  '<?xml version=\'1.0\' encoding=\'UTF-8\'?>\n<MetadataDocument xmlns="http://xml.vidispine.com/schema/vidispine"><timespan end="+INF" start="-INF"><field><name>title</name><value>Thousands take to streets in Barcelona to protest against police violence \xe2\x80\x93 video </value></field><field><name>gnm_asset_category</name><value>Master</value></field><field><name>gnm_type</name><value>Master</value></field><fiel',
-                                                  {'Authorization': 'Basic {0}'.format(auth)}
+                                                  b'<?xml version=\'1.0\' encoding=\'UTF-8\'?>\n<MetadataDocument xmlns="http://xml.vidispine.com/schema/vidispine"><timespan end="+INF" start="-INF"><field><name>title</name><value>Thousands take to streets in Barcelona to protest against police violence \xe2\x80\x93 video </value></field><field><name>gnm_asset_category</name><value>Master</value></field><field><name>gnm_type</name><value>Master</value></field><fiel',
+                                                  {'Authorization': 'Basic ' + computed_auth.decode("UTF-8")}
                                                   )
 
     def test_param_list_unicode(self):
