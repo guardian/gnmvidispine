@@ -6,6 +6,8 @@ from mock import MagicMock, patch
 from urllib.parse import quote
 import xml.etree.cElementTree as ET
 import re
+from urllib.parse import urlparse
+from urllib.parse import parse_qs
 
 
 class TestVSItem(unittest2.TestCase):
@@ -93,30 +95,52 @@ class TestVSItem(unittest2.TestCase):
             i.import_to_shape() #expect ValueError if neither uri nor file ref
         
         fake_uri="file:///path/to/newmedia.mxf"
-        quoted_uri=quote(fake_uri,"")   #we are embedding a URI as a parameter with another URL so it must be double-encoded
-        
+
         i.import_to_shape(uri=fake_uri,shape_tag="shapetagname",priority="HIGH")
-        i.sendAuthorized.assert_called_with('POST',
-                                            '/API/item/VX-123/shape?priority=HIGH&essence=false&tag=shapetagname&thumbnails=true&uri={0}'.format(quoted_uri)
-                                            ,"",{'Accept':'application/xml'}, rawData=False)
+        arg1, arg2, arg3, arg4 = i.sendAuthorized.call_args[0]
+        self.assertEqual(arg1, 'POST')
+        self.assertEqual(arg3, '')
+        self.assertEqual(arg4, {'Accept': 'application/xml'})
+        parsed_url = urlparse(arg2)
+        self.assertEqual(parsed_url.path, '/API/item/VX-123/shape')
+        query_dict = parse_qs(parsed_url.query)
+        self.assertEqual(query_dict['priority'], ['HIGH'])
+        self.assertEqual(query_dict['essence'], ['false'])
+        self.assertEqual(query_dict['tag'], ['shapetagname'])
+        self.assertEqual(query_dict['thumbnails'], ['true'])
+        self.assertEqual(query_dict['uri'], ['file:///path/to/newmedia.mxf'])
 
         fake_uri = "file:///path/to/" + quote("media with spaces.mxf",safe="/")
-        quoted_uri = quote(fake_uri,"")  # we are embedding a URI as a parameter with another URL so it must be double-encoded
-        
+
         i.import_to_shape(uri=fake_uri, shape_tag="shapetagname", priority="HIGH")
-        i.sendAuthorized.assert_called_with('POST',
-                                            '/API/item/VX-123/shape?priority=HIGH&essence=false&tag=shapetagname&thumbnails=true&uri={0}'.format(
-                                                quoted_uri)
-                                            , "", {'Accept': 'application/xml'}, rawData=False)
+        arg1, arg2, arg3, arg4 = i.sendAuthorized.call_args[0]
+        self.assertEqual(arg1, 'POST')
+        self.assertEqual(arg3, '')
+        self.assertEqual(arg4, {'Accept': 'application/xml'})
+        parsed_url = urlparse(arg2)
+        self.assertEqual(parsed_url.path, '/API/item/VX-123/shape')
+        query_dict = parse_qs(parsed_url.query)
+        self.assertEqual(query_dict['priority'], ['HIGH'])
+        self.assertEqual(query_dict['essence'], ['false'])
+        self.assertEqual(query_dict['tag'], ['shapetagname'])
+        self.assertEqual(query_dict['thumbnails'], ['true'])
+        self.assertEqual(query_dict['uri'], ['file:///path/to/media%20with%20spaces.mxf'])
 
         fake_uri = "file:///path/to/" + quote("media+with+plusses.mxf",safe="/+")
-        quoted_uri = quote(fake_uri,"")  # we are embedding a URI as a parameter with another URL so it must be double-encoded
-        
+
         i.import_to_shape(uri=fake_uri, shape_tag="shapetagname", priority="HIGH")
-        i.sendAuthorized.assert_called_with('POST',
-                                            '/API/item/VX-123/shape?priority=HIGH&essence=false&tag=shapetagname&thumbnails=true&uri={0}'.format(
-                                                quoted_uri)
-                                            , "", {'Accept': 'application/xml'}, rawData=False)
+        arg1, arg2, arg3, arg4 = i.sendAuthorized.call_args[0]
+        self.assertEqual(arg1, 'POST')
+        self.assertEqual(arg3, '')
+        self.assertEqual(arg4, {'Accept': 'application/xml'})
+        parsed_url = urlparse(arg2)
+        self.assertEqual(parsed_url.path, '/API/item/VX-123/shape')
+        query_dict = parse_qs(parsed_url.query)
+        self.assertEqual(query_dict['priority'], ['HIGH'])
+        self.assertEqual(query_dict['essence'], ['false'])
+        self.assertEqual(query_dict['tag'], ['shapetagname'])
+        self.assertEqual(query_dict['thumbnails'], ['true'])
+        self.assertEqual(query_dict['uri'], ['file:///path/to/media+with+plusses.mxf'])
 
     def test_make_metadata_document(self):
         from gnmvidispine.vs_item import VSItem
