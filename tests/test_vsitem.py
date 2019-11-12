@@ -148,13 +148,13 @@ class TestVSItem(unittest2.TestCase):
 
         i.name = "VX-123"
 
-        testdoc = i._make_metadata_document({"field1": "value1","field2": "value2","field3": 3})
+        testdoc = i._make_metadata_document({"field2": "value2", "field3": 3,"field1": "value1"})
 
-        self.assertEqual(testdoc,"""<?xml version='1.0' encoding='UTF-8'?>
+        self.assertEqual(testdoc,b"""<?xml version='1.0' encoding='utf8'?>
 <MetadataDocument xmlns="http://xml.vidispine.com/schema/vidispine"><timespan end="+INF" start="-INF"><field><name>field2</name><value>value2</value></field><field><name>field3</name><value>3</value></field><field><name>field1</name><value>value1</value></field></timespan></MetadataDocument>""")
 
-        testdoc = i._make_metadata_document({"field1": ["value1","value2","value3"], "field2": "value2"})
-        self.assertEqual(testdoc,"""<?xml version='1.0' encoding='UTF-8'?>
+        testdoc = i._make_metadata_document({"field2": "value2", "field1": ["value1","value2","value3"]})
+        self.assertEqual(testdoc,b"""<?xml version='1.0' encoding='utf8'?>
 <MetadataDocument xmlns="http://xml.vidispine.com/schema/vidispine"><timespan end="+INF" start="-INF"><field><name>field2</name><value>value2</value></field><field><name>field1</name><value>value1</value><value>value2</value><value>value3</value></field></timespan></MetadataDocument>""")
 
     def test_import_external_xml(self):
@@ -214,10 +214,10 @@ class TestVSItem(unittest2.TestCase):
         self.assertEqual(i.get("someotherfield", allowArray=True),["valueone","valuetwo"])
 
     def test_toxml(self):
-        fix = re.compile(r'((?<=>)(\n[\t]*)(?=[^<\t]))|(?<=[^>\t])(\n[\t]*)(?=<)')
+        fix = re.compile(b'((?<=>)(\n[\t]*)(?=[^<\t]))|(?<=[^>\t])(\n[\t]*)(?=<)')
 
         #christ knows why it gets indented like this, but it does.
-        output_testdoc = fix.sub("","""<?xml version='1.0' encoding='UTF-8'?>
+        output_testdoc = fix.sub(b"",b"""<?xml version='1.0' encoding='utf8'?>
 <ns0:MetadataListDocument xmlns:ns0="http://xml.vidispine.com/schema/vidispine">
     <ns0:item id="VX-1234">
     <ns0:metadata>
@@ -240,7 +240,7 @@ class TestVSItem(unittest2.TestCase):
         i = VSItem(host=self.fake_host, port=self.fake_port, user=self.fake_user, passwd=self.fake_passwd)
         i.fromXML(self.testdoc)
 
-        self.assertEqual(fix.sub("",i.toXML()),output_testdoc)
+        self.assertEqual(fix.sub(b"",i.toXML()),output_testdoc)
 
     def test_get_metadata_attributes(self):
         fake_data = """<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
@@ -319,7 +319,7 @@ class TestVsMetadataBuilder(unittest2.TestCase):
         b = VSMetadataBuilder(mock_item)
         b.addMeta({'test_field': ref})
 
-        self.assertEqual(b.as_xml("UTF-8"),"""<?xml version='1.0' encoding='UTF-8'?>
+        self.assertEqual(b.as_xml("utf8"),b"""<?xml version='1.0' encoding='utf8'?>
 <MetadataDocument xmlns="http://xml.vidispine.com/schema/vidispine"><timespan end="+INF" start="-INF"><field><name>test_field</name><reference>ED047409-706B-43B7-9F35-0DDBC6F2689E</reference></field></timespan></MetadataDocument>""")
 
     def test_serialize_float(self):
@@ -332,7 +332,7 @@ class TestVsMetadataBuilder(unittest2.TestCase):
 
         b = VSMetadataBuilder(mock_item)
         b.addMeta({'test_field': 1.234})
-        self.assertEqual(b.as_xml("UTF-8"),"""<?xml version='1.0' encoding='UTF-8'?>
+        self.assertEqual(b.as_xml("utf8"),b"""<?xml version='1.0' encoding='utf8'?>
 <MetadataDocument xmlns="http://xml.vidispine.com/schema/vidispine"><timespan end="+INF" start="-INF"><field><name>test_field</name><value>1.234</value></field></timespan></MetadataDocument>""")
 
     def test_serialize_datetime(self):
@@ -348,7 +348,7 @@ class TestVsMetadataBuilder(unittest2.TestCase):
 
         b = VSMetadataBuilder(mock_item)
         b.addMeta({'test_field': datetime(2015,0o7,12,23,0o4,31,0,pytz.timezone("Europe/London"))})
-        self.assertEqual(b.as_xml("UTF-8"),"""<?xml version='1.0' encoding='UTF-8'?>
+        self.assertEqual(b.as_xml("utf8"),b"""<?xml version='1.0' encoding='utf8'?>
 <MetadataDocument xmlns="http://xml.vidispine.com/schema/vidispine"><timespan end="+INF" start="-INF"><field><name>test_field</name><value>2015-07-12T23:04:31-00:01</value></field></timespan></MetadataDocument>""")
 
     def test_serialize_unicode_extended(self):
@@ -365,8 +365,16 @@ class TestVsMetadataBuilder(unittest2.TestCase):
 
         b = VSMetadataBuilder(mock_item)
         b.addMeta({'test_field': "£1 for a house: made in Stoke-on-Trent"})
-        self.assertEqual(b.as_xml("UTF-8"),"""<?xml version='1.0' encoding='UTF-8'?>\n<MetadataDocument xmlns="http://xml.vidispine.com/schema/vidispine"><timespan end="+INF" start="-INF"><field><name>test_field</name><value>£1 for a house: made in Stoke-on-Trent</value></field></timespan></MetadataDocument>""")
+        try:
+            xml_to_test_with = """<?xml version='1.0' encoding='utf8'?>\n<MetadataDocument xmlns="http://xml.vidispine.com/schema/vidispine"><timespan end="+INF" start="-INF"><field><name>test_field</name><value>£1 for a house: made in Stoke-on-Trent</value></field></timespan></MetadataDocument>""".encode(encoding='UTF-8')
+        except:
+            xml_to_test_with = """<?xml version='1.0' encoding='utf8'?>\n<MetadataDocument xmlns="http://xml.vidispine.com/schema/vidispine"><timespan end="+INF" start="-INF"><field><name>test_field</name><value>£1 for a house: made in Stoke-on-Trent</value></field></timespan></MetadataDocument>"""
+        self.assertEqual(b.as_xml("utf8"), xml_to_test_with)
 
         b = VSMetadataBuilder(mock_item)
         b.addMeta({'test_field': "Fire at Trump Tower – video "})
-        self.assertEqual(b.as_xml("UTF-8"),"""<?xml version='1.0' encoding='UTF-8'?>\n<MetadataDocument xmlns="http://xml.vidispine.com/schema/vidispine"><timespan end="+INF" start="-INF"><field><name>test_field</name><value>Fire at Trump Tower – video </value></field></timespan></MetadataDocument>""")
+        try:
+            xml_to_test_with = """<?xml version='1.0' encoding='utf8'?>\n<MetadataDocument xmlns="http://xml.vidispine.com/schema/vidispine"><timespan end="+INF" start="-INF"><field><name>test_field</name><value>Fire at Trump Tower – video </value></field></timespan></MetadataDocument>""".encode(encoding='UTF-8')
+        except:
+            xml_to_test_with = """<?xml version='1.0' encoding='utf8'?>\n<MetadataDocument xmlns="http://xml.vidispine.com/schema/vidispine"><timespan end="+INF" start="-INF"><field><name>test_field</name><value>Fire at Trump Tower – video </value></field></timespan></MetadataDocument>"""
+        self.assertEqual(b.as_xml("utf8"), xml_to_test_with)

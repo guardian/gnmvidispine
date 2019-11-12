@@ -124,7 +124,7 @@ class VSItem(VSApi):
             raise InvalidData("Did not get created collection ID from Vidispine")
         return self
 
-    def toXML(self,encoding="UTF-8"):
+    def toXML(self,encoding="utf8"):
         """
         Returns a reconstructed XML document for the metadata of this item.
         :return: XML string
@@ -512,7 +512,7 @@ class VSItem(VSApi):
     def _make_metadata_document(self, md, group=None, mode="default"):
         b = self.get_metadata_builder(master_group=group)
         b.addMeta(md)
-        return b.as_xml("UTF-8")
+        return b.as_xml("utf8")
 
     def set_metadata(self, md, group=None, entitytype="default", mode="default"):
         """
@@ -1100,7 +1100,7 @@ class VSMetadataBuilder(VSApi):
 
         self._groupContent(groupnode,meta,subgroupmode)
 
-    def as_xml(self,encoding="UTF-8"):
+    def as_xml(self,encoding="utf8"):
         """
         Returns the contents of the VSMetadataBuilder as a string
         :param encoding: (optional, default: "UTF-8") String encoding to use
