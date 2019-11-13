@@ -1,7 +1,10 @@
 # -*- coding: UTF-8 -*-
-
+from future.standard_library import install_aliases
+install_aliases()
 import unittest2
 from mock import MagicMock, patch, call
+from urllib.parse import urlparse
+from urllib.parse import parse_qs
 
 
 class TestVSStorage(unittest2.TestCase):
@@ -410,13 +413,19 @@ class TestVSStorage(unittest2.TestCase):
 
         s.sendAuthorized = MagicMock(side_effect=[self.MockedResponse(200, self.test_list_doc),
                                                   self.MockedResponse(200, self.test_list_doc_end)])
-
         files_list = [f for f in s.files()]
         self.assertEqual(len(files_list),10)
-        s.sendAuthorized.assert_has_calls([
-            call('GET', '/API/storage/INVALIDNAME/file;start=0;includeItem=True;number=100?path=%2F', None, {'Accept': 'application/xml'}, rawData=False),
-            call('GET', '/API/storage/INVALIDNAME/file;start=10;includeItem=True;number=100?path=%2F', None, {'Accept': 'application/xml'}, rawData=False)
-        ])
+        arg1, arg2, arg3, arg4 = s.sendAuthorized.call_args[0]
+        self.assertEqual(arg1, 'GET')
+        self.assertEqual(arg3, None)
+        self.assertEqual(arg4, {'Accept': 'application/xml'})
+        parsed_url = urlparse(arg2)
+        self.assertEqual(parsed_url.path, '/API/storage/INVALIDNAME/file')
+        self.assertIn('start=10', parsed_url.params)
+        self.assertIn('includeItem=True', parsed_url.params)
+        self.assertIn('number=100', parsed_url.params)
+        query_dict = parse_qs(parsed_url.query)
+        self.assertEqual(query_dict['path'], ['/'])
 
     def test_files_path(self):
         from gnmvidispine.vs_storage import VSStorage
@@ -428,10 +437,17 @@ class TestVSStorage(unittest2.TestCase):
 
         files_list = [f for f in s.files(path="/some/long/filepath")]
         self.assertEqual(len(files_list),10)
-        s.sendAuthorized.assert_has_calls([
-            call('GET', '/API/storage/INVALIDNAME/file;start=0;includeItem=True;number=100?path=%2Fsome%2Flong%2Ffilepath', None, {'Accept': 'application/xml'}, rawData=False),
-            call('GET', '/API/storage/INVALIDNAME/file;start=10;includeItem=True;number=100?path=%2Fsome%2Flong%2Ffilepath', None, {'Accept': 'application/xml'}, rawData=False)
-        ])
+        arg1, arg2, arg3, arg4 = s.sendAuthorized.call_args[0]
+        self.assertEqual(arg1, 'GET')
+        self.assertEqual(arg3, None)
+        self.assertEqual(arg4, {'Accept': 'application/xml'})
+        parsed_url = urlparse(arg2)
+        self.assertEqual(parsed_url.path, '/API/storage/INVALIDNAME/file')
+        self.assertIn('start=10', parsed_url.params)
+        self.assertIn('includeItem=True', parsed_url.params)
+        self.assertIn('number=100', parsed_url.params)
+        query_dict = parse_qs(parsed_url.query)
+        self.assertEqual(query_dict['path'], ['/some/long/filepath'])
 
     def test_files_closed(self):
         from gnmvidispine.vs_storage import VSStorage
@@ -443,10 +459,18 @@ class TestVSStorage(unittest2.TestCase):
 
         files_list = [f for f in s.files(state='CLOSED')]
         self.assertEqual(len(files_list),10)
-        s.sendAuthorized.assert_has_calls([
-            call('GET', '/API/storage/INVALIDNAME/file;start=0;includeItem=True;number=100?path=%2F&state=CLOSED', None, {'Accept': 'application/xml'}, rawData=False),
-             call('GET', '/API/storage/INVALIDNAME/file;start=10;includeItem=True;number=100?path=%2F&state=CLOSED', None, {'Accept': 'application/xml'}, rawData=False)
-        ])
+        arg1, arg2, arg3, arg4 = s.sendAuthorized.call_args[0]
+        self.assertEqual(arg1, 'GET')
+        self.assertEqual(arg3, None)
+        self.assertEqual(arg4, {'Accept': 'application/xml'})
+        parsed_url = urlparse(arg2)
+        self.assertEqual(parsed_url.path, '/API/storage/INVALIDNAME/file')
+        self.assertIn('start=10', parsed_url.params)
+        self.assertIn('includeItem=True', parsed_url.params)
+        self.assertIn('number=100', parsed_url.params)
+        query_dict = parse_qs(parsed_url.query)
+        self.assertEqual(query_dict['path'], ['/'])
+        self.assertEqual(query_dict['state'], ['CLOSED'])
 
     def test_file_count(self):
         from gnmvidispine.vs_storage import VSStorage
@@ -459,9 +483,17 @@ class TestVSStorage(unittest2.TestCase):
         result = s.file_count()
         self.assertEqual(result,10)
 
-        s.sendAuthorized.assert_has_calls([
-            call('GET', '/API/storage/INVALIDNAME/file;start=0;includeItem=True;number=0?path=%2F', None, {'Accept': 'application/xml'}, rawData=False)
-        ])
+        arg1, arg2, arg3, arg4 = s.sendAuthorized.call_args[0]
+        self.assertEqual(arg1, 'GET')
+        self.assertEqual(arg3, None)
+        self.assertEqual(arg4, {'Accept': 'application/xml'})
+        parsed_url = urlparse(arg2)
+        self.assertEqual(parsed_url.path, '/API/storage/INVALIDNAME/file')
+        self.assertIn('start=0', parsed_url.params)
+        self.assertIn('includeItem=True', parsed_url.params)
+        self.assertIn('number=0', parsed_url.params)
+        query_dict = parse_qs(parsed_url.query)
+        self.assertEqual(query_dict['path'], ['/'])
 
     def test_file_count_state(self):
         from gnmvidispine.vs_storage import VSStorage
@@ -474,6 +506,15 @@ class TestVSStorage(unittest2.TestCase):
         result = s.file_count(state="LOST")
         self.assertEqual(result,10)
 
-        s.sendAuthorized.assert_has_calls([
-            call('GET', '/API/storage/INVALIDNAME/file;start=0;includeItem=True;number=0?path=%2F&state=LOST', None, {'Accept': 'application/xml'}, rawData=False)
-        ])
+        arg1, arg2, arg3, arg4 = s.sendAuthorized.call_args[0]
+        self.assertEqual(arg1, 'GET')
+        self.assertEqual(arg3, None)
+        self.assertEqual(arg4, {'Accept': 'application/xml'})
+        parsed_url = urlparse(arg2)
+        self.assertEqual(parsed_url.path, '/API/storage/INVALIDNAME/file')
+        self.assertIn('start=0', parsed_url.params)
+        self.assertIn('includeItem=True', parsed_url.params)
+        self.assertIn('number=0', parsed_url.params)
+        query_dict = parse_qs(parsed_url.query)
+        self.assertEqual(query_dict['path'], ['/'])
+        self.assertEqual(query_dict['state'], ['LOST'])
