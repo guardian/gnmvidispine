@@ -300,6 +300,70 @@ class TestVSItem(unittest2.TestCase):
             i.remove_external_id("08473AFA-E7D5-4B92-9C4F-81035523A492")
             mock_request.assert_called_once_with("/item/VX-1234/external-id/08473AFA-E7D5-4B92-9C4F-81035523A492", method="DELETE")
 
+    def test_transcode_error(self):
+        """
+        tests the VSTranscodeError exception
+        :return:
+        """
+
+        job_doc = """<JobDocument xmlns="http://xml.vidispine.com/schema/vidispine">
+            <jobId>VX-80</jobId>
+            <status>FAILED</status>
+            <type>PLACEHOLDER_IMPORT</type>
+        </JobDocument>"""
+
+        with patch('gnmvidispine.vs_item.VSItem.request', return_value=ET.fromstring(job_doc)) as mock_request:
+            with patch('gnmvidispine.vs_item.VSJob.request', return_value=ET.fromstring(job_doc)) as mock_request_two:
+                from gnmvidispine.vs_item import VSItem, VSTranscodeError
+                i = VSItem(host=self.fake_host,port=self.fake_port,user=self.fake_user,passwd=self.fake_passwd)
+                with self.assertRaises(VSTranscodeError) as ex:
+                    i.transcode("VX-3245")
+
+    def test_path(self):
+        test_item_doc = """<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+        <ItemDocument id="VX-1234" xmlns="http://xml.vidispine.com/schema/vidispine">
+        <metadata>
+            <timespan start="-INF" end="+INF">
+                <field>
+                    <name>text</name>
+                    <value>sometestvalue</value>
+                </field>
+            </timespan>
+            </metadata>
+        </ItemDocument>"""
+        from gnmvidispine.vs_item import VSItem
+        i = VSItem(host=self.fake_host, port=self.fake_port, user=self.fake_user, passwd=self.fake_passwd)
+        i.fromXML(ET.fromstring(test_item_doc))
+        output_path = i.path()
+        self.assertEqual(output_path, "/item/VX-1234")
+
+    def test_create_placeholder(self):
+        test_item_doc = """<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+        <ItemDocument id="VX-1234" xmlns="http://xml.vidispine.com/schema/vidispine">
+        <metadata>
+            <timespan start="-INF" end="+INF">
+                <field>
+                    <name>text</name>
+                    <value>sometestvalue</value>
+                </field>
+            </timespan>
+            </metadata>
+        </ItemDocument>"""
+        job_doc = """<JobDocument id="VX-1234" xmlns="http://xml.vidispine.com/schema/vidispine">
+            <jobId>VX-80</jobId>
+            <status>FAILED</status>
+            <type>PLACEHOLDER_IMPORT</type>
+        </JobDocument>"""
+
+        with patch('gnmvidispine.vs_item.VSItem.request', return_value=ET.fromstring(job_doc)) as mock_request:
+            from gnmvidispine.vs_item import VSItem
+            i = VSItem(host=self.fake_host, port=self.fake_port, user=self.fake_user, passwd=self.fake_passwd)
+            i.fromXML(ET.fromstring(test_item_doc))
+            test_placeholder = i.createPlaceholder()
+            self.assertEqual(test_placeholder.name, "VX-1234")
+            self.assertEqual(test_placeholder.type, "item")
+            self.assertEqual(test_placeholder.contentDict, {'text': 'sometestvalue'})
+
 
 class TestVsMetadataBuilder(unittest2.TestCase):
     maxDiff = None

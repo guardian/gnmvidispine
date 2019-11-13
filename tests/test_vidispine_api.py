@@ -215,8 +215,24 @@ class TestVSApi(unittest2.TestCase):
         tests the VSConflict exception
         :return:
         """
-        pass
-    
+        from gnmvidispine.vidispine_api import VSApi, VSConflict
+
+        exception_response = """<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<ExceptionDocument xmlns="http://xml.vidispine.com/schema/vidispine">
+  <conflict>
+    <type>Item</type>
+    <id>SD-46362</id>
+  </conflict>
+</ExceptionDocument>"""
+        conn = http.client.HTTPConnection(host=self.fake_host, port=self.fake_port)
+        conn.request = MagicMock()
+        conn.getresponse = MagicMock(return_value=self.MockedResponse(409, exception_response, reason="Test 409 failure"))
+        api = VSApi(user=self.fake_user, passwd=self.fake_passwd, conn=conn)
+        with self.assertRaises(VSConflict) as ex:
+            api.request("/item/VX-3245/metadata", method="GET")
+        self.assertEqual("SD-46362", ex.exception.exceptionID)
+        self.assertEqual("conflict", ex.exception.exceptionType)
+
     def test_chunked_upload(self):
         """
         test the chunked_upload_request functionality
@@ -412,3 +428,97 @@ class TestVSApi(unittest2.TestCase):
         from gnmvidispine.vidispine_api import VSApi
 
         VSApi._escape_for_query("/srv/Multimedia2/Media Production/Assets/Multimedia_News/FEARLESS_women_in_India/ekaterina_ochagavia_FEARLESS_women_in_India_2/ASSETS/SOME MUSIC/IRENE/ES_Colored Spirals 4 - Johannes Bornlöf/ES_Colored Spirals 4 STEMS DRUMS.mp3")
+
+    def test_set_metadata(self):
+        from gnmvidispine.vidispine_api import VSApi
+        sample_returned_xml = """<?xml version="1.0"?>
+        <root xmlns="http://xml.vidispine.com/schema/vidispine">
+          <element>string</element>
+        </root>"""
+        conn = http.client.HTTPConnection(host='localhost', port=8080)
+        conn.request = MagicMock()
+        conn.getresponse = MagicMock(return_value=self.MockedResponse(200, sample_returned_xml))
+        api = VSApi(user=self.fake_user, passwd=self.fake_passwd, conn=conn)
+        api.set_metadata('/VX-1234', {'test': '1', 'anothertest': '2'})
+
+        arg1, arg2, arg3, arg4 = conn.request.call_args[0]
+        test_dict = arg4
+        self.assertEqual(arg1, 'PUT')
+        self.assertEqual(arg2, '/API/VX-1234/metadata')
+        self.assertEqual(arg3, b'<SimpleMetadataDocument xmlns="http://xml.vidispine.com/schema/vidispine">\n<field><key>test</key><value>1</value></field>\n<field><key>anothertest</key><value>2</value></field></SimpleMetadataDocument>')
+        self.assertEqual(test_dict['Accept'], 'application/xml')
+        self.assertEqual(test_dict['Content-Type'], 'application/xml')
+        self.assertEqual(test_dict['Authorization'], 'Basic dXNlcm5hbWU6cGFzc3dvcmQ=')
+
+    def test_set_metadata_add(self):
+        from gnmvidispine.vidispine_api import VSApi
+        sample_returned_xml = """<?xml version="1.0"?>
+        <root xmlns="http://xml.vidispine.com/schema/vidispine">
+          <element>string</element>
+        </root>"""
+        conn = http.client.HTTPConnection(host='localhost', port=8080)
+        conn.request = MagicMock()
+        conn.getresponse = MagicMock(return_value=self.MockedResponse(200, sample_returned_xml))
+        api = VSApi(user=self.fake_user, passwd=self.fake_passwd, conn=conn)
+        api.set_metadata('/VX-1234', {'test': '1', 'anothertest': '2'}, mode='add')
+
+        arg1, arg2, arg3, arg4 = conn.request.call_args[0]
+        test_dict = arg4
+        self.assertEqual(arg1, 'PUT')
+        self.assertEqual(arg2, '/API/VX-1234/metadata')
+        self.assertEqual(arg3, b'<SimpleMetadataDocument xmlns="http://xml.vidispine.com/schema/vidispine">\n<field><key>test</key><value mode="add">1</value></field>\n<field><key>anothertest</key><value mode="add">2</value></field></SimpleMetadataDocument>')
+        self.assertEqual(test_dict['Accept'], 'application/xml')
+        self.assertEqual(test_dict['Content-Type'], 'application/xml')
+        self.assertEqual(test_dict['Authorization'], 'Basic dXNlcm5hbWU6cGFzc3dvcmQ=')
+
+    def test_get_metadata(self):
+        import xml.etree.cElementTree as ET
+        sample_xml = """<?xml version="1.0"?>
+        <root xmlns="http://xml.vidispine.com/schema/vidispine">
+          <field>
+            <name>string</name>
+            <value>test</value>
+          </field>
+          <field>
+            <name>something</name>
+            <value>wibble</value>
+          </field>
+          <field>
+            <name>text</name>
+            <value>some text</value>
+          </field>
+        </root>"""
+
+        with patch("gnmvidispine.vidispine_api.VSApi.request", return_value=ET.fromstring(sample_xml)) as mock_request:
+            from gnmvidispine.vidispine_api import VSApi
+            api = VSApi(user=self.fake_user, passwd=self.fake_passwd)
+            meta_dict = api.get_metadata('VX-1234')
+            self.assertEqual(meta_dict['string'], 'test')
+            self.assertEqual(meta_dict['something'], 'wibble')
+            self.assertEqual(meta_dict['text'], 'some text')
+
+        more_xml = """<?xml version="1.0"?>
+        <root xmlns="http://xml.vidispine.com/schema/vidispine">
+          <timespan>
+            <field>
+              <name>string</name>
+              <value>test</value>
+            </field>
+            <field>
+              <name>something</name>
+              <value>wibble</value>
+            </field>
+            <field>
+              <name>text</name>
+              <value>some text</value>
+            </field>
+          </timespan>
+        </root>"""
+
+        with patch("gnmvidispine.vidispine_api.VSApi.request", return_value=ET.fromstring(more_xml)) as mock_request:
+            from gnmvidispine.vidispine_api import VSApi
+            api = VSApi(user=self.fake_user, passwd=self.fake_passwd)
+            meta_dict = api.get_metadata('VX-1234')
+            self.assertEqual(meta_dict['string'], 'test')
+            self.assertEqual(meta_dict['something'], 'wibble')
+            self.assertEqual(meta_dict['text'], 'some text')
