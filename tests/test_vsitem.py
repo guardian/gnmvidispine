@@ -501,6 +501,78 @@ class TestVSItem(unittest2.TestCase):
             self.assertEqual(new_item.name, 'VX-1234')
             self.assertEqual(new_item.type, 'item')
 
+    def test_metadata_changesets(self):
+        test_item_doc = """<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+        <ItemDocument id="VX-1234" xmlns="http://xml.vidispine.com/schema/vidispine">
+        <metadata>
+            <timespan start="-INF" end="+INF">
+                <field>
+                    <name>test</name>
+                    <value change="VX-15930">1</value>
+                </field>
+            </timespan>
+            </metadata>
+        </ItemDocument>"""
+
+        changes_doc = """<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+        <MetadataChangeSetDocument xmlns="http://xml.vidispine.com/schema/vidispine">
+<changeSet>
+<id>VX-4784396</id>
+<metadata>
+<revision />
+<timespan start="-INF" end="+INF">
+<field uuid="3f5dfaf5-0a50-4882-91cb-7511aabfbe33" user="admin" timestamp="2015-09-06T06:29:23.463+01:00" change="VX-4784396">
+<name>gnm_asset_filming_location</name>
+<value uuid="7a78948e-0b9e-4074-8315-2c224894eac0" user="admin" timestamp="2015-09-06T06:29:23.463+01:00" change="VX-4784396">None</value>
+ </field>
+ </timespan>
+ </metadata>
+ </changeSet>
+<changeSet>
+<id>VX-4784397</id>
+<metadata>
+<revision />
+<timespan start="-INF" end="+INF">
+<field uuid="ab1de902-2c25-4a67-aeb5-98b1819639af" user="system" timestamp="2015-09-06T06:29:24.375+01:00" change="VX-4784397">
+<name>mediaType</name>
+<value uuid="3b71e57c-0cbd-4aa7-b5f0-eee04a8f5dea" user="system" timestamp="2015-09-06T06:29:24.375+01:00" change="VX-4784397">none</value>
+ </field>
+ </timespan>
+ </metadata>
+ </changeSet>
+<changeSet>
+<id>VX-4784398</id>
+<metadata>
+<revision />
+<timespan start="-INF" end="+INF">
+<field uuid="85f785a8-037e-472a-8cfd-3ef1c21b52d6" user="system" timestamp="2015-09-06T06:29:25.250+01:00" change="VX-4784398">
+<name>shapeTag</name>
+<value uuid="e2350aed-9835-4c6e-9a5c-989a86f42def" user="system" timestamp="2015-09-06T06:29:25.250+01:00" change="VX-4784398">original</value>
+ </field>
+</timespan>
+ </metadata>
+ </changeSet>
+ </MetadataChangeSetDocument>"""
+
+        with patch('gnmvidispine.vs_item.VSItem.request', side_effect=[ET.fromstring(test_item_doc), ET.fromstring(changes_doc)]) as mock_request:
+            from gnmvidispine.vs_item import VSItem
+            test_item = VSItem(host=self.fake_host, port=self.fake_port, user=self.fake_user, passwd=self.fake_passwd)
+            test_item.populate()
+            self.assertEqual(test_item.type, 'item')
+            self.assertEqual(test_item.name, 'VX-1234')
+            output_changesets = test_item.metadata_changesets()
+
+            test_place = 1
+
+            for changeset in output_changesets:
+                if test_place is 1:
+                    self.assertIn(b'admin', ET.tostring(changeset.mdContent))
+                if test_place is 2:
+                    self.assertIn(b'ab1de902-2c25-4a67-aeb5-98b1819639af', ET.tostring(changeset.mdContent))
+                if test_place is 3:
+                    self.assertIn(b'e2350aed-9835-4c6e-9a5c-989a86f42de', ET.tostring(changeset.mdContent))
+                test_place = test_place + 1
+
 
 class TestVsMetadataBuilder(unittest2.TestCase):
     maxDiff = None

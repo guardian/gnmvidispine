@@ -52,7 +52,7 @@ class VSMDChangeSet(VSApi):
     but get it from an object that supports complex metadata, e.g. item.metadata_changeset()
     """
     def __init__(self,*args,**kwargs):
-        super(VSMDChangeSet,self).__init__(*args,**kwargs)
+        super(VSMDChangeSet, self).__init__(*args,**kwargs)
         self.dataContent=None
         self._fieldlist = None
 
@@ -75,6 +75,10 @@ class VSMDChangeSet(VSApi):
         if self.dataContent is None: raise ValueError("Not populated!")
         content = self.dataContent.find('{0}id'.format(self.xmlns)).text
         return content
+
+    @name.setter
+    def name(self, newvalue):
+        pass
 
     def _timespans(self):
         if self.dataContent is None: raise ValueError("Not populated!")
