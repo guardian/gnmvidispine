@@ -421,7 +421,7 @@ class VSItem(VSApi):
         :param passwd: password for the VS server to copy to (default: None)
         :return: a new VSItem representing the duplicated item
         """
-        md = self.metadata_document()
+        md = str(self.metadata_document())
         logging.debug(md)
         newItem = VSItem(host,port,user,passwd)
         newItem.createPlaceholder(metadata=md)

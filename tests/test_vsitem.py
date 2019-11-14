@@ -355,14 +355,151 @@ class TestVSItem(unittest2.TestCase):
             <type>PLACEHOLDER_IMPORT</type>
         </JobDocument>"""
 
-        with patch('gnmvidispine.vs_item.VSItem.request', return_value=ET.fromstring(job_doc)) as mock_request:
+        with patch('gnmvidispine.vs_item.VSItem.request', return_value=ET.fromstring(test_item_doc)) as mock_request:
             from gnmvidispine.vs_item import VSItem
             i = VSItem(host=self.fake_host, port=self.fake_port, user=self.fake_user, passwd=self.fake_passwd)
             i.fromXML(ET.fromstring(test_item_doc))
             test_placeholder = i.createPlaceholder()
+            arg1, arg2 = i.request.call_args
+            self.assertEqual(arg1, ('/import/placeholder',))
+            test_dict = arg2
+            self.assertEqual(test_dict['method'], 'POST')
+            self.assertEqual(test_dict['query'], {'video': 1, 'container': 1})
             self.assertEqual(test_placeholder.name, "VX-1234")
             self.assertEqual(test_placeholder.type, "item")
             self.assertEqual(test_placeholder.contentDict, {'text': 'sometestvalue'})
+
+    def test_create_placeholder_from_metadata(self):
+        test_item_doc = """<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+        <ItemDocument id="VX-1234" xmlns="http://xml.vidispine.com/schema/vidispine">
+        <metadata>
+            <timespan start="-INF" end="+INF">
+                <field>
+                    <name>test</name>
+                    <value>1</value>
+                </field>
+                <field>
+                    <name>anothertest</name>
+                    <value>2</value>
+                </field>
+            </timespan>
+            </metadata>
+        </ItemDocument>"""
+        with patch('gnmvidispine.vs_item.VSItem.request', return_value=ET.fromstring(test_item_doc)) as mock_request:
+            from gnmvidispine.vs_item import VSItem
+            test_item = VSItem(host=self.fake_host, port=self.fake_port, user=self.fake_user, passwd=self.fake_passwd)
+            test_placeholder_two = test_item.createPlaceholder(metadata={'test': '1', 'anothertest': '2'})
+            arg1, arg2 = test_item.request.call_args
+            self.assertEqual(arg1, ('/import/placeholder',))
+            test_dict = arg2
+            self.assertEqual(test_dict['method'], 'POST')
+            self.assertEqual(test_dict['query'], {'container': 1})
+            self.assertIn(b'<MetadataDocument xmlns="http://xml.vidispine.com/schema/vidispine"><timespan end="+INF" start="-INF"><field><name>test</name><value>1</value></field><field><name>anothertest</name><value>2</value></field></timespan></MetadataDocument>', test_dict['body'])
+            self.assertEqual(test_placeholder_two.name, "VX-1234")
+            self.assertEqual(test_placeholder_two.type, "item")
+
+    def test_delete(self):
+        test_item_doc = """<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+        <ItemDocument id="VX-1234" xmlns="http://xml.vidispine.com/schema/vidispine">
+        <metadata>
+            <timespan start="-INF" end="+INF">
+                <field>
+                    <name>test</name>
+                    <value>1</value>
+                </field>
+            </timespan>
+            </metadata>
+        </ItemDocument>"""
+        with patch('gnmvidispine.vs_item.VSItem.request', return_value=ET.fromstring(test_item_doc)) as mock_request:
+            from gnmvidispine.vs_item import VSItem
+            test_item = VSItem(host=self.fake_host, port=self.fake_port, user=self.fake_user, passwd=self.fake_passwd)
+            test_item.fromXML(ET.fromstring(test_item_doc))
+            test_item.delete()
+            arg1, test_dict = test_item.request.call_args
+            self.assertEqual(arg1, ('/item/VX-1234',))
+            self.assertEqual(test_dict['method'], 'DELETE')
+            self.assertEqual(test_dict['query'], {})
+
+        with patch('gnmvidispine.vs_item.VSItem.request', return_value=ET.fromstring(test_item_doc)) as mock_request:
+            from gnmvidispine.vs_item import VSItem
+            test_item = VSItem(host=self.fake_host, port=self.fake_port, user=self.fake_user, passwd=self.fake_passwd)
+            test_item.fromXML(ET.fromstring(test_item_doc))
+            test_item.delete(keepShapeTagMedia=['original', 'test', 'string'])
+            arg1, test_dict = test_item.request.call_args
+            self.assertEqual(arg1, ('/item/VX-1234',))
+            self.assertEqual(test_dict['method'], 'DELETE')
+            self.assertEqual(test_dict['query'], {'keepShapeTagMedia': 'original,test,string'})
+
+        with patch('gnmvidispine.vs_item.VSItem.request', return_value=ET.fromstring(test_item_doc)) as mock_request:
+            from gnmvidispine.vs_item import VSItem
+            test_item = VSItem(host=self.fake_host, port=self.fake_port, user=self.fake_user, passwd=self.fake_passwd)
+            test_item.fromXML(ET.fromstring(test_item_doc))
+            test_item.delete(keepShapeTagStorage=['VX-1', 'VX-2', 'VX-3'])
+            arg1, test_dict = test_item.request.call_args
+            self.assertEqual(arg1, ('/item/VX-1234',))
+            self.assertEqual(test_dict['method'], 'DELETE')
+            self.assertEqual(test_dict['query'], {'keepShapeTagStorage': 'VX-1,VX-2,VX-3'})
+
+    def test_get_metadata_field(self):
+        test_item_doc = """<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+        <ItemDocument id="VX-1234" xmlns="http://xml.vidispine.com/schema/vidispine">
+        <metadata>
+            <timespan start="-INF" end="+INF">
+                <field>
+                    <name>test</name>
+                    <value>value</value>
+                </field>
+            </timespan>
+            </metadata>
+        </ItemDocument>"""
+        with patch('gnmvidispine.vs_item.VSItem.request', return_value=ET.fromstring(test_item_doc)) as mock_request:
+            from gnmvidispine.vs_item import VSItem
+            test_item = VSItem(host=self.fake_host, port=self.fake_port, user=self.fake_user, passwd=self.fake_passwd)
+            test_item.populate()
+            returned_value = test_item.get('test')
+            self.assertEqual(returned_value, 'value')
+
+        test_item_doc = """<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+        <ItemDocument id="VX-1234" xmlns="http://xml.vidispine.com/schema/vidispine">
+        <metadata>
+            <timespan start="-INF" end="+INF">
+                <field>
+                    <name>test</name>
+                    <value>value</value>
+                    <value>two</value>
+                    <value>three</value>
+                </field>
+            </timespan>
+            </metadata>
+        </ItemDocument>"""
+        with patch('gnmvidispine.vs_item.VSItem.request', return_value=ET.fromstring(test_item_doc)) as mock_request:
+            from gnmvidispine.vs_item import VSItem
+            test_item = VSItem(host=self.fake_host, port=self.fake_port, user=self.fake_user, passwd=self.fake_passwd)
+            test_item.populate()
+            returned_value = test_item.get('test')
+            self.assertEqual(returned_value, 'value|two|three')
+            returned_value = test_item.get('test', allowArray=True)
+            self.assertEqual(returned_value, ['value', 'two', 'three'])
+
+    def test_copy_to_placeholder(self):
+        test_item_doc = """<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+        <ItemDocument id="VX-1234" xmlns="http://xml.vidispine.com/schema/vidispine">
+        <metadata>
+            <timespan start="-INF" end="+INF">
+                <field>
+                    <name>test</name>
+                    <value>1</value>
+                </field>
+            </timespan>
+            </metadata>
+        </ItemDocument>"""
+        with patch('gnmvidispine.vs_item.VSItem.request', return_value=ET.fromstring(test_item_doc)) as mock_request:
+            from gnmvidispine.vs_item import VSItem
+            test_item = VSItem(host=self.fake_host, port=self.fake_port, user=self.fake_user, passwd=self.fake_passwd)
+            test_item.populate()
+            new_item = test_item.copyToPlaceholder(host=self.fake_host, port=self.fake_port, user=self.fake_user, passwd=self.fake_passwd)
+            self.assertEqual(new_item.name, 'VX-1234')
+            self.assertEqual(new_item.type, 'item')
 
 
 class TestVsMetadataBuilder(unittest2.TestCase):
