@@ -2054,6 +2054,35 @@ class TestVSItem(unittest2.TestCase):
                     self.assertEqual(3, collection.itemCount)
                 test_place = test_place + 1
 
+    def test_to_cache(self):
+        test_item_doc = """<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+        <ItemDocument id="VX-1234" xmlns="http://xml.vidispine.com/schema/vidispine">
+        <metadata>
+            <timespan start="-INF" end="+INF">
+                <field>
+                    <name>test</name>
+                    <value change="VX-15930">1</value>
+                </field>
+                <field>
+                    <name>__collection_size</name>
+                    <value>854</value>
+                </field>
+            </timespan>
+            </metadata>
+        </ItemDocument>"""
+        with patch('gnmvidispine.vs_item.VSItem.request', side_effect=[ET.fromstring(test_item_doc)]) as mock_request:
+            from gnmvidispine.vs_item import VSItem
+            test_item = VSItem(host=self.fake_host, port=self.fake_port, user=self.fake_user, passwd=self.fake_passwd)
+            test_item.populate()
+            self.assertEqual(test_item.type, 'item')
+            self.assertEqual(test_item.name, 'VX-1234')
+            test_dict = test_item.to_cache()
+            self.assertEqual(test_dict['_vidispine_id'], 'VX-1234')
+            self.assertIn(b'<ns0:value change="VX-15930">1</ns0:value>', ET.tostring(test_dict['data']))
+            self.assertIn(b'<ns0:name>__collection_size</ns0:name>', ET.tostring(test_dict['data']))
+            self.assertIn(b'<ns0:value>854</ns0:value>', ET.tostring(test_dict['data']))
+            self.assertEqual(test_dict['content'], {'test': '1', '__collection_size': '854'})
+
 
 class TestVsMetadataBuilder(unittest2.TestCase):
     maxDiff = None
