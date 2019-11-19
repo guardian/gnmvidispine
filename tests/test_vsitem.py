@@ -2083,6 +2083,16 @@ class TestVSItem(unittest2.TestCase):
             self.assertIn(b'<ns0:value>854</ns0:value>', ET.tostring(test_dict['data']))
             self.assertEqual(test_dict['content'], {'test': '1', '__collection_size': '854'})
 
+    def test_from_cache(self):
+        from gnmvidispine.vs_item import VSItem
+        input_dict = {'_vidispine_id': 'VX-1234', 'content': {'test': '1', '__collection_size': '854'}, 'data': '<ns0:ItemDocument xmlns:ns0="http://xml.vidispine.com/schema/vidispine" id="VX-1234">\n        <ns0:metadata>\n            <ns0:timespan end="+INF" start="-INF">\n                <ns0:field>\n                    <ns0:name>test</ns0:name>\n                    <ns0:value change="VX-15930">1</ns0:value>\n                </ns0:field>\n                <ns0:field>\n                    <ns0:name>__collection_size</ns0:name>\n                    <ns0:value>854</ns0:value>\n                </ns0:field>\n            </ns0:timespan>\n            </ns0:metadata>\n        </ns0:ItemDocument>'}
+        test_item = VSItem(host=self.fake_host, port=self.fake_port, user=self.fake_user, passwd=self.fake_passwd)
+        test_item.from_cache(input_dict)
+        self.assertEqual(test_item.type, 'item')
+        self.assertEqual(test_item.name, 'VX-1234')
+        self.assertEqual(test_item.contentDict, {'test': '1', '__collection_size': '854'})
+        self.assertEqual(test_item.dataContent, '<ns0:ItemDocument xmlns:ns0="http://xml.vidispine.com/schema/vidispine" id="VX-1234">\n        <ns0:metadata>\n            <ns0:timespan end="+INF" start="-INF">\n                <ns0:field>\n                    <ns0:name>test</ns0:name>\n                    <ns0:value change="VX-15930">1</ns0:value>\n                </ns0:field>\n                <ns0:field>\n                    <ns0:name>__collection_size</ns0:name>\n                    <ns0:value>854</ns0:value>\n                </ns0:field>\n            </ns0:timespan>\n            </ns0:metadata>\n        </ns0:ItemDocument>')
+
 
 class TestVsMetadataBuilder(unittest2.TestCase):
     maxDiff = None
