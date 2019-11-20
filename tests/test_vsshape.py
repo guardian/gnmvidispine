@@ -721,3 +721,39 @@ class TestVSShape(unittest2.TestCase):
                     self.assertIn(b'<ns0:precedence>HIGHEST</ns0:precedence>', tostring(rule.xmlDOM))
                     self.assertIn(b'<ns0:priority level="1">capacity</ns0:priority>', tostring(rule.xmlDOM))
                 test_place = test_place + 1
+
+    def test_analyze_doc_fragment(self):
+        from xml.etree.cElementTree import tostring, Element
+        from gnmvidispine.vs_shape import VSShape
+        test_shape_object = VSShape(host=self.fake_host,port=self.fake_port,user=self.fake_user,passwd=self.fake_passwd)
+        analyze_doc_root = Element("AnalyzeJobDocument", {'xmlns': 'http://xml.vidispine.com/schema/vidispine'})
+        analyze_output = test_shape_object._analyzeDocFragment(analyze_doc_root, "black", threshold=20, percentage=50)
+        self.assertEqual(tostring(analyze_output), b'<black><threshold>20</threshold><percentage>50</percentage></black>')
+        analyze_output = test_shape_object._analyzeDocFragment(analyze_doc_root, "freeze", threshold=30, time=4.0)
+        self.assertEqual(tostring(analyze_output), b'<freeze><threshold>30</threshold><time>4.0</time></freeze>')
+
+    def test_analyze(self):
+        from xml.etree.cElementTree import fromstring
+        job_doc = """<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<JobDocument xmlns="http://xml.vidispine.com/schema/vidispine">
+<jobId>VX-17403032</jobId>
+<user>guest</user>
+<started>2019-11-20T15:41:00.668Z</started>
+<status>READY</status>
+<type>ANALYZE</type>
+<priority>MEDIUM</priority>
+ </JobDocument>"""
+        with patch('gnmvidispine.vs_shape.VSShape.request', side_effect=[fromstring(self.test_shapedoc), fromstring(job_doc), fromstring(job_doc)]) as mock_request:
+            from gnmvidispine.vs_shape import VSShape
+            test_shape_object = VSShape(host=self.fake_host,port=self.fake_port,user=self.fake_user,passwd=self.fake_passwd)
+            test_shape_object.populate('VX-1', 'VX-2')
+            test_job_object = test_shape_object.analyze()
+            test_shape_object.request.assert_called_with('/item/VX-1/shape/VX-2/analyze', body=b'<?xml version=\'1.0\' encoding=\'utf8\'?>\n<AnalyzeJobDocument xmlns="http://xml.vidispine.com/schema/vidispine"><black><threshold>0.1</threshold><percentage>95</percentage></black><freeze><threshold>0.05</threshold><time>4.0</time></freeze><bars><threshold>0.05</threshold><percentage>10</percentage></bars></AnalyzeJobDocument>', method='POST', query={'priority': 'MEDIUM'})
+            self.assertEqual(test_job_object.name, 'VX-17403032')
+            self.assertEqual(test_job_object.contentDict['status'], 'READY')
+            self.assertEqual(test_job_object.contentDict['type'], 'ANALYZE')
+            test_job_object = test_shape_object.analyze(blackThreshold=0.2, blackPercentage=94, freezeThreshold=0.04, freezeTime=3.0, barsThreshold=0.04, barsPercentage=11, priority="HIGH")
+            test_shape_object.request.assert_called_with('/item/VX-1/shape/VX-2/analyze', body=b'<?xml version=\'1.0\' encoding=\'utf8\'?>\n<AnalyzeJobDocument xmlns="http://xml.vidispine.com/schema/vidispine"><black><threshold>0.2</threshold><percentage>94</percentage></black><freeze><threshold>0.04</threshold><time>3.0</time></freeze><bars><threshold>0.04</threshold><percentage>11</percentage></bars></AnalyzeJobDocument>', method='POST', query={'priority': 'HIGH'})
+            self.assertEqual(test_job_object.name, 'VX-17403032')
+            self.assertEqual(test_job_object.contentDict['status'], 'READY')
+            self.assertEqual(test_job_object.contentDict['type'], 'ANALYZE')
