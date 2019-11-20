@@ -502,3 +502,222 @@ class TestVSShape(unittest2.TestCase):
 
         s.delete_storage_rule()
         s.sendAuthorized.assert_called_with('DELETE', '/API/item/VX-456/storage-rule/original', None, {'Accept': 'application/xml'}, rawData=False)
+
+    def test_mime_type(self):
+        from xml.etree.cElementTree import fromstring
+        with patch('gnmvidispine.vs_shape.VSShape.request', side_effect=[fromstring(self.test_shapedoc)]) as mock_request:
+            from gnmvidispine.vs_shape import VSShape
+            test_shape_object = VSShape(host=self.fake_host,port=self.fake_port,user=self.fake_user,passwd=self.fake_passwd)
+            test_shape_object.populate('test', 'test')
+            self.assertEqual(test_shape_object.mimeType(), 'video/quicktime')
+
+    def test_file_uris(self):
+        from xml.etree.cElementTree import fromstring
+        with patch('gnmvidispine.vs_shape.VSShape.request', side_effect=[fromstring(self.test_shapedoc)]) as mock_request:
+            from gnmvidispine.vs_shape import VSShape
+            test_shape_object = VSShape(host=self.fake_host,port=self.fake_port,user=self.fake_user,passwd=self.fake_passwd)
+            test_shape_object.populate('test', 'test')
+            test_file_uris_object = test_shape_object.fileURIs()
+            test_place = 1
+            for uri in test_file_uris_object:
+                if test_place is 1:
+                    self.assertEqual('omms://34238423-r2323442:d487893895723879r/EXPORTS/INTRO_WITH%20IDENT.mov', uri)
+                if test_place is 2:
+                    self.assertEqual('file:///storage/path/EXPORTS/INTRO_WITH%20IDENT.mov', uri)
+                test_place = test_place + 1
+
+    def test_files(self):
+        from xml.etree.cElementTree import fromstring
+        file_doc = """<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<FileDocument xmlns="http://xml.vidispine.com/schema/vidispine">
+<id>VX-48077439</id>
+<path>141019_9661710_lowres.mp4</path>
+<uri>omms://1fa3ad40-65e4-11e9-a3bc-bc113b8044e7:_VSENC__3uhd3tAWvFSU0WX0W8TkA1halNoyKnHuf9Q4KlqgRMFjh%2FtK%2FVxjUQ==@10.0.0.1/5ce37552-358f-998b-115b-9569b8f21a01/1d07a65a-65e4-11e9-a3bc-bc113b8044e7/141019_9661710_lowres.mp4</uri>
+<state>CLOSED</state>
+<size>32827409</size>
+<timestamp>2019-11-12T12:50:00.603Z</timestamp>
+<refreshFlag>1</refreshFlag>
+<storage>VX-76</storage>
+<metadata>
+<field>
+<key>MXFS_PARENTOID</key>
+<value />
+ </field>
+<field>
+<key>MXFS_CREATION_TIME</key>
+<value>1558041125848</value>
+ </field>
+<field>
+<key>MXFS_CATEGORY</key>
+<value>2</value>
+ </field>
+<field>
+<key>MXFS_CREATIONDAY</key>
+<value>16</value>
+ </field>
+<field>
+<key>created</key>
+<value>1442718812000</value>
+ </field>
+<field>
+<key>MXFS_ACCESS_TIME</key>
+<value>1558041125905</value>
+ </field>
+<field>
+<key>MXFS_ARCHDAY</key>
+<value>16</value>
+ </field>
+<field>
+<key>MXFS_INTRASH</key>
+<value>false</value>
+ </field>
+<field>
+<key>mtime</key>
+<value>1442718812000</value>
+ </field>
+<field>
+<key>MXFS_ARCHYEAR</key>
+<value>2019</value>
+ </field>
+<field>
+<key>uuid</key>
+<value>7ab026e5-749e-11e9-af8e-8c4bda3562c7-2546</value>
+ </field>
+<field>
+<key>path</key>
+<value>.</value>
+ </field>
+<field>
+<key>MXFS_ARCHIVE_TIME</key>
+<value>1558041125848</value>
+ </field>
+<field>
+<key>MXFS_MODIFICATION_TIME</key>
+<value>1558041125905</value>
+ </field>
+<field>
+<key>MXFS_ARCHMONTH</key>
+<value>5</value>
+ </field>
+<field>
+<key>MXFS_CREATIONYEAR</key>
+<value>2019</value>
+ </field>
+<field>
+<key>MXFS_FILENAME_UPPER</key>
+<value>141019_9661710_LOWRES.MP4</value>
+ </field>
+<field>
+<key>MXFS_CREATIONMONTH</key>
+<value>5</value>
+ </field>
+<field>
+<key>MXFS_FILENAME</key>
+<value>141019_9661710_lowres.mp4</value>
+ </field>
+ </metadata>
+ </FileDocument>"""
+        with patch('gnmvidispine.vs_shape.VSShape.request', side_effect=[fromstring(self.test_shapedoc)]) as mock_request:
+            with patch('gnmvidispine.vs_storage.VSStorage.request', side_effect=[fromstring(file_doc), fromstring(file_doc)]) as mock_request:
+                from gnmvidispine.vs_shape import VSShape
+                test_shape_object = VSShape(host=self.fake_host,port=self.fake_port,user=self.fake_user,passwd=self.fake_passwd)
+                test_shape_object.populate('test', 'test')
+                test_files_object = test_shape_object.files()
+                test_place = 1
+                for file in test_files_object:
+                    if test_place is 1:
+                        self.assertEqual('KP-31774258', file.name)
+                        self.assertEqual('KP-2', file.storageName)
+                        self.assertEqual('EXPORTS/INTRO_WITH IDENT.mov', file.path)
+                        self.assertEqual('omms://34238423-r2323442:d487893895723879r/EXPORTS/INTRO_WITH%20IDENT.mov', file.uri)
+                        self.assertEqual('CLOSED', file.state)
+                        self.assertEqual('96531092', file.size)
+                    if test_place is 2:
+                        self.assertEqual('KP-32349474', file.name)
+                        self.assertEqual('KP-8', file.storageName)
+                        self.assertEqual('EXPORTS/INTRO_WITH IDENT.mov', file.path)
+                        self.assertEqual('file:///storage/path/EXPORTS/INTRO_WITH%20IDENT.mov', file.uri)
+                        self.assertEqual('CLOSED', file.state)
+                        self.assertEqual('96531092', file.size)
+                    test_place = test_place + 1
+
+    def test_mime_type_two(self):
+        from xml.etree.cElementTree import fromstring
+        with patch('gnmvidispine.vs_shape.VSShape.request', side_effect=[fromstring(self.test_shapedoc)]) as mock_request:
+            from gnmvidispine.vs_shape import VSShape
+            test_shape_object = VSShape(host=self.fake_host,port=self.fake_port,user=self.fake_user,passwd=self.fake_passwd)
+            with self.assertRaises(ValueError):
+                test_shape_object.mime_type
+            test_shape_object.populate('test', 'test')
+            self.assertEqual(test_shape_object.mime_type, 'video/quicktime')
+
+    def test_essence_version(self):
+        from xml.etree.cElementTree import fromstring
+        with patch('gnmvidispine.vs_shape.VSShape.request', side_effect=[fromstring(self.test_shapedoc)]) as mock_request:
+            from gnmvidispine.vs_shape import VSShape
+            test_shape_object = VSShape(host=self.fake_host,port=self.fake_port,user=self.fake_user,passwd=self.fake_passwd)
+            with self.assertRaises(ValueError):
+                test_shape_object.essence_version
+            test_shape_object.populate('test', 'test')
+            self.assertEqual(test_shape_object.essence_version, 0)
+
+    def test_storage_rules(self):
+        from xml.etree.cElementTree import fromstring, tostring
+        storage_rule_doc = """<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<StorageRulesDocument xmlns="http://xml.vidispine.com/schema/vidispine">
+<tag id="lowres">
+<storageCount>1</storageCount>
+<priority level="1">capacity</priority>
+<group>Proxies</group>
+<not>
+<storage>VX-16</storage>
+<group>Deep Archive</group>
+<group>Project Files</group>
+<group>Nearline</group>
+<group>Newswires</group>
+<group>Guardian Masters</group>
+<group>Online</group>
+ </not>
+<appliesTo>
+<id>lowres</id>
+<type>GENERIC</type>
+ </appliesTo>
+<precedence>HIGHEST</precedence>
+ </tag>
+<tag id="original">
+<storageCount>1</storageCount>
+<priority level="1">capacity</priority>
+<group>Proxies</group>
+<not>
+<storage>VX-16</storage>
+<group>Deep Archive</group>
+<group>Project Files</group>
+<group>Nearline</group>
+<group>Newswires</group>
+<group>Guardian Masters</group>
+<group>Online</group>
+ </not>
+<appliesTo>
+<id>original</id>
+<type>GENERIC</type>
+ </appliesTo>
+<precedence>HIGHEST</precedence>
+ </tag>
+</StorageRulesDocument>"""
+        with patch('gnmvidispine.vs_shape.VSShape.request', side_effect=[fromstring(self.test_shapedoc), fromstring(storage_rule_doc)]) as mock_request:
+            from gnmvidispine.vs_shape import VSShape
+            test_shape_object = VSShape(host=self.fake_host,port=self.fake_port,user=self.fake_user,passwd=self.fake_passwd)
+            test_shape_object.populate('test', 'test')
+            test_storage_rules = test_shape_object.storage_rules()
+            test_storage_rules_object = test_storage_rules.rules()
+            test_place = 1
+            for rule in test_storage_rules_object:
+                if test_place is 1:
+                    self.assertIn(b'<ns0:id>lowres</ns0:id>', tostring(rule.xmlDOM))
+                    self.assertIn(b'<ns0:precedence>HIGHEST</ns0:precedence>', tostring(rule.xmlDOM))
+                    self.assertIn(b'<ns0:priority level="1">capacity</ns0:priority>', tostring(rule.xmlDOM))
+                if test_place is 2:
+                    self.assertIn(b'<ns0:id>original</ns0:id>', tostring(rule.xmlDOM))
+                    self.assertIn(b'<ns0:precedence>HIGHEST</ns0:precedence>', tostring(rule.xmlDOM))
+                    self.assertIn(b'<ns0:priority level="1">capacity</ns0:priority>', tostring(rule.xmlDOM))
+                test_place = test_place + 1
