@@ -2171,3 +2171,48 @@ class TestVsMetadataBuilder(unittest2.TestCase):
         except:
             xml_to_test_with = """<?xml version='1.0' encoding='utf8'?>\n<MetadataDocument xmlns="http://xml.vidispine.com/schema/vidispine"><timespan end="+INF" start="-INF"><field><name>test_field</name><value>Fire at Trump Tower – video </value></field></timespan></MetadataDocument>"""
         self.assertEqual(b.as_xml("utf8"), xml_to_test_with)
+
+    def test_add_group(self):
+        from gnmvidispine.vs_item import VSMetadataBuilder, VSItem
+        mock_item = MagicMock(target=VSItem)
+        test_metadata_builder = VSMetadataBuilder(mock_item)
+        with self.assertRaises(TypeError):
+            test_metadata_builder.addGroup('test', 'test')
+        test_metadata_builder.addGroup('test', {'test': '1', '__collection_size': '854'})
+        self.assertIn(b'<group><name>test</name>', ET.tostring(test_metadata_builder.rootNode))
+        self.assertIn(b'<field><name>test</name><value>1</value></field>', ET.tostring(test_metadata_builder.rootNode))
+        self.assertIn(b'<field><name>__collection_size</name><value>854</value></field>', ET.tostring(test_metadata_builder.rootNode))
+        test_metadata_builder = VSMetadataBuilder(mock_item)
+        test_metadata_builder.addGroup('test', {'test': '1', '__collection_size': '854'}, mode='add')
+        self.assertIn(b'<group mode="add"><name>test</name>', ET.tostring(test_metadata_builder.rootNode))
+        self.assertIn(b'<field><name>test</name><value>1</value></field>', ET.tostring(test_metadata_builder.rootNode))
+        self.assertIn(b'<field><name>__collection_size</name><value>854</value></field>', ET.tostring(test_metadata_builder.rootNode))
+        test_metadata_builder = VSMetadataBuilder(mock_item)
+        test_metadata_builder.addGroup('test', {'test': {'test': '1', '__collection_size': '854'}, '__collection_size': '854'}, subgroupmode='add')
+        self.assertIn(b'<group><name>test</name><group mode="add"><name>test</name>', ET.tostring(test_metadata_builder.rootNode))
+        self.assertIn(b'<field><name>test</name><value>1</value></field>', ET.tostring(test_metadata_builder.rootNode))
+        self.assertIn(b'<field><name>__collection_size</name><value>854</value></field>', ET.tostring(test_metadata_builder.rootNode))
+
+    def test_commit(self):
+        from gnmvidispine.vidispine_api import VSBadRequest
+        test_item_doc = """<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+        <ItemDocument id="VX-1234" xmlns="http://xml.vidispine.com/schema/vidispine">
+        <metadata>
+            <timespan start="-INF" end="+INF">
+                <field>
+                    <name>test</name>
+                    <value change="VX-15930">1</value>
+                </field>
+            </timespan>
+            </metadata>
+        </ItemDocument>"""
+        with patch('gnmvidispine.vs_item.VSItem.request', side_effect=[ET.fromstring(test_item_doc)]) as mock_request:
+            with patch('gnmvidispine.vs_item.VSMetadataBuilder.request', side_effect=[VSBadRequest, 'test']) as mock_request_two:
+                from gnmvidispine.vs_item import VSMetadataBuilder, VSItem
+                test_item = VSItem(host='test', port=8080, user='test', passwd='test')
+                test_item.populate()
+                test_metadata_builder = VSMetadataBuilder(test_item)
+                with self.assertRaises(VSBadRequest):
+                    test_metadata_builder.commit()
+                test_metadata_builder.commit()
+                test_metadata_builder.request.assert_called_with('/item/VX-1234/metadata', body='<?xml version=\'1.0\' encoding=\'utf8\'?>\n<MetadataDocument xmlns="http://xml.vidispine.com/schema/vidispine"><timespan end="+INF" start="-INF" /></MetadataDocument>', method='PUT')

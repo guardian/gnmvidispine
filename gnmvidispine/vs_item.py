@@ -1074,7 +1074,7 @@ class VSMetadataBuilder(VSApi):
             params={'mode': subgroupmode}
         return self._setkeyvalue(parentNode,params,meta)
 
-    def addGroup(self,groupname,meta,mode=None,subgroubmode=None):
+    def addGroup(self,groupname,meta,mode=None,subgroupmode=None):
         """
         Add a group to the root level, optionally including subgroups
         :param groupname: name of the group to add
@@ -1087,7 +1087,7 @@ class VSMetadataBuilder(VSApi):
         if not isinstance(meta,dict):
             raise TypeError
 
-        if subgroubmode is None:
+        if subgroupmode is None:
             subgroupmode = mode
 
         params = {}
@@ -1116,7 +1116,7 @@ class VSMetadataBuilder(VSApi):
         """
         path="{0}/metadata".format(self.parent.path())
         try:
-            self.request(path,method="PUT",body=self.as_xml(encoding="UTF-8"))
+            self.request(path,method="PUT",body=self.as_xml(encoding="utf8").decode("utf8"))
         except VSBadRequest as e:
             logging.error(e)
             logging.error(str(self.as_xml(encoding="UTF-8")))
