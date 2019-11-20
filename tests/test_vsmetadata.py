@@ -79,3 +79,28 @@ class TestVSMetadataAttribute(unittest2.TestCase):
         self.assertEqual(field.change,"KP-22501063")
         self.assertEqual(field.name,"gnm_commission_title")
         self.assertEqual(str(field.references),"[VSMetadataReference a8765513-8872-48f2-8549-ac1468405e8a to collection KP-23891]")
+
+
+class TestVSMetadata(unittest2.TestCase):
+    def test_add_value(self):
+        from gnmvidispine.vs_metadata import VSMetadata
+        test_metadata_object = VSMetadata()
+        test_metadata_object.addValue('one', 'two')
+        self.assertEqual(test_metadata_object.contentDict['one'], ['two'])
+        test_metadata_object.addValue('one', 'three')
+        self.assertEqual(test_metadata_object.contentDict['one'], ['two', 'three'])
+
+    def test_set_primary_group(self):
+        from gnmvidispine.vs_metadata import VSMetadata
+        test_metadata_object = VSMetadata()
+        test_metadata_object.setPrimaryGroup('one')
+        self.assertEqual(test_metadata_object.primaryGroup, 'one')
+
+    def test_to_xml(self):
+        from gnmvidispine.vs_metadata import VSMetadata
+        test_metadata_object_two = VSMetadata(initial_data={})
+        test_metadata_object_two.addValue('four', 'five')
+        self.assertEqual(test_metadata_object_two.toXML(), '<?xml version=\'1.0\' encoding=\'utf8\'?>\n<ns0:MetadataDocument xmlns:ns0="http://xml.vidispine.com/schema/vidispine"><ns0:timespan end="+INF" start="-INF"><ns0:field><ns0:name>four</ns0:name><ns0:value>five</ns0:value></ns0:field></ns0:timespan></ns0:MetadataDocument>')
+        test_metadata_object_three = VSMetadata(initial_data={})
+        test_metadata_object_three.addValue('six', 'seven')
+        self.assertEqual(test_metadata_object_three.toXML(mdGroup='three'), '<?xml version=\'1.0\' encoding=\'utf8\'?>\n<ns0:MetadataDocument xmlns:ns0="http://xml.vidispine.com/schema/vidispine"><ns0:timespan end="+INF" start="-INF"><ns0:field><ns0:name>six</ns0:name><ns0:value>seven</ns0:value></ns0:field></ns0:timespan><ns0:group>three</ns0:group></ns0:MetadataDocument>')

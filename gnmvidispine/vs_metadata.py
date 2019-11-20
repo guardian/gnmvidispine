@@ -60,7 +60,7 @@ class VSMetadata:
 
             timespanEl.append(fieldEl)
 
-        return ET.tostring(rootEl,encoding="UTF-8")
+        return ET.tostring(rootEl,encoding="utf8").decode("utf8")
 
 
 class VSMetadataMixin(object):
