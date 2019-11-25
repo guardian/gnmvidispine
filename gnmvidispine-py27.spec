@@ -25,6 +25,8 @@ An object-oriented Python interface to the Vidispine Media Asset Management syst
 %prep
 #%setup -n %{name}-%{unmangled_version}
 tar xvzf ../SOURCES/%{sourcebundle}
+pip install pip-bundle wheel
+pip-bundle create "$RPM_BUILD_ROOT/opt/gnmvidispine/requirements/gnmvidispine.pybundle"  -r  "requirements.pip"
 
 %build
 cd gnmvidispine-1.9.DEV
@@ -43,3 +45,6 @@ rm -rf $RPM_BUILD_ROOT
 %files -f gnmvidispine-1.9.DEV/INSTALLED_FILES
 %defattr(-,root,root)
 /usr/share/doc/gnmvidispine/*
+
+%post
+/opt/cantemo/python/bin/pip install /opt/gnmvidispine/requirements/gnmvidispine.pybundle
