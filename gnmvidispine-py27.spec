@@ -25,7 +25,6 @@ An object-oriented Python interface to the Vidispine Media Asset Management syst
 %prep
 #%setup -n %{name}-%{unmangled_version}
 tar xvzf ../SOURCES/%{sourcebundle}
-pip install pip-bundle wheel
 pip-bundle create "$RPM_BUILD_ROOT/opt/gnmvidispine/requirements/gnmvidispine.pybundle"  -r  "requirements.pip"
 
 %build
