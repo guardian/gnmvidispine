@@ -25,7 +25,6 @@ An object-oriented Python interface to the Vidispine Media Asset Management syst
 %prep
 #%setup -n %{name}-%{unmangled_version}
 tar xvzf ../SOURCES/%{sourcebundle}
-pip-bundle create "$RPM_BUILD_ROOT/opt/gnmvidispine/requirements/gnmvidispine.pybundle"  -r  "/home/circleci/fredex42/gnmvidispine/requirements.pip"
 
 %build
 cd gnmvidispine-1.9.DEV
@@ -34,6 +33,7 @@ doxygen
 
 %install
 cd gnmvidispine-1.9.DEV
+pip-bundle create "$RPM_BUILD_ROOT/opt/gnmvidispine/requirements/gnmvidispine.pybundle"  -r  "/home/circleci/fredex42/gnmvidispine/requirements.pip"
 python setup.py install -O1 --root=$RPM_BUILD_ROOT --prefix=/usr --record=INSTALLED_FILES
 mkdir -p $RPM_BUILD_ROOT/usr/share/doc/gnmvidispine
 cp -a doc/html/* $RPM_BUILD_ROOT/usr/share/doc/gnmvidispine
