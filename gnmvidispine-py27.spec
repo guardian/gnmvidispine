@@ -48,4 +48,5 @@ rm -rf $RPM_BUILD_ROOT
 /opt/gnmvidispine/requirements/*
 
 %post
-/opt/cantemo/python/bin/pip install /opt/gnmvidispine/requirements/gnmvidispine.pybundle
+if [ ! -x /opt/cantemo/python/bin/python ]; then pip install /opt/gnmvidispine/requirements/gnmvidispine.pybundle; fi
+if [ -x /opt/cantemo/python/bin/python ]; then /opt/cantemo/python/bin/pip install /opt/gnmvidispine/requirements/gnmvidispine.pybundle; fi
