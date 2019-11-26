@@ -33,6 +33,7 @@ doxygen
 
 %install
 cd gnmvidispine-1.9.DEV
+mkdir -p "$RPM_BUILD_ROOT/opt/gnmvidispine/requirements"
 pip-bundle create "$RPM_BUILD_ROOT/opt/gnmvidispine/requirements/gnmvidispine.pybundle"  -r  "/home/circleci/fredex42/gnmvidispine/requirements.pip"
 python setup.py install -O1 --root=$RPM_BUILD_ROOT --prefix=/usr --record=INSTALLED_FILES
 mkdir -p $RPM_BUILD_ROOT/usr/share/doc/gnmvidispine
@@ -44,6 +45,7 @@ rm -rf $RPM_BUILD_ROOT
 %files -f gnmvidispine-1.9.DEV/INSTALLED_FILES
 %defattr(-,root,root)
 /usr/share/doc/gnmvidispine/*
+/opt/gnmvidispine/requirements/*
 
 %post
 /opt/cantemo/python/bin/pip install /opt/gnmvidispine/requirements/gnmvidispine.pybundle
