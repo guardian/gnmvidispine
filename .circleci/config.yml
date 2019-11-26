@@ -28,10 +28,8 @@ jobs:
     # To see the list of pre-built images that CircleCI provides for most common languages see
     # https://circleci.com/docs/2.0/circleci-images/
     docker:
-    - image: andyg42/centos-python:2
+    - image: guardianmultimedia/centos-python:2
     steps:
-    - run: yum install -y sudo
-    - run: sudo pip install pip-bundle
     # Machine Setup
     #   If you break your build into multiple jobs with workflows, you will probably want to do the parts of this that are relevant in each
     # The following `checkout` command checks out your code to your working directory. In 1.0 we did this implicitly. In 2.0 you can choose where in the course of a job your code should be checked out.
