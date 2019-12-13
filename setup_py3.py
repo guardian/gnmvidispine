@@ -113,7 +113,7 @@ class BuildRpms(Command):
             print("Could not find {0}.  Try running setup.py sdist first.".format(source_dist))
             exit(1)
         print("Using source distribution {0}".format(source_dist))
-        self.modify_specfile('gnmvidispine-py27.spec',dest_spec,replacements)
+        self.modify_specfile('gnmvidispine-py36.spec',dest_spec,replacements)
         print("RPM build path is {0}".format(rpm_buildpath))
         shutil.copy(source_dist,os.path.join(rpm_buildpath, "SOURCES", sourcefile))
 
@@ -153,7 +153,7 @@ class BuildCantemoRpm(BuildRpms):
             r'^%define sourcebundle.*$': '%define sourcebundle {0}'.format(sourcefile),
             r'^%define release.*$': '%define release {0}'.format(buildnum),
             r'^Requires:': 'Requires: Portal >= 3.0 ',
-            r'^%define name gnmvidispine-py27': '%define name gnmvidispine-portal',
+            r'^%define name gnmvidispine-py36': '%define name gnmvidispine-portal',
             r'--prefix=/usr':' --prefix=/opt/cantemo/python',
             r'^cd gnmvidispine-.*$': 'cd {0}-{1}'.format(self.distribution.get_name(), self.distribution.get_version()),
             r'gnmvidispine-.*/INSTALLED_FILES': '{0}-{1}/INSTALLED_FILES'.format(self.distribution.get_name(),
