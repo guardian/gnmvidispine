@@ -9,7 +9,7 @@ pip install -r requirements.txt
 pip install boto
 
 declare -x PYTHONPATH=${HOME}/virtualenvs/gnmvidispine/lib/python3.6/site-packages
-nosetests-3.6 --with-xunit
+nosetests-3.6 --with-xunit tests/
 
 ./setup_py3.py sdist
 ./setup_py3.py buildrpm

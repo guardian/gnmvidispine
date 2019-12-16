@@ -3,13 +3,16 @@
 ### this script expects to be run from a docker image andyg42/centos-python36-build
 ### it expects the environment variables ${UPLOAD_BUCKET} and ${CIRCLE_BUILD_NUM} to be set
 
-virtualenv ~/virtualenvs/gnmvidispine
+if [ ! -d  $HOME/virtualenvs/gnmvidispine ]; then
+    virtualenv ~/virtualenvs/gnmvidispine
+fi
+
 source ~/virtualenvs/gnmvidispine/bin/activate
 pip install -r requirements.txt
 pip install boto
 
 declare -x PYTHONPATH=${HOME}/virtualenvs/gnmvidispine/lib/python2.7/site-packages
-nosetests --with-xunit
+nosetests --with-xunit tests/
 
 ./setup.py sdist
 ./setup.py buildrpm
