@@ -42,6 +42,6 @@ rm -rf $RPM_BUILD_ROOT
 
 %files -f gnmvidispine-1.9.DEV/INSTALLED_FILES
 %defattr(-,root,root)
-/usr/share/doc/gnmvidispine/*
+/usr/share/doc/gnmvidispine-py36/*
 
 %post
