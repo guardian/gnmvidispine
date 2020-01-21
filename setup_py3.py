@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 from distutils.core import setup,Command
 import os
 import re
