@@ -28,12 +28,12 @@ tar xvzf ../SOURCES/%{sourcebundle}
 
 %build
 cd gnmvidispine-1.9.DEV
-python setup_py3.py build
+python3 setup_py3.py build
 doxygen
 
 %install
 cd gnmvidispine-1.9.DEV
-python setup_py3.py install -O1 --root=$RPM_BUILD_ROOT --prefix=/usr --record=INSTALLED_FILES
+python3 setup_py3.py install -O1 --root=$RPM_BUILD_ROOT --prefix=/usr --record=INSTALLED_FILES
 mkdir -p $RPM_BUILD_ROOT/usr/share/doc/gnmvidispine
 cp -a doc/html/* $RPM_BUILD_ROOT/usr/share/doc/gnmvidispine
 
