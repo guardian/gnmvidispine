@@ -34,8 +34,8 @@ doxygen
 %install
 cd gnmvidispine-1.9.DEV
 python3 setup_py3.py install -O1 --root=$RPM_BUILD_ROOT --prefix=/usr --record=INSTALLED_FILES
-mkdir -p $RPM_BUILD_ROOT/usr/share/doc/gnmvidispine
-cp -a doc/html/* $RPM_BUILD_ROOT/usr/share/doc/gnmvidispine
+mkdir -p $RPM_BUILD_ROOT/usr/share/doc/gnmvidispine-py36
+cp -a doc/html/* $RPM_BUILD_ROOT/usr/share/doc/gnmvidispine-py36
 
 %clean
 rm -rf $RPM_BUILD_ROOT
