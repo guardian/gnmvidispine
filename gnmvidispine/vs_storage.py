@@ -332,7 +332,7 @@ class VSStorage(VSApi):
     def stripOwnPath(self,pathname):
         for u in self.urisOfType('file',pathOnly=True,decode=True):
             logging.debug("VSStorage::stripOwnPath - checking %s" % u)
-            if pathname.startswith(u.encode()):
+            if pathname.startswith(u):
                 l = len(u)
                 return pathname[l:]
         return pathname
