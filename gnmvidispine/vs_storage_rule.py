@@ -4,6 +4,7 @@ from .vidispine_api import VSApi,VSException,VSNotFound
 #from vidispine.vs_storage import VSStorage
 from xml.etree import ElementTree as ET
 from pprint import pprint
+import logging
 
 
 class VSStorageRuleNew(VSApi):
@@ -173,7 +174,7 @@ class VSStorageRule(VSApi):
             elif child.tag.endswith('appliesTo'):
                 pass
             else:
-                print("warning: unrecognised tag in storage rule definition: %s" % child.tag)
+                logging.warning("warning: unrecognised tag in storage rule definition: %s" % child.tag)
         return rtn
 
     def populateFromXml(self,response):

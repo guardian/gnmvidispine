@@ -2,7 +2,7 @@ __author__ = 'Andy Gallagher <andy.gallagher@theguardian.com>'
 
 import xml.etree.ElementTree as ET
 import dateutil.parser
-
+from .vidispine_api import always_string
 
 class VSMetadata:
     def __init__(self, initial_data={}):
@@ -55,7 +55,7 @@ class VSMetadata:
                 if isinstance(line,datetime):
                     line = line.strftime("%Y-%m-%dT%H:%M:%S%Z")
 
-                valueEl.text = str(line)
+                valueEl.text = always_string(line)
                 fieldEl.append(valueEl)
 
             timespanEl.append(fieldEl)

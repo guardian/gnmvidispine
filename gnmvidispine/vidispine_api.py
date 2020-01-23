@@ -617,3 +617,12 @@ class VSApi(object):
         child=self.findPortalDataNode(node,should_create=should_create)
 
         child.text=json.dumps(self.portalData)
+
+
+def always_string(maybe_string):
+    if isinstance(maybe_string, str):
+        return maybe_string
+    elif isinstance(maybe_string, bytes):
+        return maybe_string.decode("utf8")
+    else:
+        raise TypeError("always_string got an unexpected type {0}".format(type(maybe_string)))

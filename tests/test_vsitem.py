@@ -2140,7 +2140,7 @@ class TestVsMetadataBuilder(unittest2.TestCase):
         mock_item = MagicMock(target=VSItem)
 
         b = VSMetadataBuilder(mock_item)
-        b.addMeta({'test_field': datetime(2015,0o7,12,23,0o4,31,0,pytz.timezone("Europe/London"))})
+        b.addMeta({'test_field': datetime(2015,7,12,23,4,31,0,pytz.timezone("Europe/London"))})
         self.assertEqual(b.as_xml("utf8"),b"""<?xml version='1.0' encoding='utf8'?>
 <MetadataDocument xmlns="http://xml.vidispine.com/schema/vidispine"><timespan end="+INF" start="-INF"><field><name>test_field</name><value>2015-07-12T23:04:31-00:01</value></field></timespan></MetadataDocument>""")
 

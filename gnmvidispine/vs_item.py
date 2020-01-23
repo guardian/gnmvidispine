@@ -11,7 +11,7 @@ from time import sleep
 import logging
 import re
 
-from .vidispine_api import HTTPError, VSApi, VSException, VSNotFound
+from .vidispine_api import HTTPError, VSApi, VSException, VSNotFound, always_string
 from .vs_storage_rule import VSStorageRule
 import io
 
@@ -114,7 +114,7 @@ class VSItem(VSApi):
                                     query={'container': 1, 'video': 1,
                                     })
         except VSBadRequest as e:
-            print(rqbody)
+            logging.warning("Got a bad request for {0}".format(rqbody))
             raise
 
         try:
@@ -421,7 +421,7 @@ class VSItem(VSApi):
         :param passwd: password for the VS server to copy to (default: None)
         :return: a new VSItem representing the duplicated item
         """
-        md = str(self.metadata_document())
+        md = always_string(self.metadata_document())
         logging.debug(md)
         newItem = VSItem(host,port,user,passwd)
         newItem.createPlaceholder(metadata=md)
@@ -699,13 +699,13 @@ class VSItem(VSApi):
 
         jobDocument = self.request(path, method="POST", query=args)
         jobID = jobDocument.find("{0}jobId".format(ns)).text
-        print("Export job ID is %s" % jobID)
+        logging.info("Export job ID is %s" % jobID)
 
         while True:
             job = VSJob(host=self.host, port=self.port, user=self.user, passwd=self.passwd)
             job.populate(jobID)
 
-            print("Job %s has status %s" % (job.name, job.status()))
+            logging.info("Job %s has status %s" % (job.name, job.status()))
             if job.status() == "FINISHED":
                 break
 

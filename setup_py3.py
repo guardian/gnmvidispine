@@ -152,7 +152,6 @@ class BuildCantemoRpm(BuildRpms):
             r'^%define unmangled_version.*$': '%define unmangled_version {0}'.format(shortversion),
             r'^%define sourcebundle.*$': '%define sourcebundle {0}'.format(sourcefile),
             r'^%define release.*$': '%define release {0}'.format(buildnum),
-            r'^Requires:': 'Requires: Portal >= 3.0 ',
             r'^%define name gnmvidispine-py36': '%define name gnmvidispine-portal',
             r'--prefix=/usr':' --prefix=/opt/cantemo/python',
             r'^cd gnmvidispine-.*$': 'cd {0}-{1}'.format(self.distribution.get_name(), self.distribution.get_version()),

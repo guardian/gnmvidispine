@@ -1,6 +1,8 @@
 from .vidispine_api import VSApi
 import re
 from pprint import pprint
+import logging
+
 
 class URLError(Exception):
     pass
@@ -23,7 +25,7 @@ class VSThumbnailCollection(VSApi):
         for node in self.dataContent.findall('{0}uri'.format(self.xmlns)):
             self._resource_list.append(node.text)
 
-        print("DEBUG: got resource list {0}".format(self._resource_list))
+        logging.debug("DEBUG: got resource list {0}".format(self._resource_list))
         self.thumbnail_urls = []
 
     @staticmethod

@@ -171,8 +171,8 @@ class VSShape(VSApi):
         self._analyzeDocFragment(analyzeDocRoot,"black",threshold=blackThreshold,percentage=blackPercentage)
         self._analyzeDocFragment(analyzeDocRoot,"freeze",threshold=freezeThreshold,time=freezeTime)
         self._analyzeDocFragment(analyzeDocRoot,"bars",threshold=barsThreshold,percentage=barsPercentage)
-        
-        print(ET.tostring(analyzeDocRoot))
+
+        logging.debug(ET.tostring(analyzeDocRoot))
         data = self.request(path,method="POST",query={'priority': priority},body=ET.tostring(analyzeDocRoot,encoding="utf8"))
         j = VSJob(host=self.host,port=self.port,user=self.user,passwd=self.passwd,run_as=self.run_as)
         j.fromResponse(data)

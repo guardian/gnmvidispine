@@ -171,7 +171,7 @@ class VSJob(VSApi):
                 timeString=re.sub('\.\d+','',startTimeNode.text)
                 self.contentDict['started'] = datetime.datetime.strptime(timeString,"%Y-%m-%dT%H:%M:%SZ")
             except ValueError as e: #if the date doesn't parse
-                print("WARNING: %s" % e.message)
+                logger.error("ERROR: %s" % e.message)
                 pass
 
     @property

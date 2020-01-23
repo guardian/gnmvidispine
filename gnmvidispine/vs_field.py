@@ -109,7 +109,7 @@ class VSField(VSApi):
         #SubElement(self.dataContent,'data')
 
         self.dataContent = ET.fromstring(ET.tostring(self.dataContent))
-        print(ET.tostring(self.dataContent))
+        self._logger.debug(ET.tostring(self.dataContent))
         if commit:
             self.commitXML()
         return self

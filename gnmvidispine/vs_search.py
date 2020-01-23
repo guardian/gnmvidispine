@@ -1,6 +1,6 @@
 __author__ = 'Andy Gallagher <andy.gallagher@theguardian.com>'
 
-from .vidispine_api import VSApi,VSBadRequest,VSException,VSNotFound
+from .vidispine_api import VSApi,VSBadRequest,VSException,VSNotFound, always_string
 from .vs_timecode import VSTimecode
 from .vs_item import VSItem
 from .vs_collection import VSCollection
@@ -71,7 +71,7 @@ class VSSearchOperator(object):
             else:
                 fieldEl = ET.SubElement(opNode,'field')
                 nameEl = ET.SubElement(fieldEl,'name')
-                nameEl.text = str(k)
+                nameEl.text = always_string(k)
 
                 if isinstance(v,VSSearchRange):
                     v.to_xml(fieldEl)
@@ -312,7 +312,7 @@ class VSSearch(VSApi):
 
             fieldEl = ET.SubElement(root,'field'.format(vs))
             nameEl = ET.SubElement(fieldEl,'name'.format(vs))
-            nameEl.text = str(k)
+            nameEl.text = always_string(k)
             if isinstance(v,list):
                 for value in v:
                     valueEl = ET.SubElement(fieldEl,'value'.format(vs))
