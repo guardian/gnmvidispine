@@ -1,6 +1,6 @@
 __author__ = 'Andy Gallagher <andy.gallagher@theguardian.com>'
 
-from vidispine_api import VSApi,InvalidData
+from .vidispine_api import VSApi,InvalidData
 
 
 class VSResource(VSApi):
@@ -21,7 +21,7 @@ class VSResource(VSApi):
         """
         Convenience function to return a list of the types of valid resource
         """
-        return map(lambda x: x, self.types())
+        return [x for x in self.types()]
 
     def transcoders(self):
         """
@@ -32,7 +32,7 @@ class VSResource(VSApi):
         for resource in doc.findall("{0}resource".format(ns)):
             try:
                 vsid = resource.find("{0}id".format(ns)).text
-            except StandardError as e:
+            except Exception as e:
                 raise InvalidData("No <id> element in returned resource designation")
             yield VSTranscoderResource(resource.find("{0}transcoder".format(ns)),vsid=vsid,
                                           host=self.host,port=self.port,user=self.user,passwd=self.passwd)

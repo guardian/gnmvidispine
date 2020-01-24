@@ -1,13 +1,13 @@
 # *-* coding: UTF-8 --*
-from __future__ import absolute_import
+
 import unittest2
 from mock import MagicMock, patch
-import httplib
+import http.client
 import base64
 import logging
 import tempfile
 from os import urandom
-from httplib import CannotSendRequest
+from http.client import CannotSendRequest
 
 class TestVSApi(unittest2.TestCase):
     fake_host='localhost'
@@ -35,15 +35,16 @@ class TestVSApi(unittest2.TestCase):
           <element>string</element>
         </root>"""
         
-        conn = httplib.HTTPConnection(host='localhost',port=8080)
+        conn = http.client.HTTPConnection(host='localhost',port=8080)
         conn.request = MagicMock()
         conn.getresponse = MagicMock(return_value=self.MockedResponse(200,sample_returned_xml))
         
         api = VSApi(user=self.fake_user,passwd=self.fake_passwd,conn=conn)
         parsed_xml = api.request("/path/to/endpoint",method="GET")
-        
-        computed_auth = base64.b64encode("{0}:{1}".format(self.fake_user,self.fake_passwd))
-        conn.request.assert_called_with('GET','/API/path/to/endpoint', None, {'Authorization': "Basic " + computed_auth, 'Accept': 'application/xml'})
+
+        authstring = u"{0}:{1}".format(self.fake_user, self.fake_passwd)
+        computed_auth = base64.b64encode(authstring.encode("UTF-8"))
+        conn.request.assert_called_with('GET','/API/path/to/endpoint', None, {'Authorization': "Basic " + computed_auth.decode("UTF-8"), 'Accept': 'application/xml'})
         conn.getresponse.assert_called_with()
         
         teststring = parsed_xml.find('{0}element'.format("{http://xml.vidispine.com/schema/vidispine}"))
@@ -55,7 +56,7 @@ class TestVSApi(unittest2.TestCase):
         :return:
         """
         from gnmvidispine.vidispine_api import VSApi
-        sample_send_xml = """<?xml version="1.0"?>
+        sample_send_xml = b"""<?xml version="1.0"?>
         <root xmlns="http://xml.vidispine.com/schema/vidispine">
           <element>string</element>
         </root>"""
@@ -65,16 +66,17 @@ class TestVSApi(unittest2.TestCase):
           <returned-element>string</returned-element>
         </response>
         """
-        conn = httplib.HTTPConnection(host=self.fake_host, port=self.fake_port)
+        conn = http.client.HTTPConnection(host=self.fake_host, port=self.fake_port)
         conn.request = MagicMock()
         conn.getresponse = MagicMock(return_value=self.MockedResponse(200, sample_returned_xml)) #simulate empty OK response
     
         api = VSApi(user=self.fake_user, passwd=self.fake_passwd, conn=conn)
         parsed_xml = api.request("/path/to/endpoint", method="PUT", body=sample_send_xml)
-    
-        computed_auth = base64.b64encode("{0}:{1}".format(self.fake_user, self.fake_passwd))
+
+        authstring = u"{0}:{1}".format(self.fake_user, self.fake_passwd)
+        computed_auth = base64.b64encode(authstring.encode("UTF-8"))
         conn.request.assert_called_with('PUT', '/API/path/to/endpoint', sample_send_xml,
-                                        {'Content-Type': 'application/xml', 'Authorization': "Basic " + computed_auth, 'Accept': 'application/xml'})
+                                        {'Content-Type': 'application/xml', 'Authorization': "Basic " + computed_auth.decode("UTF-8"), 'Accept': 'application/xml'})
         conn.getresponse.assert_called_with()
 
         teststring = parsed_xml.find('{0}returned-element'.format("{http://xml.vidispine.com/schema/vidispine}"))
@@ -86,21 +88,22 @@ class TestVSApi(unittest2.TestCase):
         :return:
         """
         from gnmvidispine.vidispine_api import VSApi
-        sample_send_xml = """<?xml version="1.0"?>
+        sample_send_xml = b"""<?xml version="1.0"?>
         <root xmlns="http://xml.vidispine.com/schema/vidispine">
           <element>string</element>
         </root>"""
     
-        conn = httplib.HTTPConnection(host=self.fake_host, port=self.fake_port)
+        conn = http.client.HTTPConnection(host=self.fake_host, port=self.fake_port)
         conn.request = MagicMock()
         conn.getresponse = MagicMock(return_value=self.MockedResponse(201, ""))  # simulate empty OK response
     
         api = VSApi(user=self.fake_user, passwd=self.fake_passwd, conn=conn)
         api.request("/path/to/endpoint", method="POST", body=sample_send_xml)
-    
-        computed_auth = base64.b64encode("{0}:{1}".format(self.fake_user, self.fake_passwd))
+
+        authstring = u"{0}:{1}".format(self.fake_user, self.fake_passwd)
+        computed_auth = base64.b64encode(authstring.encode("UTF-8"))
         conn.request.assert_called_with('POST', '/API/path/to/endpoint', sample_send_xml,
-                                        {'Content-Type': 'application/xml', 'Authorization': "Basic " + computed_auth,
+                                        {'Content-Type': 'application/xml', 'Authorization': "Basic " + computed_auth.decode("UTF-8"),
                                          'Accept'      : 'application/xml'})
         conn.getresponse.assert_called_with()
         
@@ -115,7 +118,7 @@ class TestVSApi(unittest2.TestCase):
   </notFound>
 </ExceptionDocument>"""
         
-        conn = httplib.HTTPConnection(host='localhost', port=8080)
+        conn = http.client.HTTPConnection(host='localhost', port=8080)
         conn.request = MagicMock()
         conn.getresponse = MagicMock(return_value=self.MockedResponse(404, exception_response, reason="Test 404 failure"))
     
@@ -127,10 +130,11 @@ class TestVSApi(unittest2.TestCase):
         self.assertEqual("SD-46362",ex.exception.exceptionID)
         self.assertEqual("notFound",ex.exception.exceptionType)
         self.assertEqual("no explanation provided",ex.exception.exceptionWhat)
-            
-        computed_auth = base64.b64encode("{0}:{1}".format(self.fake_user, self.fake_passwd))
+
+        authstring = u"{0}:{1}".format(self.fake_user, self.fake_passwd)
+        computed_auth = base64.b64encode(authstring.encode("UTF-8"))
         conn.request.assert_called_with('GET', '/API/item/SD-46362/metadata', None,
-                                        {'Authorization': "Basic " + computed_auth, 'Accept': 'application/xml'})
+                                        {'Authorization': "Basic " + computed_auth.decode("UTF-8"), 'Accept': 'application/xml'})
         conn.getresponse.assert_called_with()
         
     def test_400(self):
@@ -139,7 +143,7 @@ class TestVSApi(unittest2.TestCase):
         :return:
         """
         from gnmvidispine.vidispine_api import VSApi, VSBadRequest
-        request_body = """<MetadataDocument xmlns="http://xml.vidispine.com/">
+        request_body = b"""<MetadataDocument xmlns="http://xml.vidispine.com/">
   <field>
     <name>blah</name>
     <value>smith</value>
@@ -147,7 +151,7 @@ class TestVSApi(unittest2.TestCase):
 </MetadataDocument>"""  #invalid namespace will raise bad request error
         exception_response = """<?xml version="1.0" encoding="UTF-8" standalone="yes"?><ExceptionDocument xmlns="http://xml.vidispine.com/schema/vidispine"><invalidInput><context>metadata</context><id>VX-3245</id><explanation>Couldn't transform the input according to the projection.</explanation></invalidInput></ExceptionDocument>"""
 
-        conn = httplib.HTTPConnection(host='localhost', port=8080)
+        conn = http.client.HTTPConnection(host='localhost', port=8080)
         conn.request = MagicMock()
         conn.getresponse = MagicMock(return_value=self.MockedResponse(400, exception_response, reason="Test 40- failure"))
     
@@ -159,10 +163,11 @@ class TestVSApi(unittest2.TestCase):
         self.assertEqual("VX-3245", ex.exception.exceptionID)
         self.assertEqual("invalidInput", ex.exception.exceptionType)
         self.assertEqual("Couldn't transform the input according to the projection.", ex.exception.exceptionWhat)
-    
-        computed_auth = base64.b64encode("{0}:{1}".format(self.fake_user, self.fake_passwd))
+
+        authstring = u"{0}:{1}".format(self.fake_user, self.fake_passwd)
+        computed_auth = base64.b64encode(authstring.encode("UTF-8"))
         conn.request.assert_called_with('PUT', '/API/item/VX-3245/metadata', request_body,
-                                        {'Content-Type': 'application/xml', 'Authorization': "Basic " + computed_auth, 'Accept': 'application/xml'})
+                                        {'Content-Type': 'application/xml', 'Authorization': "Basic " + computed_auth.decode("UTF-8"), 'Accept': 'application/xml'})
         
     def test_503(self):
         """
@@ -172,7 +177,7 @@ class TestVSApi(unittest2.TestCase):
         from gnmvidispine.vidispine_api import VSApi,HTTPError
         from time import time
         
-        conn = httplib.HTTPConnection(host=self.fake_host, port=self.fake_port)
+        conn = http.client.HTTPConnection(host=self.fake_host, port=self.fake_port)
         conn.request = MagicMock()
         conn.getresponse = MagicMock(return_value=self.MockedResponse(503, "No server available"))
 
@@ -190,10 +195,11 @@ class TestVSApi(unittest2.TestCase):
             api.request("/path/to/endpoint", method="GET")
 
         end_time = time()
-        
-        computed_auth = base64.b64encode("{0}:{1}".format(self.fake_user, self.fake_passwd))
+
+        authstring = u"{0}:{1}".format(self.fake_user, self.fake_passwd)
+        computed_auth = base64.b64encode(authstring.encode("UTF-8"))
         conn.request.assert_called_with('GET', '/API/path/to/endpoint', None,
-                                        {'Authorization': "Basic " + computed_auth, 'Accept': 'application/xml'})
+                                        {'Authorization': "Basic " + computed_auth.decode("UTF-8"), 'Accept': 'application/xml'})
         conn.getresponse.assert_called_with()
 
         self.assertEqual(cm.exception.code, 503)
@@ -209,8 +215,24 @@ class TestVSApi(unittest2.TestCase):
         tests the VSConflict exception
         :return:
         """
-        pass
-    
+        from gnmvidispine.vidispine_api import VSApi, VSConflict
+
+        exception_response = """<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<ExceptionDocument xmlns="http://xml.vidispine.com/schema/vidispine">
+  <conflict>
+    <type>Item</type>
+    <id>SD-46362</id>
+  </conflict>
+</ExceptionDocument>"""
+        conn = http.client.HTTPConnection(host=self.fake_host, port=self.fake_port)
+        conn.request = MagicMock()
+        conn.getresponse = MagicMock(return_value=self.MockedResponse(409, exception_response, reason="Test 409 failure"))
+        api = VSApi(user=self.fake_user, passwd=self.fake_passwd, conn=conn)
+        with self.assertRaises(VSConflict) as ex:
+            api.request("/item/VX-3245/metadata", method="GET")
+        self.assertEqual("SD-46362", ex.exception.exceptionID)
+        self.assertEqual("conflict", ex.exception.exceptionType)
+
     def test_chunked_upload(self):
         """
         test the chunked_upload_request functionality
@@ -218,7 +240,7 @@ class TestVSApi(unittest2.TestCase):
         """
         from gnmvidispine.vidispine_api import VSApi,HTTPError
         
-        conn = httplib.HTTPConnection(host=self.fake_host, port=self.fake_port)
+        conn = http.client.HTTPConnection(host=self.fake_host, port=self.fake_port)
         conn.request = MagicMock()
         
         logging.basicConfig(level=logging.INFO)
@@ -230,8 +252,9 @@ class TestVSApi(unittest2.TestCase):
         api = VSApi(user=self.fake_user, passwd=self.fake_passwd, conn=conn, logger=logger)
         api.raw_request = MagicMock()
 
-        computed_auth = base64.b64encode("{0}:{1}".format(self.fake_user, self.fake_passwd))
-        
+        authstring = u"{0}:{1}".format(self.fake_user, self.fake_passwd)
+        computed_auth = base64.b64encode(authstring.encode("UTF-8"))
+
         #create a test file
         testfilesize = 100000
         testchunksize = 1000
@@ -251,7 +274,7 @@ class TestVSApi(unittest2.TestCase):
                                            method="POST", filename="fakefile.dat", extra_headers={'extra_header': 'true'})
                 
                 should_have_headers = {
-                    'Authorization': "Basic " + computed_auth,
+                    'Authorization': "Basic " + computed_auth.decode("UTF-8"),
                     'Content-Type': 'application/octet-stream',
                     'Accept': 'application/xml'
                 }
@@ -276,7 +299,7 @@ class TestVSApi(unittest2.TestCase):
 
     def test_reuse(self):
         from gnmvidispine.vidispine_api import VSApi
-        conn = httplib.HTTPConnection(host='localhost',port=8080)
+        conn = http.client.HTTPConnection(host='localhost',port=8080)
         conn.request = MagicMock(side_effect=CannotSendRequest())
         
         a = VSApi(host='localhost',user='testuser',passwd='testpasswd',conn=conn)
@@ -290,7 +313,7 @@ class TestVSApi(unittest2.TestCase):
     
     def test_reset_http(self):
         from gnmvidispine.vidispine_api import VSApi
-        conn = httplib.HTTPConnection(host='localhost', port=8080)
+        conn = http.client.HTTPConnection(host='localhost', port=8080)
         conn.close = MagicMock()
 
         a = VSApi(host='localhost', user='testuser', passwd='testpasswd', conn=conn)
@@ -300,28 +323,29 @@ class TestVSApi(unittest2.TestCase):
 
     def test_querydict(self):
         from gnmvidispine.vidispine_api import VSApi
+        from collections import OrderedDict
         sample_returned_xml = """<?xml version="1.0"?>
         <root xmlns="http://xml.vidispine.com/schema/vidispine">
           <element>string</element>
         </root>"""
 
-        conn = httplib.HTTPConnection(host='localhost', port=8080)
+        conn = http.client.HTTPConnection(host='localhost', port=8080)
         conn.request = MagicMock()
         conn.getresponse = MagicMock(return_value=self.MockedResponse(200, sample_returned_xml))
 
         api = VSApi(user=self.fake_user, passwd=self.fake_passwd, conn=conn)
-        queryparams={
-            'query1': 'value1',
+        queryparams = OrderedDict({
             'query2': 'value2',
             'query3': ['value3','value4','value5'],
+            'query1': 'value1',
             'query4': 37
-        }
-
+        })
         parsed_xml = api.request("/path/to/endpoint", query=queryparams, method="GET")
 
-        computed_auth = base64.b64encode("{0}:{1}".format(self.fake_user, self.fake_passwd))
+        authstring = u"{0}:{1}".format(self.fake_user, self.fake_passwd)
+        computed_auth = base64.b64encode(authstring.encode("UTF-8"))
         conn.request.assert_called_with('GET', '/API/path/to/endpoint?query2=value2&query3=value3&query3=value4&query3=value5&query1=value1&query4=37', None,
-                                        {'Authorization': "Basic " + computed_auth, 'Accept': 'application/xml'})
+                                        {'Authorization': "Basic " + computed_auth.decode("UTF-8"), 'Accept': 'application/xml'})
         conn.getresponse.assert_called_with()
 
     def test_matrixdict(self):
@@ -331,23 +355,24 @@ class TestVSApi(unittest2.TestCase):
           <element>string</element>
         </root>"""
 
-        conn = httplib.HTTPConnection(host='localhost', port=8080)
+        conn = http.client.HTTPConnection(host='localhost', port=8080)
         conn.request = MagicMock()
         conn.getresponse = MagicMock(return_value=self.MockedResponse(200, sample_returned_xml))
 
         api = VSApi(user=self.fake_user, passwd=self.fake_passwd, conn=conn)
         mtxparams={
-            'mtx1': 'value1',
-            'mtx2': 'value2',
             'mtx4': 8,
-            'mtx3': ['value3','value4','value5']
+            'mtx3': ['value3','value4','value5'],
+            'mtx2': 'value2',
+            'mtx1': 'value1'
         }
 
         parsed_xml = api.request("/path/to/endpoint", matrix=mtxparams, method="GET")
 
-        computed_auth = base64.b64encode("{0}:{1}".format(self.fake_user, self.fake_passwd))
+        authstring = u"{0}:{1}".format(self.fake_user, self.fake_passwd)
+        computed_auth = base64.b64encode(authstring.encode("UTF-8"))
         conn.request.assert_called_with('GET', '/API/path/to/endpoint;mtx4=8;mtx3=value3;mtx3=value4;mtx3=value5;mtx2=value2;mtx1=value1', None,
-                                        {'Authorization': "Basic " + computed_auth, 'Accept': 'application/xml'})
+                                        {'Authorization': "Basic " + computed_auth.decode("UTF-8"), 'Accept': 'application/xml'})
         conn.getresponse.assert_called_with()
 
     def test_find_portal_data_none(self):
@@ -374,22 +399,24 @@ class TestVSApi(unittest2.TestCase):
 <MetadataDocument xmlns="http://xml.vidispine.com/schema/vidispine"><timespan end="+INF" start="-INF"><field><name>title</name><value>Thousands take to streets in Barcelona to protest against police violence – video </value></field><field><name>gnm_asset_category</name><value>Master</value></field><field><name>gnm_type</name><value>Master</value></field><fiel"""
 
         from gnmvidispine.vidispine_api import VSApi
-        from httplib import HTTPConnection
+        from http.client import HTTPConnection
         api = VSApi(user=self.fake_user, passwd=self.fake_passwd)
-        auth = base64.encodestring('%s:%s' % (self.fake_user, self.fake_passwd)).replace('\n', '')
+        authstring = u"{0}:{1}".format(self.fake_user, self.fake_passwd)
+        computed_auth = base64.b64encode(authstring.encode("UTF-8"))
+        #auth = base64.encodestring('%s:%s' % (self.fake_user, self.fake_passwd)).replace('\n', '')
 
         api._conn = MagicMock(target=HTTPConnection)
 
         api.sendAuthorized("GET","/path/to/fake/url", dodgy_string,{})
         api._conn.request.assert_called_once_with("GET",
                                                   "/path/to/fake/url",
-                                                  '<?xml version=\'1.0\' encoding=\'UTF-8\'?>\n<MetadataDocument xmlns="http://xml.vidispine.com/schema/vidispine"><timespan end="+INF" start="-INF"><field><name>title</name><value>Thousands take to streets in Barcelona to protest against police violence \xe2\x80\x93 video </value></field><field><name>gnm_asset_category</name><value>Master</value></field><field><name>gnm_type</name><value>Master</value></field><fiel',
-                                                  {'Authorization': 'Basic {0}'.format(auth)}
+                                                  b'<?xml version=\'1.0\' encoding=\'UTF-8\'?>\n<MetadataDocument xmlns="http://xml.vidispine.com/schema/vidispine"><timespan end="+INF" start="-INF"><field><name>title</name><value>Thousands take to streets in Barcelona to protest against police violence \xe2\x80\x93 video </value></field><field><name>gnm_asset_category</name><value>Master</value></field><field><name>gnm_type</name><value>Master</value></field><fiel',
+                                                  {'Authorization': 'Basic ' + computed_auth.decode("UTF-8")}
                                                   )
 
     def test_param_list_unicode(self):
         from gnmvidispine.vidispine_api import VSApi
-        response = VSApi._get_param_list("keyname",u"arséne wenger est allée en vacances. Häppy hølidåys")
+        response = VSApi._get_param_list("keyname","arséne wenger est allée en vacances. Häppy hølidåys")
         #ensure that the unicode string has been urlencoded properly
         self.assertEqual(response, ['keyname=ars%C3%A9ne%20wenger%20est%20all%C3%A9e%20en%20vacances.%20H%C3%A4ppy%20h%C3%B8lid%C3%A5ys'])
 
@@ -401,3 +428,97 @@ class TestVSApi(unittest2.TestCase):
         from gnmvidispine.vidispine_api import VSApi
 
         VSApi._escape_for_query("/srv/Multimedia2/Media Production/Assets/Multimedia_News/FEARLESS_women_in_India/ekaterina_ochagavia_FEARLESS_women_in_India_2/ASSETS/SOME MUSIC/IRENE/ES_Colored Spirals 4 - Johannes Bornlöf/ES_Colored Spirals 4 STEMS DRUMS.mp3")
+
+    def test_set_metadata(self):
+        from gnmvidispine.vidispine_api import VSApi
+        sample_returned_xml = """<?xml version="1.0"?>
+        <root xmlns="http://xml.vidispine.com/schema/vidispine">
+          <element>string</element>
+        </root>"""
+        conn = http.client.HTTPConnection(host='localhost', port=8080)
+        conn.request = MagicMock()
+        conn.getresponse = MagicMock(return_value=self.MockedResponse(200, sample_returned_xml))
+        api = VSApi(user=self.fake_user, passwd=self.fake_passwd, conn=conn)
+        api.set_metadata('/VX-1234', {'test': '1', 'anothertest': '2'})
+
+        arg1, arg2, arg3, arg4 = conn.request.call_args[0]
+        test_dict = arg4
+        self.assertEqual(arg1, 'PUT')
+        self.assertEqual(arg2, '/API/VX-1234/metadata')
+        self.assertEqual(arg3, b'<SimpleMetadataDocument xmlns="http://xml.vidispine.com/schema/vidispine">\n<field><key>test</key><value>1</value></field>\n<field><key>anothertest</key><value>2</value></field></SimpleMetadataDocument>')
+        self.assertEqual(test_dict['Accept'], 'application/xml')
+        self.assertEqual(test_dict['Content-Type'], 'application/xml')
+        self.assertEqual(test_dict['Authorization'], 'Basic dXNlcm5hbWU6cGFzc3dvcmQ=')
+
+    def test_set_metadata_add(self):
+        from gnmvidispine.vidispine_api import VSApi
+        sample_returned_xml = """<?xml version="1.0"?>
+        <root xmlns="http://xml.vidispine.com/schema/vidispine">
+          <element>string</element>
+        </root>"""
+        conn = http.client.HTTPConnection(host='localhost', port=8080)
+        conn.request = MagicMock()
+        conn.getresponse = MagicMock(return_value=self.MockedResponse(200, sample_returned_xml))
+        api = VSApi(user=self.fake_user, passwd=self.fake_passwd, conn=conn)
+        api.set_metadata('/VX-1234', {'test': '1', 'anothertest': '2'}, mode='add')
+
+        arg1, arg2, arg3, arg4 = conn.request.call_args[0]
+        test_dict = arg4
+        self.assertEqual(arg1, 'PUT')
+        self.assertEqual(arg2, '/API/VX-1234/metadata')
+        self.assertEqual(arg3, b'<SimpleMetadataDocument xmlns="http://xml.vidispine.com/schema/vidispine">\n<field><key>test</key><value mode="add">1</value></field>\n<field><key>anothertest</key><value mode="add">2</value></field></SimpleMetadataDocument>')
+        self.assertEqual(test_dict['Accept'], 'application/xml')
+        self.assertEqual(test_dict['Content-Type'], 'application/xml')
+        self.assertEqual(test_dict['Authorization'], 'Basic dXNlcm5hbWU6cGFzc3dvcmQ=')
+
+    def test_get_metadata(self):
+        import xml.etree.cElementTree as ET
+        sample_xml = """<?xml version="1.0"?>
+        <root xmlns="http://xml.vidispine.com/schema/vidispine">
+          <field>
+            <name>string</name>
+            <value>test</value>
+          </field>
+          <field>
+            <name>something</name>
+            <value>wibble</value>
+          </field>
+          <field>
+            <name>text</name>
+            <value>some text</value>
+          </field>
+        </root>"""
+
+        with patch("gnmvidispine.vidispine_api.VSApi.request", return_value=ET.fromstring(sample_xml)) as mock_request:
+            from gnmvidispine.vidispine_api import VSApi
+            api = VSApi(user=self.fake_user, passwd=self.fake_passwd)
+            meta_dict = api.get_metadata('VX-1234')
+            self.assertEqual(meta_dict['string'], 'test')
+            self.assertEqual(meta_dict['something'], 'wibble')
+            self.assertEqual(meta_dict['text'], 'some text')
+
+        more_xml = """<?xml version="1.0"?>
+        <root xmlns="http://xml.vidispine.com/schema/vidispine">
+          <timespan>
+            <field>
+              <name>string</name>
+              <value>test</value>
+            </field>
+            <field>
+              <name>something</name>
+              <value>wibble</value>
+            </field>
+            <field>
+              <name>text</name>
+              <value>some text</value>
+            </field>
+          </timespan>
+        </root>"""
+
+        with patch("gnmvidispine.vidispine_api.VSApi.request", return_value=ET.fromstring(more_xml)) as mock_request:
+            from gnmvidispine.vidispine_api import VSApi
+            api = VSApi(user=self.fake_user, passwd=self.fake_passwd)
+            meta_dict = api.get_metadata('VX-1234')
+            self.assertEqual(meta_dict['string'], 'test')
+            self.assertEqual(meta_dict['something'], 'wibble')
+            self.assertEqual(meta_dict['text'], 'some text')

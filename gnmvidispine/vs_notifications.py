@@ -1,4 +1,4 @@
-from vidispine_api import VSApi
+from .vidispine_api import VSApi
 import logging
 
 logger = logging.getLogger('vidispine.vs_notifications')
@@ -42,7 +42,7 @@ class NotificationBase(object):
         from xml.etree.cElementTree import SubElement
         if parent is None:
             parent = self.dataContent
-        if not isinstance(newval,basestring):
+        if not isinstance(newval,str):
             newval = str(newval)
 
         node = self.dataContent.find(xpath)
@@ -172,7 +172,7 @@ class VSTriggerEntry(NotificationBase):
         action_el = SubElement(class_el, '{0}{1}'.format(self.xmlns,self.action))
         if len(self.filter)>0:
             filter_el = SubElement(class_el, '{0}filter'.format(self.xmlns))
-            for k,v in self.filter.items():
+            for k,v in list(self.filter.items()):
                 name_el = SubElement(filter_el,'{0}{1}'.format(self.xmlns,k))
                 if not isinstance(v,list):
                     v = [v]
@@ -192,7 +192,7 @@ class VSNotification(VSApi):
     """
     This class represents a Vidispine notification definition
     """
-    class UnknownActionType(StandardError):
+    class UnknownActionType(Exception):
         """
         Raised if an action type is found that we don't support
         """
@@ -225,7 +225,7 @@ class VSNotification(VSApi):
         :return: None
         """
         from xml.etree.cElementTree import tostring
-        from vidispine_api import VSNotFound
+        from .vidispine_api import VSNotFound
         from pprint import pprint
         
         try:
@@ -267,8 +267,8 @@ class VSNotification(VSApi):
 
     def __unicode__(self):
         #raise StandardError("testing")
-        return u'Notification {n} to {act} on {trig}'.format(n=self.name,
-        act=','.join(map(lambda x: unicode(x),self.actions)),trig=self.trigger)
+        return 'Notification {n} to {act} on {trig}'.format(n=self.name,
+        act=','.join([str(x) for x in self.actions]),trig=self.trigger)
     
     @property
     def actions(self):

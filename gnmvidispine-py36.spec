@@ -1,4 +1,4 @@
-%define name gnmvidispine-py27
+%define name gnmvidispine-py36
 %define version 1.9
 %define unmangled_version 1.9
 %define release 1
@@ -17,7 +17,7 @@ BuildArch: noarch
 Vendor: Andy Gallagher <andy.gallagher@theguardian.com>
 Url: https://github.com/fredex42/gnmvidispine
 AutoReqProv: no
-Requires: python >= 2.7
+Requires: python(abi) = 3.6 python36-pytz python36-dateutil python36-future
 
 %description
 An object-oriented Python interface to the Vidispine Media Asset Management system
@@ -28,22 +28,20 @@ tar xvzf ../SOURCES/%{sourcebundle}
 
 %build
 cd gnmvidispine-1.9.DEV
-python setup.py build
+python3 setup_py3.py build
 doxygen
 
 %install
 cd gnmvidispine-1.9.DEV
-python setup.py install -O1 --root=$RPM_BUILD_ROOT --prefix=/usr --record=INSTALLED_FILES
-mkdir -p $RPM_BUILD_ROOT/usr/share/doc/gnmvidispine
-cp -a doc/html/* $RPM_BUILD_ROOT/usr/share/doc/gnmvidispine
+python3 setup_py3.py install -O1 --root=$RPM_BUILD_ROOT --prefix=/usr --record=INSTALLED_FILES
+mkdir -p $RPM_BUILD_ROOT/usr/share/doc/gnmvidispine-py36
+cp -a doc/html/* $RPM_BUILD_ROOT/usr/share/doc/gnmvidispine-py36
 
 %clean
 rm -rf $RPM_BUILD_ROOT
 
 %files -f gnmvidispine-1.9.DEV/INSTALLED_FILES
 %defattr(-,root,root)
-/usr/share/doc/gnmvidispine/*
+/usr/share/doc/gnmvidispine-py36/*
 
 %post
-if [ ! -x /opt/cantemo/python/bin/python ]; then pip install future; fi
-if [ -x /opt/cantemo/python/bin/python ]; then /opt/cantemo/python/bin/pip install future; fi

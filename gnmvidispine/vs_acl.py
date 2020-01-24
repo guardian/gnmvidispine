@@ -1,4 +1,4 @@
-from vidispine_api import VSApi
+from .vidispine_api import VSApi
 from pprint import pprint
 import xml.etree.ElementTree as ET
 
@@ -42,14 +42,14 @@ class VSAccess(VSApi):
         ns = "{http://xml.vidispine.com/schema/vidispine}"
         try:
             return node.find('{0}{1}'.format(ns,path)).text
-        except StandardError:
+        except Exception:
             return None
 
     def setNode(self,node,path,value):
         ns = "{http://xml.vidispine.com/schema/vidispine}"
         try:
             node.find('{0}{1}'.format(ns,path)).text = value
-        except StandardError:
+        except Exception:
             n = ET.Element(path)
             n.text = value
             node.append(n)

@@ -1,5 +1,5 @@
-from vidispine_api import VSApi,VSException,HTTPError, VSNotFound
-from vs_storage_rule import VSStorageRule,VSStorageRuleCollection
+from .vidispine_api import VSApi,VSException,HTTPError, VSNotFound
+from .vs_storage_rule import VSStorageRule,VSStorageRuleCollection
 import logging
 import xml.etree.cElementTree as ET
 
@@ -46,7 +46,7 @@ class VSShape(VSApi):
         Generator that yields populated VSFile objects for all containerComponents on the shape
         :return:
         """
-        from vs_storage import VSFile
+        from .vs_storage import VSFile
         if self.dataContent is not None:
             ns = "{http://xml.vidispine.com/schema/vidispine}"
             #logging.debug("got dataContent")
@@ -59,7 +59,7 @@ class VSShape(VSApi):
         Initiate download of a file
         :return: HTTPResponse object. Call .read() on this to get the data
         """
-        import httplib
+        import http.client
         #import xml.etree.cElementTree as ET
         from pprint import pprint
 
@@ -130,7 +130,7 @@ class VSShape(VSApi):
         return ret
 
     def add_storage_rule(self, newrule):
-        from vs_storage_rule import VSStorageRuleNew
+        from .vs_storage_rule import VSStorageRuleNew
         from xml.etree.cElementTree import tostring
         if not isinstance(newrule,VSStorageRuleNew): raise TypeError("add() accepts only a VSStorageRuleNew object")
         newrule.assert_populated()
@@ -164,16 +164,16 @@ class VSShape(VSApi):
         :param priority: optional - job priority for the analyse
         :return: A VSJob representing the analyze job, or an exception
         """
-        from vs_job import VSJob
+        from .vs_job import VSJob
         path = "/item/{0}/shape/{1}/analyze".format(self.itemid,self.name)
         
         analyzeDocRoot = ET.Element("AnalyzeJobDocument",{'xmlns': 'http://xml.vidispine.com/schema/vidispine'})
         self._analyzeDocFragment(analyzeDocRoot,"black",threshold=blackThreshold,percentage=blackPercentage)
         self._analyzeDocFragment(analyzeDocRoot,"freeze",threshold=freezeThreshold,time=freezeTime)
         self._analyzeDocFragment(analyzeDocRoot,"bars",threshold=barsThreshold,percentage=barsPercentage)
-        
-        print ET.tostring(analyzeDocRoot)
-        data = self.request(path,method="POST",query={'priority': priority},body=ET.tostring(analyzeDocRoot,encoding="UTF-8"))
+
+        logging.debug(ET.tostring(analyzeDocRoot))
+        data = self.request(path,method="POST",query={'priority': priority},body=ET.tostring(analyzeDocRoot,encoding="utf8"))
         j = VSJob(host=self.host,port=self.port,user=self.user,passwd=self.passwd,run_as=self.run_as)
         j.fromResponse(data)
         return j
@@ -186,4 +186,4 @@ class VSShape(VSApi):
         self.request("/item/{0}/shape/{1}".format(self.itemid,self.name),method="DELETE")
         
     def __unicode__(self):
-        return u'Vidispine shape {0}: tag {1} type {2} version {3}'.format(self.name,self.tag(),self.mime_type,self.essence_version)
+        return 'Vidispine shape {0}: tag {1} type {2} version {3}'.format(self.name,self.tag(),self.mime_type,self.essence_version)

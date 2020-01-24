@@ -1,4 +1,4 @@
-from vidispine_api import VSApi, VSNotFound
+from .vidispine_api import VSApi, VSNotFound
 import xml.etree.ElementTree as ET
 import traceback
 
@@ -31,7 +31,7 @@ class VSGlobalMetadataGroup(VSApi):
                     rtn[fieldname] = values
             return rtn
 
-        def next(self):
+        def __next__(self):
             self._internalcounter +=1
             if self._internalcounter>=len(self._nodelist): raise StopIteration
 
@@ -145,5 +145,5 @@ class VSGlobalMetadata(VSApi):
             except AttributeError as e:
                 pass
 
-        for k,v in rtn.items():
+        for k,v in list(rtn.items()):
             yield v

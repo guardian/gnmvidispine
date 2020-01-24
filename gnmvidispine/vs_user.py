@@ -1,4 +1,4 @@
-from vidispine_api import VSApi,VSException,VSNotFound
+from .vidispine_api import VSApi,VSException,VSNotFound
 import xml.etree.ElementTree as ET
 import re
 from pprint import pprint
@@ -13,7 +13,7 @@ class VSUserGroup(VSApi):
         self.dataContent = xmlNode
 
     def __unicode__(self):
-        return u'{0} {1}'.format(self.groupName,self.description)
+        return '{0} {1}'.format(self.groupName,self.description)
 
     @property
     def groupName(self):
@@ -56,7 +56,7 @@ class VSUser(VSApi):
         self.dataContent = None
         self.groupList = None
 
-    class NotPopulatedError(StandardError):
+    class NotPopulatedError(Exception):
         pass
 
     def populate(self,username):
@@ -87,17 +87,17 @@ class VSUser(VSApi):
             self.groupList.append(g)
 
     def __unicode__(self):
-        return u'{0} ({1})'.format(self.userName,self.originSite)
+        return '{0} ({1})'.format(self.userName,self.originSite)
 
     def dump(self):
         #ET.dump(self.dataContent)
-        print "\tUser name: %s" % self.userName
-        print "\tReal name: %s" % self.realName
-        print "\tOrignating site: %s" % self.originSite
+        print("\tUser name: %s" % self.userName)
+        print("\tReal name: %s" % self.realName)
+        print("\tOrignating site: %s" % self.originSite)
         if self.groupList is not None:
-            print "\tGroup memberships:"
+            print("\tGroup memberships:")
             for g in self.groupList:
-                print "\t\t%s" % unicode(g)
+                print("\t\t%s" % str(g))
                 #g.dump()
 
     @property

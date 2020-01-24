@@ -2,7 +2,7 @@ __author__ = 'Andy Gallagher <andy.gallagher@theguardian.com>'
 
 import xml.etree.ElementTree as ET
 import dateutil.parser
-
+from .vidispine_api import always_string
 
 class VSMetadata:
     def __init__(self, initial_data={}):
@@ -40,7 +40,7 @@ class VSMetadata:
             groupEl.text=mdGroup
             rootEl.append(groupEl)
 
-        for key,value in self.contentDict.items():
+        for key,value in list(self.contentDict.items()):
             fieldEl=ET.Element('{0}field'.format(ns))
 
             nameEl=ET.Element('{0}name'.format(ns))
@@ -55,12 +55,12 @@ class VSMetadata:
                 if isinstance(line,datetime):
                     line = line.strftime("%Y-%m-%dT%H:%M:%S%Z")
 
-                valueEl.text = unicode(line)
+                valueEl.text = always_string(line)
                 fieldEl.append(valueEl)
 
             timespanEl.append(fieldEl)
 
-        return ET.tostring(rootEl,encoding="UTF-8")
+        return ET.tostring(rootEl,encoding="utf8").decode("utf8")
 
 
 class VSMetadataMixin(object):
@@ -151,8 +151,8 @@ class VSMetadataAttribute(VSMetadataMixin):
             self.change = self._safe_get_attrib(fieldnode,"change",None)
             self.name = self._safe_get_subvalue(fieldnode, "{0}name".format(self._xmlns), None)
 
-            self.values = map(lambda value_node: VSMetadataValue(value_node), fieldnode.findall('{0}value'.format(self._xmlns)))
-            self.references = map(lambda ref_node: VSMetadataReference(ref_node), fieldnode.findall('{0}referenced'.format(self._xmlns)))
+            self.values = [VSMetadataValue(value_node) for value_node in fieldnode.findall('{0}value'.format(self._xmlns))]
+            self.references = [VSMetadataReference(ref_node) for ref_node in fieldnode.findall('{0}referenced'.format(self._xmlns))]
         else:
             self.uuid = None
             self.user = None

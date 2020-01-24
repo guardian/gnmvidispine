@@ -1,6 +1,6 @@
 __author__ = 'Andy Gallagher <andy.gallagher@theguardian.com>'
 
-from vidispine_api import VSApi,VSException,VSNotFound
+from .vidispine_api import VSApi,VSException,VSNotFound
 import xml.etree.ElementTree as ET
 import logging
 

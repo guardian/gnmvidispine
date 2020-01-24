@@ -1,9 +1,10 @@
 __author__ = 'Andy Gallagher <andy.gallagher@theguardian.com>'
 
-from vidispine_api import VSApi,VSException,VSNotFound
+from .vidispine_api import VSApi,VSException,VSNotFound
 #from vidispine.vs_storage import VSStorage
 from xml.etree import ElementTree as ET
 from pprint import pprint
+import logging
 
 
 class VSStorageRuleNew(VSApi):
@@ -76,7 +77,7 @@ class VSStorageRuleNew(VSApi):
     @precedence.setter
     def precedence(self,value):
         self.assert_populated()
-        if not isinstance(value,basestring): raise TypeError
+        if not isinstance(value,str): raise TypeError
         value = value.upper()
 
         node = self.xmlDOM.find('{0}precedence'.format(self.xmlns))
@@ -90,7 +91,7 @@ class VSStorageRuleNew(VSApi):
         if invert:
             xps = "{0}not/".format(self.xmlns) + xps
         
-        return map(lambda x: x.text,self.xmlDOM.findall(xps))
+        return [x.text for x in self.xmlDOM.findall(xps)]
     
     def storages(self,inverted=False):
         return self._generic_get_ref('storage',inverted)
@@ -112,7 +113,7 @@ class VSStorageRuleNew(VSApi):
     
     def __unicode__(self):
         o_class,o_id = self.applies_to
-        return u'Storage rule {n} copy to {c} storages. Applies to {t} {i}. Precedence {p}.'.format(n=self.name,
+        return 'Storage rule {n} copy to {c} storages. Applies to {t} {i}. Precedence {p}.'.format(n=self.name,
                                                                                     c=self.storage_count,
                                                                                     t=o_class,
                                                                                     i=o_id,
@@ -173,7 +174,7 @@ class VSStorageRule(VSApi):
             elif child.tag.endswith('appliesTo'):
                 pass
             else:
-                print "warning: unrecognised tag in storage rule definition: %s" % child.tag
+                logging.warning("warning: unrecognised tag in storage rule definition: %s" % child.tag)
         return rtn
 
     def populateFromXml(self,response):

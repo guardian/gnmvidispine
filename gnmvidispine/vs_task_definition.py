@@ -1,5 +1,5 @@
 import xml.etree.ElementTree as ET
-from vidispine_api import VSApi,VSException,VSNotFound
+from .vidispine_api import VSApi,VSException,VSNotFound
 import json
 import sys
 import os.path
@@ -38,7 +38,7 @@ ET._serialize_xml = ET._serialize['xml'] = _serialize_xml
 
 def serializeXML(info,parentNode,ns=""):
     #root = ET.Element("{0}{1}".format(ns,rootname))
-    for k,v in info.items():
+    for k,v in list(info.items()):
         node = ET.SubElement(parentNode,k)
         if(type(v) == type(dict)):
             serializeXML(v,node,ns)

@@ -1,9 +1,9 @@
 __author__ = 'Andy Gallagher <andy.gallagher@theguardian.com>'
 
-from vidispine_api import VSApi,VSBadRequest,VSException,VSNotFound
-from vs_timecode import VSTimecode
-from vs_item import VSItem
-from vs_collection import VSCollection
+from .vidispine_api import VSApi,VSBadRequest,VSException,VSNotFound, always_string
+from .vs_timecode import VSTimecode
+from .vs_item import VSItem
+from .vs_collection import VSCollection
 
 import xml.etree.ElementTree as ET
 import logging
@@ -60,28 +60,28 @@ class VSSearchOperator(object):
     def addCriterion(self,crit):
         if not isinstance(crit, dict): raise ValueError
 
-        for k,v in crit.items():
+        for k,v in list(crit.items()):
             self._criteria[k] = v
 
     def to_xml(self,parentNode):
         opNode = ET.SubElement(parentNode, 'operator', attrib={'operation': self.operation})
-        for k,v in self._criteria.items():
+        for k,v in list(self._criteria.items()):
             if isinstance(v,VSSearchOperator):
                 v.to_xml(opNode)
             else:
                 fieldEl = ET.SubElement(opNode,'field')
                 nameEl = ET.SubElement(fieldEl,'name')
-                nameEl.text = unicode(k)
+                nameEl.text = always_string(k)
 
                 if isinstance(v,VSSearchRange):
                     v.to_xml(fieldEl)
                 elif isinstance(v,list):
                     for value in v:
                         valueEl = ET.SubElement(fieldEl,'value')
-                        valueEl.text = unicode(value)
+                        valueEl.text = str(value)
                 else:
                     valueEl = ET.SubElement(fieldEl,'value')
-                    valueEl.text = unicode(v)
+                    valueEl.text = str(v)
 
 
 class VSFacet(object):
@@ -279,7 +279,7 @@ class VSSearch(VSApi):
         if not isinstance(crit,dict):
             raise TypeError
 
-        for k,v in crit.items():
+        for k,v in list(crit.items()):
             self.criteria[k]=v
 
     def addFacet(self,facet):
@@ -305,23 +305,23 @@ class VSSearch(VSApi):
             groupEl = ET.SubElement(root,'group'.format(vs))
             groupEl.text = self.group
 
-        for k,v in self.criteria.items():
+        for k,v in list(self.criteria.items()):
             if isinstance(v,VSSearchOperator):
                 v.to_xml(root)
                 continue
 
             fieldEl = ET.SubElement(root,'field'.format(vs))
             nameEl = ET.SubElement(fieldEl,'name'.format(vs))
-            nameEl.text = unicode(k)
+            nameEl.text = always_string(k)
             if isinstance(v,list):
                 for value in v:
                     valueEl = ET.SubElement(fieldEl,'value'.format(vs))
-                    valueEl.text = unicode(value)
+                    valueEl.text = str(value)
             elif isinstance(v,VSSearchRange):
                 v.to_xml(fieldEl)
             else:
                 valueEl = ET.SubElement(fieldEl,'value'.format(vs))
-                valueEl.text = unicode(v)
+                valueEl.text = str(v)
 
         for f in self.facets:
             f.to_xml(root)

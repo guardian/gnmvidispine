@@ -23,7 +23,7 @@ class VSTimecode(object):
             self.minute = value.minute
             self.second = value.second
             self.frames = value.microsecond/(1000*framerate)
-        elif isinstance(value,basestring):
+        elif isinstance(value,str):
             parts = re.match('(\d+):(\d{2}):(\d{2})[:;](\d{2})',value)
             if parts:
                 self.hour = int(parts.group(1))
@@ -57,4 +57,4 @@ class VSTimecode(object):
         if self.framerate == 29.97:
             fr = "NTSC"
 
-        return u"{0}@{1}".format(num,fr)
+        return "{0}@{1}".format(num,fr)

@@ -1,8 +1,8 @@
 __author__ = 'Andy Gallagher <andy.gallagher@theguardian.com>'
 
-from vs_item import VSItem
-from vidispine_api import InvalidData
-import urllib
+from .vs_item import VSItem
+from .vidispine_api import InvalidData
+import urllib.request, urllib.parse, urllib.error
 import xml.etree.ElementTree as ET
 import logging
 import os
@@ -10,14 +10,14 @@ from traceback import format_exc
 import re
 
 
-class InvalidItemReferenceError(StandardError):
+class InvalidItemReferenceError(Exception):
     """
     Error raised if a passed item is not of the correct type
     """
     pass
 
 
-class ArgumentError(StandardError):
+class ArgumentError(Exception):
     """
     Error raised if an argument is not of the correct format
     """
@@ -34,7 +34,7 @@ class VSCollection(VSItem):
         self.itemCount = -1
 
     def __unicode__(self):
-        return u'Vidispine collection with ID {0}'.format(self.name)
+        return 'Vidispine collection with ID {0}'.format(self.name)
 
     def populate(self, id, type="collection", specificFields=None):
         """
@@ -80,7 +80,7 @@ class VSCollection(VSItem):
         elif isinstance(item,VSCollection):
             type="collection"
             itemid = item.name
-        elif isinstance(item,basestring):
+        elif isinstance(item,str):
             itemid = item
         else:
             raise InvalidItemReferenceError("The item passed was not a VSItem, VSCollection or string, it was a %s" % item.__class__)
@@ -106,11 +106,11 @@ class VSCollection(VSItem):
         :param title: Title of the collection to create
         :return:
         """
-        from vs_item import VSMetadataBuilder
+        from .vs_item import VSMetadataBuilder
         ns = "{http://xml.vidispine.com/schema/vidispine}"
 
         if metadata is None:
-            raise StandardError("No metadata provided")
+            raise Exception("No metadata provided")
         if title is None:
             response = self.request("/collection",
                                 method="POST")
@@ -184,14 +184,14 @@ class VSCollection(VSItem):
                     else:
                         rtn.name = itemNode.find("{0}id".format(ns)).text
                     yield rtn
-            except StandardError as e:
+            except Exception as e:
                 logging.error(e)
                 logging.error(format_exc())
 
     def searchWithin(self):
         # from vs_search import VSCollectionSearch
         # s = VSCollectionSearch(self.host,self.port,self.user,self.passwd)
-        from vs_search import VSSearch
+        from .vs_search import VSSearch
         s=VSSearch(searchType="collection",host=self.host,port=self.port,user=self.user,passwd=self.passwd)
         s.container = self.name
         return s
