@@ -1115,6 +1115,16 @@ class VSMetadataBuilder(VSApi):
         :return: None
         """
         path="{0}/metadata".format(self.parent.path())
+        test_for_str = False
+        try:
+            if not isinstance(self.as_xml(encoding="utf8").decode("utf8"), unicode):
+                raise TypeError("Argument does not have type 'unicode'")
+        except:
+            test_for_str = True
+            pass
+        if test_for_str:
+            if not isinstance(self.as_xml(encoding="utf8").decode("utf8"), str):
+                raise TypeError("Argument does not have type 'str'")
         try:
             self.request(path,method="PUT",body=self.as_xml(encoding="utf8").decode("utf8"))
         except VSBadRequest as e:

@@ -415,6 +415,15 @@ class TestVSStorage(unittest2.TestCase):
                                                   self.MockedResponse(200, self.test_list_doc_end)])
         files_list = [f for f in s.files()]
         self.assertEqual(len(files_list),10)
+        arg5, arg6, arg7, arg8 = s.sendAuthorized.call_args_list[0][0]
+        self.assertEqual(arg5, 'GET')
+        self.assertEqual(arg7, None)
+        self.assertEqual(arg8, {'Accept': 'application/xml'})
+        parsed_url = urlparse(arg6)
+        self.assertEqual(parsed_url.path, '/API/storage/INVALIDNAME/file')
+        self.assertIn('start=0', parsed_url.params)
+        self.assertIn('includeItem=True', parsed_url.params)
+        self.assertIn('number=100', parsed_url.params)
         arg1, arg2, arg3, arg4 = s.sendAuthorized.call_args[0]
         self.assertEqual(arg1, 'GET')
         self.assertEqual(arg3, None)
