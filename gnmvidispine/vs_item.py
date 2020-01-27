@@ -243,15 +243,19 @@ class VSItem(VSApi):
                     key = child.find('{0}name'.format(ns)).text
                 except AttributeError:
                     key = ""
-
-                logging.debug("key is {0}".format(key))
-                #try:
+                try:
+                    logging.debug("key is {0}".format(key))
+                except UnicodeEncodeError:
+                    logging.debug(u"key is {0}".format(key))
                 for valNode in child.findall('{0}value'.format(ns)):
                     try:
                         val = valNode.text
                     except AttributeError:
                         val = ""
-                    logging.debug("got {0} for {1}".format(val,key))
+                    try:
+                        logging.debug("got {0} for {1}".format(val, key))
+                    except UnicodeEncodeError:
+                        logging.debug(u"got {0} for {1}".format(val, key))
                     if key in self.contentDict:
                         #raise Exception("contentDict already has a value %s for %s, trying to insert new value %s\n" % (self.contentDict[key],key,val))
                         if isinstance(self.contentDict[key],list):
