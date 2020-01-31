@@ -1032,7 +1032,10 @@ class VSMetadataBuilder(VSApi):
                 except UnicodeDecodeError:
                     node.text = value.decode("UTF-8","xmlcharrefreplace")
             else:
-                node.text = str(value)
+                try:
+                    node.text = str(value)
+                except UnicodeEncodeError:
+                    node.text = unicode(value)
 
     def _setkeyvalue(self,parentNode, params, meta):
         """
