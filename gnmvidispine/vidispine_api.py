@@ -51,7 +51,7 @@ class HTTPError(Exception):
             else:
                 return self
         except Exception as e:
-            logging.error(e.message)
+            logging.error(e)
             return self
 
 
