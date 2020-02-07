@@ -259,8 +259,8 @@ class VSApi(object):
         """
         import time
         attempt = 0
-        str = '%s:%s' % (self.user, self.passwd)
-        auth = base64.encodebytes(str.encode("UTF-8")).decode().replace('\n', '')
+        str_for_user = '%s:%s' % (self.user, self.passwd)
+        auth = base64.encodebytes(str_for_user.encode("UTF-8")).decode().replace('\n', '')
 
         headers['Authorization']="Basic %s" % auth
         if self.run_as is not None:
