@@ -624,5 +624,11 @@ def always_string(maybe_string):
         return maybe_string
     elif isinstance(maybe_string, bytes):
         return maybe_string.decode("utf8")
+    elif isinstance(maybe_string, int):
+        return str(maybe_string)
+    elif isinstance(maybe_string, float):
+        return str(maybe_string)
+    elif isinstance(maybe_string, bool):
+        return str(maybe_string)
     else:
         raise TypeError("always_string got an unexpected type {0}".format(type(maybe_string)))
