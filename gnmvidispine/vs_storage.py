@@ -14,7 +14,7 @@ from time import sleep
 import logging
 import json
 
-from .vidispine_api import HTTPError, VSApi, VSException, VSNotFound
+from .vidispine_api import HTTPError, VSApi, VSException, VSNotFound, always_string
 
 
 class FileAlreadyImportedError(Exception):
@@ -112,6 +112,8 @@ class VSFile(object):
         mdtext = ""
         if isinstance(metadata, str):
             mdtext = metadata
+        if isinstance(metadata, bytes):
+            mdtext = always_string(metadata)
         elif isinstance(metadata, VSMetadata):
             mdtext = metadata.toXML()
 
