@@ -522,3 +522,21 @@ class TestVSApi(unittest2.TestCase):
             self.assertEqual(meta_dict['string'], 'test')
             self.assertEqual(meta_dict['something'], 'wibble')
             self.assertEqual(meta_dict['text'], 'some text')
+
+    def test_always_string(self):
+        """
+        Test always_string can cope with various object types and that is outputs the expected strings
+        :return:
+        """
+        from gnmvidispine.vidispine_api import always_string
+
+        always_string_output = always_string(1)
+        self.assertEqual(always_string_output, '1')
+        always_string_output = always_string('Wibble')
+        self.assertEqual(always_string_output, 'Wibble')
+        always_string_output = always_string(b'Wibble, Wibble')
+        self.assertEqual(always_string_output, 'Wibble, Wibble')
+        always_string_output = always_string(1.1)
+        self.assertEqual(always_string_output, '1.1')
+        always_string_output = always_string(True)
+        self.assertEqual(always_string_output, 'True')
