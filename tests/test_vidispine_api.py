@@ -540,3 +540,11 @@ class TestVSApi(unittest2.TestCase):
         self.assertEqual(always_string_output, '1.1')
         always_string_output = always_string(True)
         self.assertEqual(always_string_output, 'True')
+
+    def test_https(self):
+        """
+        Test if an HTTPS connection can be started
+        :return:
+        """
+        from gnmvidispine.vidispine_api import VSApi
+        api = VSApi(user=self.fake_user, passwd=self.fake_passwd, https=True)

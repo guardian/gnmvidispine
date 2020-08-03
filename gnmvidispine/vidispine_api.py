@@ -204,7 +204,7 @@ class VSApi(object):
             self._conn = conn
         else:
             if https:
-                self._conn = http.client.HTTPSConnection(self.host, self.port, strict=False)
+                self._conn = http.client.HTTPSConnection(self.host, self.port)
             else:
                 self._conn = http.client.HTTPConnection(self.host, self.port)
         
