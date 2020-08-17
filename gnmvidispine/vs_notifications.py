@@ -245,7 +245,7 @@ class VSNotification(VSApi):
         import re
         
         #strip_attributes(self.dataContent, 'xmlns', 'xmlns:ns0')
-        str = tostring(self.dataContent, encoding="UTF-8")
+        str = tostring(self.dataContent, encoding="UTF-8").decode("UTF-8")
         str = re.sub(r'xmlns[^\s>]*','',str)
         str = re.sub(r'ns\d:','',str)
         str = re.sub(r'[^/]NotificationDocument',
