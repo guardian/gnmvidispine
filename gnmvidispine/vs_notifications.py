@@ -300,12 +300,12 @@ class VSNotification(VSApi):
         if not isinstance(act,NotificationBase):
             raise TypeError("add_action must be given a notification action")
 
-#         action_node = self.dataContent.find('{0}action'.format(self.xmlns))
-#         if action_node is None:
-#             action_node = SubElement(self.dataContent,'{0}action'.format(self.xmlns))
-        #for subnode in act.dataContent
-        #action_node.append(act.dataContent)
-        self.dataContent.append(act.dataContent)
+        action_node = self.dataContent.find('{0}action'.format(self.xmlns))
+        if action_node is None:
+            action_node = SubElement(self.dataContent,'{0}action'.format(self.xmlns))
+
+        action_node.append(act.dataContent)
+
         return self
 
     @property
@@ -335,9 +335,6 @@ class VSNotification(VSApi):
         if not isinstance(newval,VSTriggerEntry):
             raise ValueError("trigger must be a VSTriggerEntry")
 
-        #node = self.dataContent.find('{0}trigger'.format(self.xmlns))
-        #if node is None:
-        #    node = SubElement(self.dataContent, '{0}trigger'.format(self.xmlns))
         node = newval.as_xml_node()
         try:
           del node.attrib['xmlns']
@@ -378,5 +375,5 @@ class VSNotificationCollection(VSApi):
             parts = xtractor.search(node.text)
             logger.debug("found notification {0}".format(parts.group(1)))
             n=VSNotification(self.host,self.port,self.user,self.passwd)
-            n.populate(self.objectclass, parts.group(1))
+            n.populate(objectclass, parts.group(1))
             yield n
