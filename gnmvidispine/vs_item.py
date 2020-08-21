@@ -631,7 +631,7 @@ class VSItem(VSApi):
         path = "/item/{0}/external-id/{1}".format(self.name, old_id)
         self.request(path,method="DELETE")
 
-    def transcode(self, shapetag, priority='MEDIUM', wait=True, allow_object=False):
+    def transcode(self, shapetag, priority='MEDIUM', wait=True, allow_object=False, create_thumbnails=False, job_metadata=None):
         """
         Transcode the item's video to a new format
         :param shapetag: shape tag to transcode to
@@ -639,13 +639,23 @@ class VSItem(VSApi):
         :param wait: if True (default), do not return until the job completes.  VSTranscodeError is raised if the transcode fails.
         :param allow_object: if False (default) and wait=False, return the job ID for the transcode job. If True, return a
         VSJob object.
+        :param create_thumbnails: if True, tell vidispine to create thumbnails as well as the transcode
+        :param job_metadata: optional dictionary of extra metadata keys to add to the job
         :return: the job ID of the transcode job, or a populated VSJob object (if wait=False) or None (if wait=True)
         """
         ns = "{http://xml.vidispine.com/schema/vidispine}"
-        path = "/item/%s/transcode" % self.name
+        if job_metadata is not None:
+            extra_args = {'jobmetadata': ["{0}={1}".format(k_v[0],k_v[1]) for k_v in list(job_metadata.items())]}
+        else:
+            extra_args = {}
+
+        path = "/item/{id}/transcode".format(id=self.name)
 
         jobDocument = self.request(path, method="POST",
-                                   query={'priority': priority, 'tag': shapetag.replace(' ', '%20')})
+                                   query={'priority': priority,
+                                          'tag': shapetag.replace(' ', '%20'),
+                                          'createThumbnails': "true" if create_thumbnails else "false",
+                                          **extra_args})
 
         jobID = jobDocument.find("{0}jobId".format(ns)).text
         logging.debug("Transcode job ID is %s" % jobID)
