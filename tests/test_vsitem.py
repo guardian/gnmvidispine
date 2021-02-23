@@ -74,14 +74,14 @@ class TestVSItem(unittest2.TestCase):
         from gnmvidispine.vs_item import VSItem
         i = VSItem(host=self.fake_host,port=self.fake_port,user=self.fake_user,passwd=self.fake_passwd)
         result = i.import_base()
-        self.assertEqual({'essence': 'false','priority': 'MEDIUM','tag': 'original', 'thumbnails': 'true'}, result)
+        self.assertEqual({'essence': 'false', 'no-transcode': 'false', 'priority': 'MEDIUM','tag': 'original', 'thumbnails': 'true'}, result)
 
     def test_import_base_jobmeta(self):
         from gnmvidispine.vs_item import VSItem
         i = VSItem(host=self.fake_host,port=self.fake_port,user=self.fake_user,passwd=self.fake_passwd)
         result = i.import_base(jobMetadata={'keyone': 'valueone','keytwo': 'valuetwo'})
         self.assertEqual({'essence': 'false', 'jobmetadata': ['keyone=valueone', 'keytwo=valuetwo'],
-                          'priority': 'MEDIUM','tag': 'original', 'thumbnails': 'true'},
+                          'no-transcode': 'false', 'priority': 'MEDIUM','tag': 'original', 'thumbnails': 'true'},
                          result)
 
     def test_import_to_shape(self):

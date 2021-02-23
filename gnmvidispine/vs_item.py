@@ -798,7 +798,7 @@ class VSItem(VSApi):
         else:
             logging.info("placeholder adopt returned {rtn}".format(rtn=rtn))
 
-    def import_base(self,shape_tag='original', priority='MEDIUM', essence=False, thumbnails=True, jobMetadata=None):
+    def import_base(self,shape_tag='original', priority='MEDIUM', essence=False, thumbnails=True, jobMetadata=None, noTranscode=False):
         """
         prepares arguments for an import call. This is an internal method, called by import_to_shape and streaming_import_to_shape
         :param shape_tag: shape tag to import to. Defaults to 'original'
@@ -806,6 +806,7 @@ class VSItem(VSApi):
         :param essence: is this an essence update or not
         :param thumbnails: should Vidispine re-create thumbnails or not
         :param jobMetadata: Dictionary of key/values for the job metadata - see Vidispine import documentation for details
+        :param noTranscode: If True, prevents Vidispine from attempting to transcode the imported item. Defaults to 'False'.
         :return: dictionary of arguments for the import call.
         """
         if isinstance(shape_tag,str):
@@ -830,11 +831,17 @@ class VSItem(VSApi):
         else:
             extra_args = {}
 
+        if noTranscode:
+            no_transcode = 'true'
+        else:
+            no_transcode = 'false'
+
         rtn = {
             'tag'         : shape_tag_string,
             'priority'    : priority,
             'thumbnails'  : t,
-            'essence'     : e
+            'essence'     : e,
+            'no-transcode': no_transcode
         }
         rtn.update(extra_args)
         return rtn
