@@ -806,7 +806,7 @@ class VSItem(VSApi):
         :param essence: is this an essence update or not
         :param thumbnails: should Vidispine re-create thumbnails or not
         :param jobMetadata: Dictionary of key/values for the job metadata - see Vidispine import documentation for details
-        :param noTranscode: Should Vidispine not attempt to transcode the data. Defaults to 'False'.
+        :param noTranscode: If True, prevents Vidispine from attempting to transcode the imported item. Defaults to 'False'.
         :return: dictionary of arguments for the import call.
         """
         if isinstance(shape_tag,str):
