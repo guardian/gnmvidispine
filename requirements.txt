@@ -2,4 +2,4 @@ unittest2==1.1.0
 mock==3.0.5
 python-dateutil==2.8.1
 pytz==2019.3
-future==0.18.2
+future==0.18.3
