@@ -341,11 +341,10 @@ class VSStorage(VSApi):
 
     def fileForPath(self, path):
         path = self.stripOwnPath(path)
+        print("Path: ", path)
         logging.debug("VSStorage::fileForPath - actually looking for %s" % path)
-        response = self.request("/storage/{storage}/file/byURI".format(storage=self.name),
-                                method="GET",
-                                matrix={'includeItem': 'True',
-                                        'path': path})
+        response = self.request(f"/storage/{self.name}/file/?path={path}")
+        print("Response: ", response)
         return VSFile(self, response)
 
     def fileForID(self, vsid):
