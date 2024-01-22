@@ -65,6 +65,7 @@ class VSFile(object):
 
     def _valueOrNone(self, path):
         namespace = "{http://xml.vidispine.com/schema/vidispine}"
+        self.logger.info(f"Self.dataContent: {self.dataContent}, path: {path}")
 
         node = self.dataContent.find('{0}{1}'.format(namespace, path))
         if node is not None:
