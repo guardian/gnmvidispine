@@ -65,9 +65,8 @@ class VSFile(object):
 
     def _valueOrNone(self, path):
         namespace = "{http://xml.vidispine.com/schema/vidispine}"
-        logging.info(f"Self.dataContent: {self.dataContent}, path: {path}")
         xml_str = ET.tostring(self.dataContent, encoding='unicode')
-        logging.info(f"XML Content: {xml_str}")
+        logging.info(f"VSFile XML Content: {xml_str}")
 
         node = self.dataContent.find('.//{0}file/{0}{1}'.format(namespace, path))
         if node is not None:
@@ -238,6 +237,8 @@ class VSStorageMethod(object):
 
     def _valueOrNone(self, path):
         namespace = "{http://xml.vidispine.com/schema/vidispine}"
+        xml_str = ET.tostring(self.dataContent, encoding='unicode')
+        logging.info(f"VSStorageMethod XML Content: {xml_str}")
 
         node = self.dataContent.find('{0}{1}'.format(namespace, path))
         if node is not None:
@@ -257,6 +258,9 @@ class VSStorage(VSApi):
 
     def _valueOrNone(self, path):
         namespace = "{http://xml.vidispine.com/schema/vidispine}"
+
+        xml_str = ET.tostring(self.dataContent, encoding='unicode')
+        logging.info(f"VSStorage XML Content: {xml_str}")
 
         node = self.dataContent.find('{0}{1}'.format(namespace, path))
         if node is not None:
@@ -344,10 +348,8 @@ class VSStorage(VSApi):
 
     def fileForPath(self, path):
         path = self.stripOwnPath(path)
-        print("Path: ", path)
         logging.info("VSStorage::fileForPath - actually looking for %s" % path)
         response = self.request(f"/storage/{self.name}/file/?path={path}")
-        print("Response: ", response)
         return VSFile(self, response)
 
     def fileForID(self, vsid):
