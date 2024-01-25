@@ -66,6 +66,8 @@ class VSFile(object):
     def _valueOrNone(self, path):
         namespace = "{http://xml.vidispine.com/schema/vidispine}"
         logging.info(f"Self.dataContent: {self.dataContent}, path: {path}")
+        xml_str = ET.tostring(self.dataContent, encoding='unicode')
+        logging.info(f"XML Content: {xml_str}")
 
         node = self.dataContent.find('{0}{1}'.format(namespace, path))
         if node is not None:
@@ -129,7 +131,7 @@ class VSFile(object):
             for t in tags:
                 q['tag']+=t + ','
             q['tag']=q['tag'][:-1]
-
+        logging.info(f"self.name: {self.name}, self.parent.name: {self.parent.name} self.path: {self.path} self.uri: {self.uri}")
         response = self.parent.request("/storage/{0}/file/{1}/import".format(self.parent.name, self.name),
                                        method="POST",
                                        query=q,
@@ -343,7 +345,7 @@ class VSStorage(VSApi):
     def fileForPath(self, path):
         path = self.stripOwnPath(path)
         print("Path: ", path)
-        logging.debug("VSStorage::fileForPath - actually looking for %s" % path)
+        logging.info("VSStorage::fileForPath - actually looking for %s" % path)
         response = self.request(f"/storage/{self.name}/file/?path={path}")
         print("Response: ", response)
         return VSFile(self, response)
