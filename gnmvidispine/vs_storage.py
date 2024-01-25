@@ -69,7 +69,7 @@ class VSFile(object):
         xml_str = ET.tostring(self.dataContent, encoding='unicode')
         logging.info(f"XML Content: {xml_str}")
 
-        node = self.dataContent.find('{0}{1}'.format(namespace, path))
+        node = self.dataContent.find('.//{0}file/{0}{1}'.format(namespace, path))
         if node is not None:
             return node.text
         return None
