@@ -409,7 +409,7 @@ class VSApi(object):
         while True:
             try:
                 n+=1
-                raw_body=self.raw_request(path.replace(' ', '%20'),method=method,matrix=matrix,query=query,body=body,accept=accept)
+                raw_body=self.raw_request(path.replace(' ', '%20').replace('{', '%7B').replace('}', '%7D'),method=method,matrix=matrix,query=query,body=body,accept=accept)
                 break
             except HTTPError as e:
                 if e.code==503: #server unavailable
