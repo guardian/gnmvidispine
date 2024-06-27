@@ -342,6 +342,7 @@ class VSStorage(VSApi):
     def fileForPath(self, path):
         path = self.stripOwnPath(path)
         logging.debug("VSStorage::fileForPath - actually looking for %s" % path)
+        logging.info("path: %s" % path)
         processed_path = path.replace('{', '%7B').replace('}', '%7D').replace('/', '%2F')
         response = self.request("/storage/{storage}/file/path/{path}".format(storage=self.name, path=processed_path),
                                 method="GET",
