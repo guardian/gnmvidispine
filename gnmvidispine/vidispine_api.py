@@ -379,7 +379,7 @@ class VSApi(object):
 
         for startbyte in range(0,total_size,chunk_size):
             headers = {
-                'size': total_size,
+                'size': int(str(total_size)),
                 'index': startbyte
             }
             upload_io.seek(startbyte,my_seek_set)
